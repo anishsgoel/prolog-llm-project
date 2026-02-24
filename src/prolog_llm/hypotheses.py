@@ -223,7 +223,6 @@ def generate_background_hypotheses_fast(
     prompt_fact_limit: Optional[int] = None,
 ):
     """Generate background hypotheses using LLM."""
-    from .prolog_utils import extract_first_json
 
     if max_atoms is None:
         max_atoms = config.HYP_MAX_ATOMS

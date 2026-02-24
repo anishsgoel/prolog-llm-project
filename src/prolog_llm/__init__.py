@@ -22,9 +22,22 @@ from prolog_llm.prolog_utils import (
     extract_first_json,
 )
 
+from prolog_llm.knowledge_base import (
+    KnowledgeBase,
+    Fact,
+    Rule,
+)
+
+from prolog_llm.soft_kb import (
+    SoftKB,
+    SoftFact,
+    SoftRule,
+)
+
 from prolog_llm.solvers import (
-    bfs_prolog_collect,
-    bfs_prolog_metro_soft,
+    PrologSolver,
+    HardKBCollector,
+    SoftBFSSolver,
 )
 
 from prolog_llm.hypotheses import (
@@ -33,6 +46,8 @@ from prolog_llm.hypotheses import (
 )
 
 from prolog_llm.llm_interface import (
+    LLMInterface,
+    get_llm_interface,
     ask_llm,
     llm_json_only,
     nl_to_prolog_kb,
@@ -45,6 +60,7 @@ from prolog_llm.orchestration import (
 )
 
 __all__ = [
+    # Utils
     "parse_predicate",
     "is_variable",
     "split_inline_comment",
@@ -56,13 +72,25 @@ __all__ = [
     "get_subgoals",
     "is_ground_atom",
     "extract_first_json",
-    "bfs_prolog_collect",
-    "bfs_prolog_metro_soft",
-    "generate_background_hypotheses_fast",
-    "attach_hypotheses_to_kb",
+    # Knowledge Base
+    "KnowledgeBase",
+    "Fact",
+    "Rule",
+    # Soft KB
+    "SoftKB",
+    "SoftFact",
+    "SoftRule",
+    # Solvers
+    "PrologSolver",
+    "HardKBCollector",
+    "SoftBFSSolver",
+    # LLM
+    "LLMInterface",
+    "get_llm_interface",
     "ask_llm",
     "llm_json_only",
     "nl_to_prolog_kb",
+    # Orchestration
     "solve_with_background",
     "omit_facts_from_kb",
     "parse_kb_predicate_comments",

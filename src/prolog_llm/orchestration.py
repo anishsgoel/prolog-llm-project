@@ -13,13 +13,15 @@ from prolog_llm.prolog_utils import (
     is_variable,
 )
 from prolog_llm.solvers import (
-    bfs_prolog_collect,
-    bfs_prolog_metro_soft,
+    HardKBCollector,
+    SoftBFSSolver,
 )
 from prolog_llm.hypotheses import (
     generate_background_hypotheses_fast,
     attach_hypotheses_to_kb,
 )
+from prolog_llm.knowledge_base import KnowledgeBase
+from prolog_llm.soft_kb import SoftKB
 import config
 
 
@@ -111,8 +113,10 @@ def solve_with_background(
 
     if hard_result is None:
         if config.VERBOSE:
-            print(">>> Phase 1: Hard-KB BFS (bfs_prolog_collect)")
-        hard_result = bfs_prolog_collect(goal, kb, max_depth=max_depth)
+            print(">>> Phase 1: Hard-KB BFS (HardKBCollector)")
+        kb_obj = KnowledgeBase(kb)
+        collector = HardKBCollector(kb_obj, max_depth=max_depth)
+        hard_result = collector.solve(goal)
         if config.VERBOSE:
             print("Hard-KB result:", hard_result)
     else:
@@ -203,20 +207,16 @@ def solve_with_background(
 
         print("\n>>> Phase 3: Attach hypotheses to soft KB")
 
-    soft_kb = attach_hypotheses_to_kb(kb, hypotheses)
+    soft_kb = SoftKB.from_hypotheses(hypotheses, kb)
 
     if config.VERBOSE:
-        print("Soft KB facts:", soft_kb.get("facts", []))
-        print("Soft KB rules:", soft_kb.get("rules", []))
-        print("\n>>> Phase 4: Soft BFS (bfs_prolog_metro_soft)")
+        print("Soft KB facts:", soft_kb.facts)
+        print("Soft KB rules:", soft_kb.rules)
+        print("\n>>> Phase 4: Soft BFS (SoftBFSSolver)")
 
-    soft_result = bfs_prolog_metro_soft(
-        goal=goal,
-        kb=kb,
-        soft_kb=soft_kb,
-        max_depth=max_depth,
-        max_soft=max_soft,
-    )
+    kb_obj = KnowledgeBase(kb)
+    soft_solver = SoftBFSSolver(kb_obj, soft_kb, max_depth=max_depth, max_soft=max_soft)
+    soft_result = soft_solver.solve(goal)
 
     if config.VERBOSE:
         print("Soft-BFS result:", soft_result)
@@ -235,7 +235,7 @@ def solve_with_background(
                 "hard_expansions": hard_result.get("metrics", {}).get("hard_expansions"),
                 "blocking_atom": hard_result.get("metrics", {}).get("blocking_atom") or (next(iter(unresolved_atoms)) if unresolved_atoms else None),
                 "llm_hypotheses_considered": len(hypotheses),
-                "llm_hypotheses_injected": len(soft_kb.get("facts", [])) + len(soft_kb.get("rules", [])),
+                "llm_hypotheses_injected": len(soft_kb.facts) + len(soft_kb.rules),
                 "soft_cost": soft_result.get("soft_cost"),
                 "min_conf": soft_result.get("min_conf"),
                 "penalty_sum": soft_result.get("penalty_sum"),
@@ -256,7 +256,7 @@ def solve_with_background(
             "hard_expansions": hard_result.get("metrics", {}).get("hard_expansions"),
             "blocking_atom": hard_result.get("metrics", {}).get("blocking_atom") or (next(iter(unresolved_atoms)) if unresolved_atoms else None),
             "llm_hypotheses_considered": len(hypotheses),
-            "llm_hypotheses_injected": len(soft_kb.get("facts", [])) + len(soft_kb.get("rules", [])),
+            "llm_hypotheses_injected": len(soft_kb.facts) + len(soft_kb.rules),
             "soft_cost": None,
             "min_conf": None,
         }

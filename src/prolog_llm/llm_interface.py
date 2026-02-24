@@ -2,79 +2,147 @@
 
 import json
 import os
+import re
 import sys
 from typing import Optional
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 import ollama
 
-from prolog_llm.prolog_utils import extract_first_json
+from prolog_llm.prolog_utils import extract_first_json, parse_predicate
 import config
 
 
-client = ollama.Client()
-
-
-def ask_llm(prompt: str) -> str:
+class LLMInterface:
     """
-    Drop-in patch: prevents 'reasoning' rambles and forces a JSON payload.
-    - Adds stop tokens to cut off commentary early.
-    - Falls back to `thinking` field if `response` is empty (common with gpt-oss).
-    - If client supports format='json', it will be used; otherwise it will ignore it.
+    Encapsulates the Ollama LLM client with configurable parameters.
+    Provides methods for generating completions and handling JSON responses.
     """
-    try:
-        kwargs = dict(
-            model=config.MODEL,
-            prompt=prompt,
-            options={
-                "temperature": config.LLM_TEMPERATURE,
-                "num_predict": config.LLM_NUM_PREDICT,
-                "stop": config.LLM_STOP_TOKENS,
-            },
-        )
-
-        kwargs["format"] = "json"
-
-        resp = client.generate(**kwargs)
-
-    except TypeError:
+    
+    def __init__(
+        self,
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        num_predict: Optional[int] = None,
+        stop_tokens: Optional[list] = None,
+        host: Optional[str] = None,
+    ):
+        """
+        Initialize the LLM interface.
+        
+        Args:
+            model: Model name (defaults to config.MODEL)
+            temperature: Sampling temperature (defaults to config.LLM_TEMPERATURE)
+            num_predict: Max tokens to predict (defaults to config.LLM_NUM_PREDICT)
+            stop_tokens: Stop tokens (defaults to config.LLM_STOP_TOKENS)
+            host: Ollama host URL (optional)
+        """
+        self.model = model or config.MODEL
+        self.temperature = temperature if temperature is not None else config.LLM_TEMPERATURE
+        self.num_predict = num_predict or config.LLM_NUM_PREDICT
+        self.stop_tokens = stop_tokens or config.LLM_STOP_TOKENS
+        
+        if host:
+            self.client = ollama.Client(host=host)
+        else:
+            self.client = ollama.Client()
+    
+    def generate(
+        self, 
+        prompt: str, 
+        temperature: Optional[float] = None,
+        num_predict: Optional[int] = None,
+        stop_tokens: Optional[list] = None,
+        format_json: bool = True,
+    ) -> str:
+        """
+        Generate a completion from the LLM.
+        
+        Args:
+            prompt: The prompt to send
+            temperature: Override default temperature
+            num_predict: Override default max tokens
+            stop_tokens: Override default stop tokens
+            format_json: Whether to request JSON format
+            
+        Returns:
+            The generated text response
+        """
+        temp = temperature if temperature is not None else self.temperature
+        num_pred = num_predict or self.num_predict
+        stops = stop_tokens or self.stop_tokens
+        
         try:
-            kwargs.pop("format", None)
-            resp = client.generate(**kwargs)
+            kwargs = dict(
+                model=self.model,
+                prompt=prompt,
+                options={
+                    "temperature": temp,
+                    "num_predict": num_pred,
+                    "stop": stops,
+                },
+            )
+            
+            if format_json:
+                kwargs["format"] = "json"
+            
+            resp = self.client.generate(**kwargs)
+            
+        except TypeError:
+            try:
+                if format_json:
+                    kwargs.pop("format", None)
+                resp = self.client.generate(**kwargs)
+            except Exception as e:
+                print("[LLMInterface.generate] Ollama generate() exception:", repr(e))
+                return ""
         except Exception as e:
-            print("[ask_llm] Ollama generate() exception:", repr(e))
+            print("[LLMInterface.generate] Ollama generate() exception:", repr(e))
             return ""
-    except Exception as e:
-        print("[ask_llm] Ollama generate() exception:", repr(e))
-        return ""
-
-    answer = (resp.get("response") or "").strip()
-    if not answer:
-        answer = (resp.get("thinking") or "").strip()
-
-    if not answer:
-        print("[ask_llm] EMPTY response+thinking. Raw resp:", resp)
-        return ""
-
-    if "...done thinking." in answer:
-        answer = answer.split("...done thinking.")[-1].strip()
-
-    return answer
-
-
-def llm_json_only(prompt: str, repair_schema: str) -> str:
-    """
-    Calls ask_llm. If no JSON object is present, retries once with a strict JSON-only repair prompt.
-    Returns raw text (which should contain JSON).
-    """
-    raw = ask_llm(prompt).strip()
-    try:
-        _ = extract_first_json(raw)
-        return raw
-    except Exception:
-        pass
-
-    repair_prompt = f"""
+        
+        answer = (resp.get("response") or "").strip()
+        if not answer:
+            answer = (resp.get("thinking") or "").strip()
+        
+        if not answer:
+            print("[LLMInterface.generate] EMPTY response+thinking. Raw resp:", resp)
+            return ""
+        
+        if "...done thinking." in answer:
+            answer = answer.split("...done thinking.")[-1].strip()
+        
+        return answer
+    
+    def ask(self, prompt: str) -> str:
+        """
+        Simple alias for generate() with JSON format.
+        """
+        return self.generate(prompt, format_json=True)
+    
+    def ask_with_retry(self, prompt: str, repair_schema: Optional[str] = None) -> str:
+        """
+        Generate a completion, retrying with a strict JSON-only prompt if needed.
+        
+        Args:
+            prompt: The initial prompt
+            repair_schema: JSON schema to use in the repair prompt (if needed)
+            
+        Returns:
+            The generated text (should contain valid JSON)
+        """
+        raw = self.ask(prompt).strip()
+        
+        try:
+            _ = extract_first_json(raw)
+            return raw
+        except Exception:
+            pass
+        
+        if not repair_schema:
+            return raw
+        
+        repair_prompt = f"""
 Return ONLY valid JSON. No explanation, no prose, no markdown.
 
 You MUST output JSON that matches this schema exactly:
@@ -83,21 +151,21 @@ You MUST output JSON that matches this schema exactly:
 If you cannot comply, output:
 {{"by_atom":{{}}}}
 """.strip()
-
-    raw2 = ask_llm(repair_prompt).strip()
-    return raw2
-
-
-def nl_to_prolog_kb(nl_kb_text: str, start_index: int = 1) -> list[str]:
-    """Convert natural language KB description to Prolog clauses."""
-    nl_kb_text = (nl_kb_text or "").strip()
-    if not nl_kb_text:
-        return []
-
-    from .prolog_utils import parse_predicate
-    import re
-
-    prompt = f"""
+        
+        return self.ask(repair_prompt).strip()
+    
+    def nl_to_prolog(self, nl_text: str, start_index: int = 1) -> list[str]:
+        """
+        Convert natural language KB description to Prolog clauses.
+        
+        Args:
+            nl_text: Natural language description of the KB
+            start_index: Starting line number for clauses
+            
+        Returns:
+            List of numbered Prolog clauses
+        """
+        prompt = f"""
 You are a Prolog formalization assistant.
 
 The user will give you a natural-language description of a small domain,
@@ -122,7 +190,7 @@ Guidelines:
 
 Here is the NATURAL LANGUAGE description of the knowledge base:
 
-\"\"\"{nl_kb_text}\"\"\"
+\"\"\"{nl_text}\"\"\"
 
 Respond ONLY in this JSON format (and nothing else):
 
@@ -137,60 +205,91 @@ Respond ONLY in this JSON format (and nothing else):
   ]
 }}
 """.strip()
+        
+        raw = self.ask(prompt).strip()
+        
+        try:
+            data = json.loads(extract_first_json(raw))
+        except Exception as e:
+            print("[LLMInterface.nl_to_prolog] JSON parse error:", e)
+            print("Raw LLM output:", raw[:800])
+            return []
+        
+        raw_clauses = data.get("clauses", [])
+        if not isinstance(raw_clauses, list):
+            print("[LLMInterface.nl_to_prolog] 'clauses' field is not a list:", raw_clauses)
+            return []
+        
+        cleaned = []
+        for item in raw_clauses:
+            if isinstance(item, str):
+                clause = item.strip()
+            elif isinstance(item, dict):
+                clause = (item.get("clause") or "").strip()
+            else:
+                continue
+            
+            if not clause:
+                continue
+            
+            m_num = re.match(r"^\s*(\d+)\.\s*(.+)$", clause)
+            if m_num:
+                clause = m_num.group(2).strip()
+            
+            clause = clause.rstrip()
+            if not clause.endswith("."):
+                clause += "."
+            else:
+                clause = re.sub(r"\.+$", ".", clause)
+            
+            body_str = clause[:-1].strip()
+            if ":-" in body_str:
+                head_part, _ = body_str.split(":-", 1)
+                head = head_part.strip()
+            else:
+                head = body_str
+            
+            parsed_head = parse_predicate(head)
+            if parsed_head is None:
+                print("[LLMInterface.nl_to_prolog] Discarding unparsable clause:", clause)
+                continue
+            
+            cleaned.append(clause)
+        
+        numbered = [f"{i}. {clause}" for i, clause in enumerate(cleaned, start=start_index)]
+        return numbered
+    
+    def __repr__(self) -> str:
+        return f"LLMInterface(model={self.model!r}, temp={self.temperature})"
 
-    raw = ask_llm(prompt).strip()
-    try:
-        data = json.loads(extract_first_json(raw))
-    except Exception as e:
-        print("[nl_to_prolog_kb] JSON parse error:", e)
-        print("Raw LLM output:", raw[:800])
-        return []
 
-    raw_clauses = data.get("clauses", [])
-    if not isinstance(raw_clauses, list):
-        print("[nl_to_prolog_kb] 'clauses' field is not a list:", raw_clauses)
-        return []
+# Global instance for backwards compatibility
+_llm_interface: Optional[LLMInterface] = None
 
-    cleaned_clauses = []
-    for item in raw_clauses:
-        if isinstance(item, str):
-            clause = item.strip()
-        elif isinstance(item, dict):
-            clause = (item.get("clause") or "").strip()
-        else:
-            continue
 
-        if not clause:
-            continue
+def get_llm_interface() -> LLMInterface:
+    """Get or create the global LLM interface instance."""
+    global _llm_interface
+    if _llm_interface is None:
+        _llm_interface = LLMInterface()
+    return _llm_interface
 
-        m_num = re.match(r"^\s*(\d+)\.\s*(.+)$", clause)
-        if m_num:
-            clause = m_num.group(2).strip()
 
-        clause = clause.rstrip()
-        if not clause.endswith("."):
-            clause = clause + "."
-        else:
-            clause = re.sub(r"\.+$", ".", clause)
+# Backwards compatibility functions
+def ask_llm(prompt: str) -> str:
+    """Backwards-compatible ask_llm function."""
+    return get_llm_interface().ask(prompt)
 
-        body_str = clause[:-1].strip()
-        if ":-" in body_str:
-            head_part, _ = body_str.split(":-", 1)
-            head = head_part.strip()
-        else:
-            head = body_str
 
-        parsed_head = parse_predicate(head)
-        if parsed_head is None:
-            print("[nl_to_prolog_kb] Discarding unparsable clause:", clause)
-            continue
+def llm_json_only(prompt: str, repair_schema: str) -> str:
+    """Backwards-compatible llm_json_only function."""
+    return get_llm_interface().ask_with_retry(prompt, repair_schema)
 
-        cleaned_clauses.append(clause)
 
-    numbered_clauses = []
-    next_num = start_index
-    for clause in cleaned_clauses:
-        numbered_clauses.append(f"{next_num}. {clause}")
-        next_num += 1
+def nl_kb_to_prolog_kb(nl_kb_text: str, start_index: int = 1) -> list[str]:
+    """Backwards-compatible nl_kb_to_prolog_kb function."""
+    return get_llm_interface().nl_to_prolog(nl_kb_text, start_index)
 
-    return numbered_clauses
+
+# Alias for backwards compatibility
+nl_to_prolog_kb = nl_kb_to_prolog_kb

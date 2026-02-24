@@ -7,10 +7,11 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import config
-from src.prolog_llm.orchestration import (
+from src.prolog_llm import (
+    KnowledgeBase,
+    HardKBCollector,
     solve_with_background,
     omit_facts_from_kb,
-    bfs_prolog_collect,
 )
 
 
@@ -45,12 +46,10 @@ def main():
     print(f"TEST QUERY: {test_goal}")
     print("==============================\n")
 
-    print(">>> Running bfs_prolog_collect (hard-KB BFS)...")
-    collect_result = bfs_prolog_collect(
-        goal=test_goal,
-        kb=kb_missing_fact,
-        max_depth=20
-    )
+    print(">>> Running HardKBCollector (hard-KB BFS)...")
+    kb_obj = KnowledgeBase(kb_missing_fact)
+    collector = HardKBCollector(kb_obj, max_depth=20)
+    collect_result = collector.solve(test_goal)
     print("Collect Result:", collect_result)
     print("\n----------------------------------------\n")
 
