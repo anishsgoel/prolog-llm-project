@@ -1,0 +1,15 @@
+{
+    "model": "gpt-oss:20b",
+    "debug": false,
+    "verbose": true,
+    "llm_temperature": 0.0,
+    "llm_num_predict": 256,
+    "llm_stop_tokens": ["\n\n", "\nWe ", "\nI ", "\nExplanation", "```"],
+    "default_max_depth": 10,
+    "default_max_depth_shortcut": 30,
+    "hyp_max_atoms": 1,
+    "hyp_max_hyp_per_atom": 2,
+    "hyp_prompt_fact_limit": 25,
+    "soft_bfs_max_solutions": 25,
+    "soft_penalty_unknown_station": 0.5
+}

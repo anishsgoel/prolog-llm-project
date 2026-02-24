@@ -7,17 +7,20 @@ import json
 from typing import Optional
 import math
 
+import config
+
 
 # ============================================================
 # Config / LLM setup
 # ============================================================
 
-client = ollama.Client()
-model = "gpt-oss:20b"
-# model = "qwen:14b"
+config.init_config()
 
-DEBUG = False   # raw LLM outputs, JSON snippets
-VERBOSE = True  # step-by-step traces; set False for paper-style metrics-only
+client = ollama.Client()
+model = config.MODEL
+
+DEBUG = config.DEBUG
+VERBOSE = config.VERBOSE
 
 
 def ask_llm(prompt: str) -> str:
@@ -32,10 +35,9 @@ def ask_llm(prompt: str) -> str:
             model=model,
             prompt=prompt,
             options={
-                "temperature": 0.0,
-                "num_predict": 256,  # JSON should be small; keep tight so it can't ramble forever
-                # Stop tokens that often appear right after models start "explaining"
-                "stop": ["\n\n", "\nWe ", "\nI ", "\nExplanation", "```"],
+                "temperature": config.LLM_TEMPERATURE,
+                "num_predict": config.LLM_NUM_PREDICT,
+                "stop": config.LLM_STOP_TOKENS,
             },
         )
 
@@ -433,12 +435,14 @@ def parse_kb_predicate_comments(kb: str):
 # BFS Prolog engine (hard) + minimal metric collection
 # ============================================================
 
-def bfs_prolog_collect(goal: str, kb: str, max_depth: int = 10):
+def bfs_prolog_collect(goal: str, kb: str, max_depth: int = None):
     """
     Same solver logic as before, but metric collection is now defensible:
       - returns a single "blocking_atom" (ground) if possible
       - avoids logging/returning all dead-end Rule-8 branches
     """
+    if max_depth is None:
+        max_depth = config.DEFAULT_MAX_DEPTH
     facts = []
     rules = []
 
@@ -886,7 +890,7 @@ Return ONLY valid JSON in exactly this shape:
         return f"connected({u}, {v})."
 
     def shortcut_meta(u: str, v: str):
-        d = _shortest_path_len_bounded(hard_adj, u, v, max_depth=30)
+        d = _shortest_path_len_bounded(hard_adj, u, v, max_depth=config.DEFAULT_MAX_DEPTH_SHORTCUT)
         is_shortcut = (d is not None and d >= 2)
         return is_shortcut, d
 
@@ -1008,7 +1012,7 @@ def attach_hypotheses_to_kb(kb: str, hypotheses):
 
         penalty = 0.0
         if h.get("unknown_station"):
-            penalty += 0.5
+            penalty += config.SOFT_PENALTY_UNKNOWN_STATION
 
         if _is_fact_clause(clause):
             atom = clause.rstrip(".").strip()
@@ -1031,10 +1035,14 @@ def bfs_prolog_metro_soft(
     goal: str,
     kb: str,
     soft_kb,
-    max_depth: int = 10,
+    max_depth: Optional[int] = None,
     max_soft: Optional[int] = None,
-    max_solutions: int = 25,
+    max_solutions: Optional[int] = None,
 ):
+    if max_depth is None:
+        max_depth = config.DEFAULT_MAX_DEPTH
+    if max_solutions is None:
+        max_solutions = config.SOFT_BFS_MAX_SOLUTIONS
     # Parse hard KB
     hard_facts = []
     hard_rules = []
@@ -1297,10 +1305,13 @@ def bfs_prolog_metro_soft(
 def solve_with_background(
     goal: str,
     kb: str,
-    max_depth: int = 10,
+    max_depth: Optional[int] = None,
     max_soft=None,
     hard_result=None,
 ):
+    if max_depth is None:
+        max_depth = config.DEFAULT_MAX_DEPTH
+        
     predicate_comments = parse_kb_predicate_comments(kb)
 
     if VERBOSE:
@@ -1366,9 +1377,9 @@ def solve_with_background(
         kb=kb,
         hard_result=hard_result,
         predicate_comments=predicate_comments,
-        max_atoms=1,
-        max_hyp_per_atom=2,
-        prompt_fact_limit=25,
+        max_atoms=config.HYP_MAX_ATOMS,
+        max_hyp_per_atom=config.HYP_MAX_HYP_PER_ATOM,
+        prompt_fact_limit=config.HYP_PROMPT_FACT_LIMIT,
     ) or []
 
     if not hypotheses:
@@ -1878,7 +1889,7 @@ Return ONLY valid JSON in exactly this shape:
         return f"connected({u}, {v})."
 
     def shortcut_meta(u: str, v: str):
-        d = _shortest_path_len_bounded(hard_adj, u, v, max_depth=30)
+        d = _shortest_path_len_bounded(hard_adj, u, v, max_depth=config.DEFAULT_MAX_DEPTH_SHORTCUT)
         is_shortcut = (d is not None and d >= 2)
         return is_shortcut, d
 
