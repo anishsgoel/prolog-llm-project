@@ -40,7 +40,8 @@ from prolog_llm.solvers import (
     SoftBFSSolver,
 )
 
-from prolog_llm.hypotheses import (
+from prolog_llm.hypothesis_generator import (
+    HypothesisGenerator,
     generate_background_hypotheses_fast,
     attach_hypotheses_to_kb,
 )
@@ -55,8 +56,6 @@ from prolog_llm.llm_interface import (
 
 from prolog_llm.orchestration import (
     solve_with_background,
-    omit_facts_from_kb,
-    parse_kb_predicate_comments,
 )
 
 __all__ = [
@@ -84,6 +83,10 @@ __all__ = [
     "PrologSolver",
     "HardKBCollector",
     "SoftBFSSolver",
+    # Hypothesis Generator
+    "HypothesisGenerator",
+    "generate_background_hypotheses_fast",
+    "attach_hypotheses_to_kb",
     # LLM
     "LLMInterface",
     "get_llm_interface",
@@ -92,6 +95,4 @@ __all__ = [
     "nl_to_prolog_kb",
     # Orchestration
     "solve_with_background",
-    "omit_facts_from_kb",
-    "parse_kb_predicate_comments",
 ]

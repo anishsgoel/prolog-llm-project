@@ -11,14 +11,13 @@ from src.prolog_llm import (
     KnowledgeBase,
     HardKBCollector,
     solve_with_background,
-    omit_facts_from_kb,
 )
 
 
 def main():
     config.init_config()
 
-    kb = """
+    kb_text = """
     1. connected(union_square, 14th_street). # connected/2 = ADJACENT STOPS ONLY. Use only when two stations are immediate neighbors on the same line. Do NOT add shortcut edges that skip intermediate stations.
     2. connected(14th_street, 23rd_street).
     3. connected(23rd_street, 34th_street).
@@ -31,10 +30,12 @@ def main():
     """
 
     print("===== FULL METRO KB =====")
-    print(kb)
+    print(kb_text)
     print("====================================\n")
 
-    kb_missing_fact = omit_facts_from_kb(kb, omit_numbers={7})
+    kb_obj = KnowledgeBase(kb_text)
+    kb_missing_obj = kb_obj.omit_facts({7})
+    kb_missing_fact = kb_missing_obj.to_text()
 
     print("===== METRO KB WITH FACT REMOVED =====")
     print(kb_missing_fact)
@@ -43,12 +44,11 @@ def main():
     test_goal = "reachable(union_square, bryant_park)"
 
     print("==============================")
-    print(f"TEST QUERY: {test_goal}")
+    print("TEST QUERY: {}".format(test_goal))
     print("==============================\n")
 
     print(">>> Running HardKBCollector (hard-KB BFS)...")
-    kb_obj = KnowledgeBase(kb_missing_fact)
-    collector = HardKBCollector(kb_obj, max_depth=20)
+    collector = HardKBCollector(kb_missing_obj, max_depth=20)
     collect_result = collector.solve(test_goal)
     print("Collect Result:", collect_result)
     print("\n----------------------------------------\n")

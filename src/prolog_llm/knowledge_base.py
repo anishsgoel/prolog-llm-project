@@ -3,8 +3,7 @@
 import os
 import re
 import sys
-from dataclasses import dataclass, field
-from typing import Optional
+from typing import Dict, List, Set, Optional, Any
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -15,44 +14,37 @@ from prolog_llm.prolog_utils import (
 )
 
 
-@dataclass
 class Fact:
     """A Prolog fact."""
-    num: int
-    atom: str
-    functor: str = field(init=False)
-    args: list = field(init=False)
     
-    def __post_init__(self):
-        parsed = parse_predicate(self.atom)
+    def __init__(self, num: int, atom: str):
+        self.num = num
+        self.atom = atom
+        parsed = parse_predicate(atom)
         if parsed:
             self.functor, self.args = parsed
         else:
             self.functor, self.args = "", []
+    
+    def __repr__(self) -> str:
+        return f"Fact({self.num}, {self.atom})"
 
 
-@dataclass
 class Rule:
     """A Prolog rule."""
-    num: int
-    head: str
-    body: str
-    functor: str = field(init=False)
-    args: list = field(init=False)
     
-    def __post_init__(self):
-        parsed = parse_predicate(self.head)
+    def __init__(self, num: int, head: str, body: str):
+        self.num = num
+        self.head = head
+        self.body = body
+        parsed = parse_predicate(head)
         if parsed:
             self.functor, self.args = parsed
         else:
             self.functor, self.args = "", []
-
-
-@dataclass 
-class PredicateComment:
-    """Documentation for a predicate."""
-    predicate: str  # e.g., "connected/2"
-    comment: str
+    
+    def __repr__(self) -> str:
+        return f"Rule({self.num}, {self.head} :- {self.body})"
 
 
 class KnowledgeBase:
@@ -62,11 +54,11 @@ class KnowledgeBase:
     """
     
     def __init__(self, kb_text: str = ""):
-        self.facts: list[Fact] = []
-        self.rules: list[Rule] = []
-        self.predicate_comments: dict[str, str] = {}
-        self._adjacency: dict[str, list[str]] = {}
-        self._stations: set[str] = set()
+        self.facts: List[Fact] = []
+        self.rules: List[Rule] = []
+        self.predicate_comments: Dict[str, str] = {}
+        self._adjacency: Dict[str, List[str]] = {}
+        self._stations: Set[str] = set()
         
         if kb_text:
             self.parse(kb_text)
@@ -108,7 +100,7 @@ class KnowledgeBase:
                 )
                 self.rules.append(rule)
                 
-                key = f"{rule.functor}/{len(rule.args)}"
+                key = "{}/{}".format(rule.functor, len(rule.args))
                 if pending_comments or inline_comment:
                     combined = []
                     if pending_comments:
@@ -120,7 +112,7 @@ class KnowledgeBase:
                 fact = Fact(num=num, atom=content.rstrip("."))
                 self.facts.append(fact)
                 
-                key = f"{fact.functor}/{len(fact.args)}"
+                key = "{}/{}".format(fact.functor, len(fact.args))
                 if pending_comments or inline_comment:
                     combined = []
                     if pending_comments:
@@ -146,17 +138,17 @@ class KnowledgeBase:
                 self._stations.add(b)
     
     @property
-    def adjacency(self) -> dict[str, list[str]]:
+    def adjacency(self) -> Dict[str, List[str]]:
         """Return adjacency dict for connected/2 facts."""
         return self._adjacency
     
     @property
-    def stations(self) -> set[str]:
+    def stations(self) -> Set[str]:
         """Return set of all stations."""
         return self._stations
     
     @property
-    def edges(self) -> set[tuple[str, str]]:
+    def edges(self) -> Set[tuple]:
         """Return set of (src, dst) tuples for connected/2 facts."""
         edges = set()
         for fact in self.facts:
@@ -165,22 +157,27 @@ class KnowledgeBase:
                 edges.add((a, b))
         return edges
     
-    def get_facts_by_functor(self, functor: str, arity: int) -> list[Fact]:
+    def get_facts_by_functor(self, functor: str, arity: int) -> List[Fact]:
         """Get all facts matching functor/arity."""
         return [f for f in self.facts if f.functor == functor and len(f.args) == arity]
     
-    def get_rules_by_functor(self, functor: str, arity: int) -> list[Rule]:
+    def get_rules_by_functor(self, functor: str, arity: int) -> List[Rule]:
         """Get all rules matching functor/arity."""
         return [r for r in self.rules if r.functor == functor and len(r.args) == arity]
     
-    def omit_facts(self, omit_numbers: set[int]) -> "KnowledgeBase":
+    def omit_facts(self, omit_numbers: Set[int]) -> "KnowledgeBase":
         """Create a new KB with specified fact numbers removed."""
         new_kb = KnowledgeBase()
         new_kb.facts = [f for f in self.facts if f.num not in omit_numbers]
-        new_kb.rules = self.rules.copy()
+        new_kb.rules = self.rules[:]
         new_kb.predicate_comments = self.predicate_comments.copy()
         new_kb._build_adjacency()
         return new_kb
+    
+    def omit_facts_from_text(self, kb_text: str, omit_numbers: Set[int]) -> "KnowledgeBase":
+        """Parse KB text, remove specified fact numbers, return new KB."""
+        kb = KnowledgeBase(kb_text)
+        return kb.omit_facts(omit_numbers)
     
     def to_text(self) -> str:
         """Convert KB back to text format."""
@@ -188,13 +185,13 @@ class KnowledgeBase:
         all_clauses = []
         
         for fact in self.facts:
-            all_clauses.append((fact.num, f"{fact.atom}."))
+            all_clauses.append((fact.num, "{}.".format(fact.atom)))
         for rule in self.rules:
-            all_clauses.append((rule.num, f"{rule.head} :- {rule.body}."))
+            all_clauses.append((rule.num, "{} :- {}.".format(rule.head, rule.body)))
         
         all_clauses.sort(key=lambda x: x[0])
         for num, clause in all_clauses:
-            lines.append(f"{num}. {clause}")
+            lines.append("{}. {}".format(num, clause))
         
         return "\n".join(lines)
     
@@ -208,4 +205,4 @@ class KnowledgeBase:
         return max_num
     
     def __repr__(self) -> str:
-        return f"KnowledgeBase(facts={len(self.facts)}, rules={len(self.rules)})"
+        return "KnowledgeBase(facts={}, rules={})".format(len(self.facts), len(self.rules))

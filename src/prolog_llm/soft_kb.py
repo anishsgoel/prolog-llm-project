@@ -2,8 +2,7 @@
 
 import os
 import sys
-from dataclasses import dataclass
-from typing import Optional
+from typing import Dict, List, Optional, Any
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -12,13 +11,14 @@ from prolog_llm.prolog_utils import parse_predicate
 import config
 
 
-@dataclass
 class SoftFact:
     """A soft (hypothesized) fact with confidence and penalty."""
-    num: int
-    atom: str
-    confidence: float
-    penalty: float
+    
+    def __init__(self, num: int, atom: str, confidence: float, penalty: float):
+        self.num = num
+        self.atom = atom
+        self.confidence = confidence
+        self.penalty = penalty
     
     @property
     def functor(self) -> str:
@@ -26,19 +26,24 @@ class SoftFact:
         return parsed[0] if parsed else ""
     
     @property
-    def args(self) -> list:
+    def args(self) -> List:
         parsed = parse_predicate(self.atom)
         return parsed[1] if parsed else []
+    
+    def __repr__(self) -> str:
+        return "SoftFact({}, {}, conf={}, pen={})".format(
+            self.num, self.atom, self.confidence, self.penalty)
 
 
-@dataclass
 class SoftRule:
     """A soft (hypothesized) rule with confidence and penalty."""
-    num: int
-    head: str
-    body: str
-    confidence: float
-    penalty: float
+    
+    def __init__(self, num: int, head: str, body: str, confidence: float, penalty: float):
+        self.num = num
+        self.head = head
+        self.body = body
+        self.confidence = confidence
+        self.penalty = penalty
     
     @property
     def functor(self) -> str:
@@ -46,9 +51,13 @@ class SoftRule:
         return parsed[0] if parsed else ""
     
     @property
-    def args(self) -> list:
+    def args(self) -> List:
         parsed = parse_predicate(self.head)
         return parsed[1] if parsed else []
+    
+    def __repr__(self) -> str:
+        return "SoftRule({}, {} :- {}, conf={}, pen={})".format(
+            self.num, self.head, self.body, self.confidence, self.penalty)
 
 
 class SoftKB:
@@ -58,18 +67,12 @@ class SoftKB:
     """
     
     def __init__(self):
-        self.facts: list[SoftFact] = []
-        self.rules: list[SoftRule] = []
+        self.facts: List[SoftFact] = []
+        self.rules: List[SoftRule] = []
     
     @classmethod
-    def from_hypotheses(cls, hypotheses: list[dict], hard_kb_text: str) -> "SoftKB":
-        """
-        Create SoftKB from list of hypothesis dicts.
-        
-        Args:
-            hypotheses: List of dicts with 'clause', 'confidence', 'unknown_station' keys
-            hard_kb_text: Original KB text (to find max line number)
-        """
+    def from_hypotheses(cls, hypotheses: List[Dict[str, Any]], hard_kb_text: str) -> "SoftKB":
+        """Create SoftKB from list of hypothesis dicts."""
         kb = KnowledgeBase(hard_kb_text)
         max_num = kb.get_max_line_number()
         next_num = max_num + 1
@@ -111,16 +114,16 @@ class SoftKB:
         
         return soft_kb
     
-    def get_facts_for_matching(self) -> list[tuple[int, str]]:
+    def get_facts_for_matching(self) -> List[tuple]:
         """Get facts as (num, atom) tuples for rule matching."""
         return [(f.num, f.atom) for f in self.facts]
     
-    def get_rules_for_matching(self) -> list[tuple[int, str, str]]:
+    def get_rules_for_matching(self) -> List[tuple]:
         """Get rules as (num, head, body) tuples for rule matching."""
         return [(r.num, r.head, r.body) for r in self.rules]
     
     def __repr__(self) -> str:
-        return f"SoftKB(facts={len(self.facts)}, rules={len(self.rules)})"
+        return "SoftKB(facts={}, rules={})".format(len(self.facts), len(self.rules))
     
     def __len__(self) -> int:
         return len(self.facts) + len(self.rules)
