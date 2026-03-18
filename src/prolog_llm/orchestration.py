@@ -28,7 +28,6 @@ def solve_with_background(
         max_depth = config.DEFAULT_MAX_DEPTH
 
     kb_obj = KnowledgeBase(kb)
-    predicate_comments = kb_obj.predicate_comments
 
     if config.VERBOSE:
         print("\n========================================")

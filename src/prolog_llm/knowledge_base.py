@@ -3,48 +3,13 @@
 import os
 import re
 import sys
-from typing import Dict, List, Set, Optional, Any
+from typing import Dict, List, Set
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from prolog_llm.prolog_utils import (
-    parse_predicate,
-    split_inline_comment,
-    is_variable,
-)
+from prolog_llm.prolog_utils import split_inline_comment
 
-
-class Fact:
-    """A Prolog fact."""
-    
-    def __init__(self, num: int, atom: str):
-        self.num = num
-        self.atom = atom
-        parsed = parse_predicate(atom)
-        if parsed:
-            self.functor, self.args = parsed
-        else:
-            self.functor, self.args = "", []
-    
-    def __repr__(self) -> str:
-        return f"Fact({self.num}, {self.atom})"
-
-
-class Rule:
-    """A Prolog rule."""
-    
-    def __init__(self, num: int, head: str, body: str):
-        self.num = num
-        self.head = head
-        self.body = body
-        parsed = parse_predicate(head)
-        if parsed:
-            self.functor, self.args = parsed
-        else:
-            self.functor, self.args = "", []
-    
-    def __repr__(self) -> str:
-        return f"Rule({self.num}, {self.head} :- {self.body})"
+from prolog.prolog_command import Fact, Rule
 
 
 class KnowledgeBase:
