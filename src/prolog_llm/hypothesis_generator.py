@@ -10,13 +10,12 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from prolog_llm.prolog_utils import (
-    parse_predicate,
-    is_variable,
-    split_inline_comment,
     extract_first_json,
 )
+from prolog.prolog_utils import is_variable
+from prolog.formula_parsing import parse_predicate
 from prolog_llm.llm_interface import LLMInterface, llm_json_only
-from prolog_llm.knowledge_base import KnowledgeBase
+from prolog.knowledge_base import KnowledgeBase
 from prolog_llm.soft_kb import SoftKB
 import config
 
@@ -148,7 +147,7 @@ class HypothesisGenerator:
         Args:
             goal: The Prolog goal that failed
             kb: The knowledge base
-            hard_result: Result from hard KB solver
+            hard_result: Result from hard KB solve
             
         Returns:
             List of hypothesis dicts with clause, confidence, etc.
@@ -329,7 +328,7 @@ Return ONLY valid JSON in exactly this shape:
         Args:
             goal: The Prolog goal that failed
             kb: The knowledge base
-            hard_result: Result from hard KB solver
+            hard_result: Result from hard KB solve
             
         Returns:
             SoftKB with generated hypotheses

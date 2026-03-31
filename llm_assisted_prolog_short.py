@@ -175,7 +175,7 @@ def strip_inline_comment(s: str) -> str:
 def is_ground_atom(atom: str) -> bool:
     """
     Groundness filter for metric collection: no variables in arg list.
-    Keeps the solver logic unchanged; only affects what we log/hand to LLM.
+    Keeps the solve logic unchanged; only affects what we log/hand to LLM.
     """
     p = parse_predicate(atom.strip().rstrip("."))
     if not p:
@@ -437,7 +437,7 @@ def parse_kb_predicate_comments(kb: str):
 
 def bfs_prolog_collect(goal: str, kb: str, max_depth: int = None):
     """
-    Same solver logic as before, but metric collection is now defensible:
+    Same solve logic as before, but metric collection is now defensible:
       - returns a single "blocking_atom" (ground) if possible
       - avoids logging/returning all dead-end Rule-8 branches
     """
@@ -1028,7 +1028,7 @@ def attach_hypotheses_to_kb(kb: str, hypotheses):
 
 # ============================================================
 # SOFT BFS with confidence-first priority + penalty
-# (unchanged solver logic; optional verbosity)
+# (unchanged solve logic; optional verbosity)
 # ============================================================
 
 def bfs_prolog_metro_soft(

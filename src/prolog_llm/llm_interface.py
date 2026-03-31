@@ -10,7 +10,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 import ollama
 
-from prolog_llm.prolog_utils import extract_first_json, parse_predicate
+from prolog_llm.prolog_utils import extract_first_json
+from prolog.formula_parsing import parse_predicate
 import config
 
 

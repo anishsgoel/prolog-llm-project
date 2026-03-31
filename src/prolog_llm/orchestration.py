@@ -11,7 +11,7 @@ from prolog_llm.solvers import (
     SoftBFSSolver,
 )
 from prolog_llm.hypothesis_generator import HypothesisGenerator
-from prolog_llm.knowledge_base import KnowledgeBase
+from prolog.knowledge_base import KnowledgeBase
 from prolog_llm.soft_kb import SoftKB
 import config
 

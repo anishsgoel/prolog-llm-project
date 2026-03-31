@@ -1,45 +1,7 @@
 """Prolog parsing and unification utilities."""
 
-import re
-from typing import Optional
-
-
-def parse_predicate(term: str):
-    """
-    Parse a simple Prolog predicate of the form:
-        functor(arg1, arg2, ...)
-    Returns (functor: str, args: list[str]) or None if parsing fails.
-    """
-    term = term.strip().rstrip(".")
-    m = re.match(r"^([a-z_][a-zA-Z0-9_]*)\((.*)\)$", term)
-    if not m:
-        return None
-    functor = m.group(1)
-    args_raw = m.group(2).strip()
-    if not args_raw:
-        args = []
-    else:
-        args = [a.strip() for a in args_raw.split(",")]
-    return functor, args
-
-
-def is_variable(s: str) -> bool:
-    """Prolog-ish variable check: starts with uppercase letter or '_'."""
-    s = s.strip()
-    return bool(s) and (s[0].isupper() or s[0] == "_")
-
-
-def split_inline_comment(s: str):
-    """
-    Split a string into (code, comment) at the first '#'.
-    Returns comment WITHOUT the '#'. If no comment, comment=None.
-    """
-    if "#" not in s:
-        return s.strip(), None
-    code, comment = s.split("#", 1)
-    code = code.strip()
-    comment = comment.strip()
-    return code, (comment if comment else None)
+from prolog.formula_parsing import split_body_atoms, parse_predicate
+from prolog.prolog_utils import is_variable
 
 
 def strip_inline_comment(s: str) -> str:
@@ -184,34 +146,6 @@ def substitute_in_atom(atom: str, bindings: dict) -> str:
     return f"{functor}({', '.join(new_args)})"
 
 
-def split_body_atoms(body_str: str):
-    body_str = body_str.strip()
-    atoms = []
-    current = []
-    depth = 0
-
-    for ch in body_str:
-        if ch == "(":
-            depth += 1
-            current.append(ch)
-        elif ch == ")":
-            depth = max(depth - 1, 0)
-            current.append(ch)
-        elif ch == "," and depth == 0:
-            atom = "".join(current).strip()
-            if atom:
-                atoms.append(atom)
-            current = []
-        else:
-            current.append(ch)
-
-    atom = "".join(current).strip()
-    if atom:
-        atoms.append(atom)
-
-    return atoms
-
-
 def get_subgoals(goal: str, rule_head: str, rule_body: str):
     parsed_goal = parse_predicate(goal)
     parsed_head = parse_predicate(rule_head)
@@ -244,7 +178,7 @@ def get_subgoals(goal: str, rule_head: str, rule_body: str):
 def is_ground_atom(atom: str) -> bool:
     """
     Groundness filter for metric collection: no variables in arg list.
-    Keeps the solver logic unchanged; only affects what we log/hand to LLM.
+    Keeps the solve logic unchanged; only affects what we log/hand to LLM.
     """
     p = parse_predicate(atom.strip().rstrip("."))
     if not p:
