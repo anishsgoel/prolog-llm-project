@@ -111,9 +111,11 @@ Task:
 - Propose up to {self.max_hypotheses} new Prolog clauses that could help prove the failed atoms.
 - {clause_kind_instruction}
 - Keep predicate names consistent with the existing KB.
-- Use confidence values between {min_confidence:.2f} and 1.0.
+- Use confidence values between 0.0 and 1.0.
 - Return only clauses that are syntactically valid Prolog.
 - Do not repeat clauses that already appear in the KB.
+- Try to answer with keeping in mind the real world meaning of the constants and try to avoid
+  false positives as possible.
 
 Return ONLY valid JSON in this exact format:
 {{
@@ -128,7 +130,7 @@ Return ONLY valid JSON in this exact format:
         return """{
   "clauses": [
     {"clause": "reachable(X, Y) :- connected(X, Y).", "confidence": 0.9},
-    {"clause": "connected(grand_central, bryant_park).", "confidence": 0.8}
+    {"clause": "connected(union_square, 14th_street).", "confidence": 0.8}
   ]
 }"""
 

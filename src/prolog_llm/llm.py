@@ -67,35 +67,44 @@ class LLMInterface:
         num_pred = num_predict or self.num_predict
         stops = stop_tokens or self.stop_tokens
 
+        if config.VERBOSE:
+            print("[LLMInterface.generate] Prompt:")
+            print(prompt)
+
         try:
-            kwargs = dict(
-                model=self.model,
-                prompt=prompt,
-                options={
-                    "temperature": temp,
-                    "num_predict": num_pred,
-                    "stop": stops,
-                },
+            #kwargs = dict(
+            #    model=self.model,
+            #    prompt=prompt,
+            #    options={
+            #        "temperature": temp,
+            #        "num_predict": num_pred,
+            #        "stop": stops,
+            #    },
+            #)
+
+            #if format_json:
+            #    kwargs["format"] = "json"
+
+            #resp = self.client.generate(**kwargs)
+            resp = self.client.chat(
+                model= self.model,
+                messages=[{'role': 'user', 'content': prompt}]
             )
+            resp = resp["message"]
 
-            if format_json:
-                kwargs["format"] = "json"
-
-            resp = self.client.generate(**kwargs)
-
-        except TypeError:
-            try:
-                if format_json:
-                    kwargs.pop("format", None)
-                resp = self.client.generate(**kwargs)
-            except Exception as e:
+        except TypeError as e:
+            #try:
+            #    if format_json:
+            #        kwargs.pop("format", None)
+            #    resp = self.client.generate(**kwargs)
+            #except Exception as e:
                 print("[LLMInterface.generate] Ollama generate() exception:", repr(e))
                 return ""
         except Exception as e:
             print("[LLMInterface.generate] Ollama generate() exception:", repr(e))
             return ""
 
-        answer = (resp.get("response") or "").strip()
+        answer = (resp.get("content") or "").strip()
         if not answer:
             answer = (resp.get("thinking") or "").strip()
 
@@ -105,6 +114,10 @@ class LLMInterface:
 
         if "...done thinking." in answer:
             answer = answer.split("...done thinking.")[-1].strip()
+
+        if config.VERBOSE:
+            print("[LLMInterface.generate] Response:")
+            print(answer)
 
         return answer
 
