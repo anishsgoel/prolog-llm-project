@@ -57,14 +57,14 @@ def main():
     s = Solver(kb_missing_obj, 10)
     s = Solver(kb_obj, 10)
     result = s.solve(test_goal_formula)
-    print(f"Result solved {result["success"]}")
+    print(f"Result solved {result['success']}")
     print("==============================\n")
 
     print("==============================")
     print("solving meta")
     s = MetaSolver(kb_missing_obj, LLMExtensionStrategy(allow_soft_rules=False), max_depth=5, min_confidence=1.0, max_rounds=10)
     result = s.solve(test_goal_formula)
-    print(f"Result solved {result["success"]}")
+    print(f"Result solved {result['success']}")
     print("==============================\n")
 
 
