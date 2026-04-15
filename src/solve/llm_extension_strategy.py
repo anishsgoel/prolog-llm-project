@@ -4,16 +4,33 @@ from __future__ import annotations
 
 import json
 import random
-from typing import Dict, List, Optional, Set, Tuple
+from dataclasses import dataclass
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import config
 from logic.logic import AtomicFormula, Const, Term, Var
 from prolog.formula_parsing import parse_predicate, split_body_atoms
 from prolog.knowledge_base import SoftKnowledgeBase
-from prolog.prolog_command import SoftFact, SoftRule
+from prolog.prolog_command import SoftRule
 from prolog_llm.llm import LLMInterface
 from prolog_llm.prolog_utils import extract_first_json
 from solve.extension_strategy import ExtensionStrategy
+
+
+@dataclass(frozen=True)
+class LLMPromptContext:
+    """Context exposed to experiment-specific prompt builders."""
+
+    goal: str
+    hard_fact_lines: List[str]
+    hard_rule_lines: List[str]
+    soft_fact_lines: List[str]
+    soft_rule_lines: List[str]
+    predicate_comments: Dict[str, str]
+    failed_atoms: List[str]
+    min_confidence: float
+    max_hypotheses: int
+    allow_soft_rules: bool
 
 
 class LLMExtensionStrategy(ExtensionStrategy):
@@ -27,13 +44,20 @@ class LLMExtensionStrategy(ExtensionStrategy):
         max_hypotheses: int = 6,
         increase_depth_on_empty: bool = True,
         allow_soft_rules: bool = True,
+        prompt_builder: Callable[[LLMPromptContext], str] | None = None,
+        repair_schema: Optional[str] = None,
     ):
+        if prompt_builder is None:
+            raise ValueError("LLMExtensionStrategy requires an experiment-specific prompt_builder.")
+
         self.llm = llm or LLMInterface()
         self.max_failed_goals = max_failed_goals
         self.max_formulas_per_goal = max_formulas_per_goal
         self.max_hypotheses = max_hypotheses
         self.increase_depth_on_empty = increase_depth_on_empty
         self.allow_soft_rules = allow_soft_rules
+        self.prompt_builder = prompt_builder
+        self.repair_schema = repair_schema or self._default_repair_schema()
 
     def _existing_clause_strings(self, soft_kb: SoftKnowledgeBase) -> Set[str]:
         clauses = {f"{fact.atom}." for fact in soft_kb.facts}
@@ -96,63 +120,27 @@ class LLMExtensionStrategy(ExtensionStrategy):
             if rule.confidence < 1.0
         ]
 
-    def _prompt(self, soft_kb: SoftKnowledgeBase, failed_atoms: List[str], min_confidence: float) -> str:
-        hard_fact_lines = self._hard_fact_lines(soft_kb)
-        hard_rule_lines = self._hard_rule_lines(soft_kb)
-        soft_fact_lines = self._soft_fact_lines(soft_kb)[: config.HYP_PROMPT_FACT_LIMIT]
-        soft_rule_lines = self._soft_rule_lines(soft_kb)[: config.HYP_PROMPT_FACT_LIMIT]
-        comment_lines = [
-            f"- {predicate}: {comment}"
-            for predicate, comment in sorted(soft_kb.predicate_comments.items())
-        ]
-        failed_lines = [f"- {atom}" for atom in failed_atoms]
-        clause_kind_instruction = (
-            "You may propose either facts or rules."
-            if self.allow_soft_rules
-            else "You may propose facts only. Do not propose any rules."
+    def _prompt_context(
+        self,
+        soft_kb: SoftKnowledgeBase,
+        goal: AtomicFormula,
+        failed_atoms: List[str],
+        min_confidence: float,
+    ) -> LLMPromptContext:
+        return LLMPromptContext(
+            goal=str(goal),
+            hard_fact_lines=self._hard_fact_lines(soft_kb),
+            hard_rule_lines=self._hard_rule_lines(soft_kb),
+            soft_fact_lines=self._soft_fact_lines(soft_kb)[: config.HYP_PROMPT_FACT_LIMIT],
+            soft_rule_lines=self._soft_rule_lines(soft_kb)[: config.HYP_PROMPT_FACT_LIMIT],
+            predicate_comments=dict(sorted(soft_kb.predicate_comments.items())),
+            failed_atoms=failed_atoms,
+            min_confidence=min_confidence,
+            max_hypotheses=self.max_hypotheses,
+            allow_soft_rules=self.allow_soft_rules,
         )
 
-        return f"""
-You are extending a soft Prolog knowledge base to help prove currently failing goals.
-
-Hard facts already in the program (confidence 1.0):
-{chr(10).join(hard_fact_lines) if hard_fact_lines else "- (none)"}
-
-Hard rules already in the program (confidence 1.0):
-{chr(10).join(hard_rule_lines) if hard_rule_lines else "- (none)"}
-
-Existing soft facts:
-{chr(10).join(soft_fact_lines) if soft_fact_lines else "- (none)"}
-
-Existing soft rules:
-{chr(10).join(soft_rule_lines) if soft_rule_lines else "- (none)"}
-
-Predicate comments:
-{chr(10).join(comment_lines) if comment_lines else "- (none)"}
-
-Failed unresolved atoms:
-{chr(10).join(failed_lines) if failed_lines else "- (none)"}
-
-Task:
-- Propose up to {self.max_hypotheses} new Prolog clauses that could help prove the failed atoms.
-- {clause_kind_instruction}
-- Keep predicate names consistent with the existing KB.
-- Use confidence values between 0.0 and 1.0.
-- Return only clauses that are syntactically valid Prolog.
-- Do not repeat clauses that already appear in the KB.
-- Try to answer with keeping in mind the real world meaning of the constants and try to avoid
-  false positives as possible.
-
-Return ONLY valid JSON in this exact format:
-{{
-  "clauses": [
-    {{"clause": "reachable(X, Y) :- connected(X, Y).", "confidence": 0.9}},
-    {{"clause": "connected(grand_central, bryant_park).", "confidence": 0.8}}
-  ]
-}}
-""".strip()
-
-    def _repair_schema(self) -> str:
+    def _default_repair_schema(self) -> str:
         return """{
   "clauses": [
     {"clause": "reachable(X, Y) :- connected(X, Y).", "confidence": 0.9},
@@ -189,6 +177,7 @@ Return ONLY valid JSON in this exact format:
     def extend(
         self,
         soft_kb: SoftKnowledgeBase,
+        goal: AtomicFormula,
         failed_atoms: List[AtomicFormula],
         max_depth: int,
         min_confidence: float,
@@ -198,8 +187,8 @@ Return ONLY valid JSON in this exact format:
             next_depth = max_depth + 1 if self.increase_depth_on_empty else max_depth
             return soft_kb, next_depth, min_confidence
 
-        prompt = self._prompt(soft_kb, failed_atom_strings, min_confidence)
-        raw = self.llm.ask_with_retry(prompt, repair_schema=self._repair_schema())
+        prompt = self.prompt_builder(self._prompt_context(soft_kb, goal, failed_atom_strings, min_confidence))
+        raw = self.llm.ask_with_retry(prompt, repair_schema=self.repair_schema)
 
         try:
             data = json.loads(extract_first_json(raw))
@@ -214,10 +203,10 @@ Return ONLY valid JSON in this exact format:
             next_depth = max_depth + 1 if self.increase_depth_on_empty else max_depth
             return soft_kb, next_depth, min_confidence
 
-        existing = self._existing_clause_strings(soft_kb)
         new_kb = soft_kb.copy()
         next_num = max([0] + [fact.num for fact in new_kb.facts] + [rule.num for rule in new_kb.rules]) + 1
         added = False
+        max_confidence_added = 0.0
 
         for item in clauses[: self.max_hypotheses]:
             if not isinstance(item, dict):
@@ -228,8 +217,9 @@ Return ONLY valid JSON in this exact format:
             except Exception:
                 continue
             confidence = max(0.0, min(1.0, confidence))
-            if confidence < min_confidence:
-                continue
+            max_confidence_added = max(confidence, max_confidence_added)
+            #if confidence < min_confidence:
+            #    continue
 
             normalized = self._normalize_clause(item.get("clause", ""))
             if normalized is None:
@@ -238,17 +228,14 @@ Return ONLY valid JSON in this exact format:
             head_or_atom, maybe_body = normalized
             if maybe_body is not None and not self.allow_soft_rules:
                 continue
-            clause_text = f"{head_or_atom}." if maybe_body is None else f"{head_or_atom} :- {maybe_body}."
-            if clause_text in existing:
-                continue
 
             if maybe_body is None:
-                new_kb.facts.append(SoftFact(next_num, head_or_atom, confidence))
+                if new_kb.add_soft_fact(next_num, head_or_atom, confidence):
+                    next_num += 1
             else:
                 new_kb.rules.append(SoftRule(next_num, head_or_atom, maybe_body, confidence))
+                next_num += 1
 
-            existing.add(clause_text)
-            next_num += 1
             added = True
 
         if not added:
@@ -256,4 +243,6 @@ Return ONLY valid JSON in this exact format:
             next_depth = max_depth + 1 if self.increase_depth_on_empty else max_depth
             return soft_kb, next_depth, min_confidence
 
-        return new_kb, max_depth, min_confidence
+        if max_confidence_added < min_confidence:
+            max_depth += 1
+        return new_kb, max_depth, max(min_confidence * 0.9, min(min_confidence, max_confidence_added))

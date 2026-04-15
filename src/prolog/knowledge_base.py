@@ -85,3 +85,16 @@ class SoftKnowledgeBase(KnowledgeBase):
         new_kb.rules = [SoftRule(r.num, r.head, r.body, r.confidence) for r in self.rules]
         new_kb.predicate_comments = self.predicate_comments.copy()
         return new_kb
+
+    def add_soft_fact(self, num: int, atom: str, confidence: float) -> bool:
+        """Add a soft fact or raise the confidence of an existing matching fact."""
+        for fact in self.facts:
+            if fact.atom != atom:
+                continue
+            if confidence > fact.confidence:
+                fact._confidence = confidence
+                return True
+            return False
+
+        self.facts.append(SoftFact(num, atom, confidence))
+        return True

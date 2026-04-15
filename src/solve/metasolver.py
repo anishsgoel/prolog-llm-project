@@ -98,6 +98,7 @@ class MetaSolver:
 
             next_soft_kb, next_max_depth, next_min_confidence = self.extension_strategy.extend(
                 soft_kb=soft_kb,
+                goal=goal,
                 failed_atoms=result.get("failed_atoms", []),
                 max_depth=max_depth,
                 min_confidence=min_confidence,

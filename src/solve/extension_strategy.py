@@ -16,6 +16,7 @@ class ExtensionStrategy(ABC):
     def extend(
         self,
         soft_kb: SoftKnowledgeBase,
+        goal: AtomicFormula,
         failed_atoms: List[AtomicFormula],
         max_depth: int,
         min_confidence: float,
@@ -29,6 +30,7 @@ class TrivialExtensionStrategy(ExtensionStrategy):
     def extend(
         self,
         soft_kb: SoftKnowledgeBase,
+        goal: AtomicFormula,
         failed_atoms: List[AtomicFormula],
         max_depth: int,
         min_confidence: float,
