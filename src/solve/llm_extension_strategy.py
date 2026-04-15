@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import json
+import random
 from typing import Dict, List, Optional, Set, Tuple
 
 import config
+from logic.logic import AtomicFormula, Const, Term, Var
 from prolog.formula_parsing import parse_predicate, split_body_atoms
 from prolog.knowledge_base import SoftKnowledgeBase
 from prolog.prolog_command import SoftFact, SoftRule
 from prolog_llm.llm import LLMInterface
 from prolog_llm.prolog_utils import extract_first_json
 from solve.extension_strategy import ExtensionStrategy
-from solve.goalnode import GoalNode
 
 
 class LLMExtensionStrategy(ExtensionStrategy):
@@ -39,16 +40,41 @@ class LLMExtensionStrategy(ExtensionStrategy):
         clauses.update(f"{rule.head} :- {rule.body}." for rule in soft_kb.rules)
         return clauses
 
-    def _failed_goal_atoms(self, failed_goals: List[GoalNode]) -> List[str]:
-        atoms: List[str] = []
-        seen = set()
-        for goal in failed_goals[:self.max_failed_goals]:
-            for formula in goal.unresolved_formulas()[:self.max_formulas_per_goal]:
-                atom = str(formula)
-                if atom not in seen:
-                    seen.add(atom)
-                    atoms.append(atom)
-        return atoms
+    def _is_mixed_atom(self, formula: AtomicFormula) -> bool:
+        """Return whether the atom contains at least one variable and one constant."""
+        has_variable = any(isinstance(arg, Var) for arg in formula.args)
+        has_constant = any(isinstance(arg, Const) for arg in formula.args)
+        return has_variable and has_constant
+
+    def _standardize_atom_variables(self, formula: AtomicFormula) -> str:
+        """Render an atom with short canonical variable names for prompting."""
+        canonical_names = ["X", "Y", "Z", "U", "V", "W"]
+        substitution: Dict[Term, Term] = {}
+
+        for idx, variable in enumerate(sorted(formula.vars(), key=lambda current: current.name)):
+            canonical_name = canonical_names[idx] if idx < len(canonical_names) else f"X{idx}"
+            substitution[variable] = Var(canonical_name)
+
+        return str(formula.substitute(substitution))
+
+    def _failed_goal_atoms(self, failed_atoms: List[AtomicFormula]) -> List[str]:
+        sampled_formulas: List[AtomicFormula] = []
+        seen_signatures = set()
+
+        for formula in failed_atoms:
+            if not self._is_mixed_atom(formula):
+                continue
+            atom_signature = self._standardize_atom_variables(formula)
+            if atom_signature in seen_signatures:
+                continue
+            seen_signatures.add(atom_signature)
+            sampled_formulas.append(formula)
+
+        limit = self.max_failed_goals * self.max_formulas_per_goal
+        if len(sampled_formulas) > limit:
+            sampled_formulas = random.sample(sampled_formulas, limit)
+
+        return [self._standardize_atom_variables(formula) for formula in sampled_formulas]
 
     def _hard_fact_lines(self, soft_kb: SoftKnowledgeBase) -> List[str]:
         return [f"- {fact.atom}." for fact in soft_kb.facts if fact.confidence == 1.0]
@@ -163,26 +189,28 @@ Return ONLY valid JSON in this exact format:
     def extend(
         self,
         soft_kb: SoftKnowledgeBase,
-        failed_goals: List[GoalNode],
+        failed_atoms: List[AtomicFormula],
         max_depth: int,
         min_confidence: float,
     ) -> Tuple[SoftKnowledgeBase, int, float]:
-        failed_atoms = self._failed_goal_atoms(failed_goals)
-        if not failed_atoms:
+        failed_atom_strings = self._failed_goal_atoms(failed_atoms)
+        if not failed_atom_strings:
             next_depth = max_depth + 1 if self.increase_depth_on_empty else max_depth
             return soft_kb, next_depth, min_confidence
 
-        prompt = self._prompt(soft_kb, failed_atoms, min_confidence)
+        prompt = self._prompt(soft_kb, failed_atom_strings, min_confidence)
         raw = self.llm.ask_with_retry(prompt, repair_schema=self._repair_schema())
 
         try:
             data = json.loads(extract_first_json(raw))
         except Exception:
+            print("Extension empty.")
             next_depth = max_depth + 1 if self.increase_depth_on_empty else max_depth
             return soft_kb, next_depth, min_confidence
 
         clauses = data.get("clauses", [])
         if not isinstance(clauses, list):
+            print("no clauses")
             next_depth = max_depth + 1 if self.increase_depth_on_empty else max_depth
             return soft_kb, next_depth, min_confidence
 
@@ -224,6 +252,7 @@ Return ONLY valid JSON in this exact format:
             added = True
 
         if not added:
+            print("not added!")
             next_depth = max_depth + 1 if self.increase_depth_on_empty else max_depth
             return soft_kb, next_depth, min_confidence
 

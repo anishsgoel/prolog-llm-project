@@ -16,7 +16,7 @@ class Solver:
     def __init__(self, kb: KnowledgeBase | SoftKnowledgeBase, max_depth: Optional[int] = None):
         self.kb = kb if isinstance(kb, SoftKnowledgeBase) else SoftKnowledgeBase(kb)
         self.max_depth = max_depth or config.DEFAULT_MAX_DEPTH
-        self.failed_goals: List[GoalNode] = []
+        self.failed_atoms: List[AtomicFormula] = []
 
     def _make_root_goal(self, goal: AtomicFormula) -> GoalNode:
         return GoalNode(formulas=[goal], depth=0, confidence=1.0)
@@ -29,28 +29,26 @@ class Solver:
     def _node_signature(self, node: GoalNode) -> tuple:
         return node.signature()
 
+    def _record_failed_atoms(self, atoms: List[AtomicFormula]) -> None:
+        self.failed_atoms.extend(atoms)
+
     def solve(self, goal: AtomicFormula, min_confidence: float = 0.0) -> Dict[str, Any]:
         """Run the solve and return the first proven node found."""
         root = self._make_root_goal(goal)
-        self.failed_goals = []
+        self.failed_atoms = []
 
         queue: List[tuple] = []
         tie = count()
         self._push_node(queue, tie, root)
 
         visited = set()
+        visited.add(self._node_signature(root))
 
         while queue:
             _, _, _, node = heapq.heappop(queue)
 
             if node.depth > self.max_depth:
-                self.failed_goals.append(node)
                 continue
-
-            signature = self._node_signature(node)
-            if signature in visited:
-                continue
-            visited.add(signature)
 
             node.mark_proved_facts(self.kb, min_confidence=min_confidence)
             proof_confidence = node.is_proven()
@@ -59,26 +57,30 @@ class Solver:
                     "success": True,
                     "proof": node,
                     "confidence": proof_confidence,
-                    "failed_goals": self.failed_goals,
+                    "failed_atoms": self.failed_atoms,
                 }
+
+            if node.depth >= self.max_depth:
+                continue
 
             successors = []
             successors.extend(node.unify_soft_kb(self.kb, min_confidence=min_confidence))
             successors.extend(node.unify_soft_rules(self.kb, min_confidence=min_confidence))
 
-            if not successors:
-                self.failed_goals.append(node)
-                continue
-
+            has_successor = False
             for successor in successors:
-                if successor.depth <= self.max_depth:
+                signature = self._node_signature(successor)
+                if signature not in visited:
                     self._push_node(queue, tie, successor)
-                else:
-                    self.failed_goals.append(successor)
+                    visited.add(signature)
+                    has_successor = True
+
+            if not has_successor:
+                self._record_failed_atoms(node.unresolved_formulas())
 
         return {
             "success": False,
             "proof": None,
             "confidence": 0.0,
-            "failed_goals": self.failed_goals,
+            "failed_atoms": self.failed_atoms,
         }

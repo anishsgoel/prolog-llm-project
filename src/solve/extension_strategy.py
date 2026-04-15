@@ -5,8 +5,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import List, Tuple
 
+from logic.logic import AtomicFormula
 from prolog.knowledge_base import SoftKnowledgeBase
-from solve.goalnode import GoalNode
 
 
 class ExtensionStrategy(ABC):
@@ -16,7 +16,7 @@ class ExtensionStrategy(ABC):
     def extend(
         self,
         soft_kb: SoftKnowledgeBase,
-        failed_goals: List[GoalNode],
+        failed_atoms: List[AtomicFormula],
         max_depth: int,
         min_confidence: float,
     ) -> Tuple[SoftKnowledgeBase, int, float]:
@@ -29,7 +29,7 @@ class TrivialExtensionStrategy(ExtensionStrategy):
     def extend(
         self,
         soft_kb: SoftKnowledgeBase,
-        failed_goals: List[GoalNode],
+        failed_atoms: List[AtomicFormula],
         max_depth: int,
         min_confidence: float,
     ) -> Tuple[SoftKnowledgeBase, int, float]:

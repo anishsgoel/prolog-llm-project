@@ -103,10 +103,3 @@ class SoftRule(Rule):
     def __repr__(self) -> str:
         return "SoftRule({}, {} :- {}, conf={})".format(
             self.num, self.head, self.body, self.confidence)
-
-
-class DerivedFact(SoftFact):
-    def __init__(self, num: int, atom: AtomicFormula, confidence: float, depth: int, rule: Rule):
-        super().__init__(num, atom, confidence)
-        self.depth = depth
-        self.rule = rule

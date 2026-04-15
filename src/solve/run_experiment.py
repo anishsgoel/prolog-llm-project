@@ -18,7 +18,7 @@ def main():
     config.init_config()
 
     kb_text = """
-    1. connected(union_square, 14th_street). # connected/2 = ADJACENT STOPS ONLY. Use only when two stations are immediate neighbors on the same line. Do NOT add shortcut edges that skip intermediate stations.
+    1. connected(union_square, 14th_street). # connected/2 = ADJACENT STOPS ONLY. Use only when two stations are immediate neighbors on the same line. Do NOT add shortcut edges that skip intermediate stations.  The stations are connected in New York underground.
     2. connected(14th_street, 23rd_street).
     3. connected(23rd_street, 34th_street).
     4. connected(34th_street, times_square).
@@ -62,7 +62,7 @@ def main():
 
     print("==============================")
     print("solving meta")
-    s = MetaSolver(kb_missing_obj, LLMExtensionStrategy(allow_soft_rules=False), max_depth=5, min_confidence=1.0, max_rounds=10)
+    s = MetaSolver(kb_missing_obj, LLMExtensionStrategy(allow_soft_rules=True), max_depth=5, min_confidence=1.0, max_rounds=10)
     result = s.solve(test_goal_formula)
     print(f"Result solved {result['success']}")
     print("==============================\n")

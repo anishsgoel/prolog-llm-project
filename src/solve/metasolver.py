@@ -89,7 +89,7 @@ class MetaSolver:
                     "success": True,
                     "proof": result.get("proof"),
                     "confidence": result.get("confidence", 0.0),
-                    "failed_goals": result.get("failed_goals", []),
+                    "failed_atoms": result.get("failed_atoms", []),
                     "soft_kb": soft_kb,
                     "max_depth": max_depth,
                     "min_confidence": min_confidence,
@@ -98,7 +98,7 @@ class MetaSolver:
 
             next_soft_kb, next_max_depth, next_min_confidence = self.extension_strategy.extend(
                 soft_kb=soft_kb,
-                failed_goals=result.get("failed_goals", []),
+                failed_atoms=result.get("failed_atoms", []),
                 max_depth=max_depth,
                 min_confidence=min_confidence,
             )
@@ -127,7 +127,7 @@ class MetaSolver:
             "success": False,
             "proof": None,
             "confidence": 0.0,
-            "failed_goals": attempts[-1].get("failed_goals", []) if attempts else [],
+            "failed_atoms": attempts[-1].get("failed_atoms", []) if attempts else [],
             "soft_kb": soft_kb,
             "max_depth": max_depth,
             "min_confidence": min_confidence,
