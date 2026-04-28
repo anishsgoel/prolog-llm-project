@@ -30,6 +30,7 @@ class Solver:
         return node.signature()
 
     def _record_failed_atoms(self, atoms: List[AtomicFormula]) -> None:
+        print(f"    failed atoms : {atoms}", file=open("unifications.txt", "a"))
         self.failed_atoms.extend(atoms)
 
     def solve(self, goal: AtomicFormula, min_confidence: float = 0.0) -> Dict[str, Any]:
@@ -67,10 +68,14 @@ class Solver:
             successors.extend(node.unify_soft_kb(self.kb, min_confidence=min_confidence))
             successors.extend(node.unify_soft_rules(self.kb, min_confidence=min_confidence))
 
+            print("***********", file=open("unifications.txt", "a"))
+            print(f"node: {node}", file=open("unifications.txt", "a"))
+
             has_successor = False
             for successor in successors:
                 signature = self._node_signature(successor)
                 if signature not in visited:
+                    print(f"    successor: f{successor}", file=open("unifications.txt", "a"))
                     self._push_node(queue, tie, successor)
                     visited.add(signature)
                     has_successor = True
