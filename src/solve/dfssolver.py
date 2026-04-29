@@ -32,7 +32,7 @@ class DFSSolver:
             unvisited.append(node)
         return unvisited
 
-    def _dfs(self, node: GoalNode,
+    def _dfs(self, node: GoalNode, goal,
         depth_limit: int,
         min_confidence: float,
         visited: set,
@@ -53,14 +53,30 @@ class DFSSolver:
 
         unvisited_successors = self._filter_out_visited_nodes(successors, visited)
 
-        ordered_successors = self.search_guidance_policy.order_goals(self.kb, node, unvisited_successors,)
+        print(f"node {node} has unvisited successors: {unvisited_successors}")
+
+        ordered_successors = self.search_guidance_policy.order_goals(
+            goal,
+            self.kb,
+            node,
+            min_confidence,
+            unvisited_successors,
+        )
+
+        print(f"sorted {ordered_successors}")
 
         for successor in ordered_successors:
-            proof = self._dfs(successor,depth_limit=depth_limit,min_confidence=min_confidence,visited=visited,)
+            proof = self._dfs(successor,goal, depth_limit=depth_limit,min_confidence=min_confidence,visited=visited,)
             if proof is not None:
                 return proof
 
-        self.kb, new_soft_facts, extended = self.search_guidance_policy.extend_on_backtrack(node, self.kb)
+        self.kb, new_soft_facts, extended = self.search_guidance_policy.extend_on_backtrack(
+            goal,
+            node,
+            min_confidence,
+            self.kb,
+        )
+        print(f"new soft facts {new_soft_facts}")
 
         if not extended:
             return None
@@ -70,28 +86,34 @@ class DFSSolver:
             successors.extend(node.unify_soft_fact(soft_fact, min_confidence=min_confidence))
         unvisited_successors = self._filter_out_visited_nodes(successors, visited)
 
-        ordered_successors = self.search_guidance_policy.order_goals(self.kb, node, unvisited_successors)
+        ordered_successors = self.search_guidance_policy.order_goals(
+            goal,
+            self.kb,
+            node,
+            min_confidence,
+            unvisited_successors,
+        )
 
         for successor in ordered_successors:
-            proof = self._dfs(successor,depth_limit=depth_limit,min_confidence=min_confidence,visited=visited,)
+            proof = self._dfs(successor,goal,depth_limit=depth_limit,min_confidence=min_confidence,visited=visited,)
             if proof is not None:
                 return proof
 
         return None
 
     def solve(self, goal: AtomicFormula, min_confidence: float = 0.0) -> Dict[str, Any]:
+        print(f"Solving with setting min_confidence={min_confidence}, depth_limit={self.max_depth}")
         """Run iterative-deepening DFS and return the first proven node found."""
         root = GoalNode(formulas=[goal], depth=0, confidence=1.0)
 
-        for depth_limit in range(root.depth, self.max_depth + 1):
-            visited = {root.signature()}
-            proof = self._dfs(root, depth_limit=depth_limit, min_confidence=min_confidence, visited=visited)
-            if proof is not None:
-                return {
-                    "success": True,
-                    "proof": proof,
-                    "confidence": proof.is_proven(),
-                }
+        visited = {root.signature()}
+        proof = self._dfs(root, goal, depth_limit=self.max_depth + 1, min_confidence=min_confidence, visited=visited)
+        if proof is not None:
+            return {
+                "success": True,
+                "proof": proof,
+                "confidence": proof.is_proven(),
+            }
 
         return {
             "success": False,

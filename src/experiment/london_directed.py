@@ -4,12 +4,14 @@
 import os
 import sys
 
+from experiment.underground.prompts import UndergroundPromptBuilder
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import config
 from prolog.formula_parsing import parse_prolog_to_formula
 from prolog.knowledge_base import KnowledgeBase
-from solve import LLMExtensionStrategy, MetaSolver
+from solve import LLMExtensionStrategy, MetaSolver, DFSMetaSolver, LLMSearchGuidancePolicy
 from solve.llm_extension_strategy import LLMPromptContext
 from solve.solver import Solver
 
@@ -124,16 +126,17 @@ def main() -> None:
 
     print("==============================")
     print("solving meta")
-    s = MetaSolver(
-        kb_missing_obj,
-        LLMExtensionStrategy(
-            allow_soft_rules=True,
-            prompt_builder=build_prompt,
-        ),
-        max_depth=5,
-        min_confidence=1.0,
-        max_rounds=10,
-    )
+    # s = MetaSolver(
+    #     kb_missing_obj,
+    #     LLMExtensionStrategy(
+    #         allow_soft_rules=True,
+    #         prompt_builder=build_prompt,
+    #     ),
+    #     max_depth=5,
+    #     min_confidence=1.0,
+    #     max_rounds=10,
+    # )
+    s = DFSMetaSolver(kb_missing_obj, LLMSearchGuidancePolicy(UndergroundPromptBuilder()))
     result = s.solve(test_goal_formula)
     print(f"Result solved {result['success']}")
     print(f"Proof: {result['proof']}")
