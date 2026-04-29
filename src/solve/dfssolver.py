@@ -6,18 +6,33 @@ import config
 from logic.logic import AtomicFormula
 from prolog.knowledge_base import KnowledgeBase, SoftKnowledgeBase
 from solve.goalnode import GoalNode
+from solve.search_guidance_policy import SearchGuidancePolicy, TrivialSearchGuidancePolicy
 
 
 class DFSSolver:
     """Search for a proof using depth-first search with iterative deepening."""
 
-    def __init__(self, kb: KnowledgeBase | SoftKnowledgeBase, max_depth: Optional[int] = None):
+    def __init__(
+        self,
+        kb: KnowledgeBase | SoftKnowledgeBase,
+        max_depth: Optional[int] = None,
+        search_guidance_policy: Optional[SearchGuidancePolicy] = None,
+    ):
         self.kb = kb if isinstance(kb, SoftKnowledgeBase) else SoftKnowledgeBase(kb)
         self.max_depth = max_depth or config.DEFAULT_MAX_DEPTH
+        self.search_guidance_policy = search_guidance_policy or TrivialSearchGuidancePolicy()
 
-    def _dfs(
-        self,
-        node: GoalNode,
+    def _filter_out_visited_nodes(self, nodes: List[GoalNode], visited: set) -> List[GoalNode]:
+        unvisited = []
+        for node in nodes:
+            signature = node.signature()
+            if signature in visited:
+                continue
+            visited.add(signature)
+            unvisited.append(node)
+        return unvisited
+
+    def _dfs(self, node: GoalNode,
         depth_limit: int,
         min_confidence: float,
         visited: set,
@@ -36,14 +51,29 @@ class DFSSolver:
         successors.extend(node.unify_soft_kb(self.kb, min_confidence=min_confidence))
         successors.extend(node.unify_soft_rules(self.kb, min_confidence=min_confidence))
 
-        for successor in successors:
-            signature = successor.signature()
-            if signature in visited:
-                continue
+        unvisited_successors = self._filter_out_visited_nodes(successors, visited)
 
-            has_unvisited_successor = True
-            visited.add(signature)
-            proof = self._dfs(successor, depth_limit=depth_limit, min_confidence=min_confidence, visited=visited)
+        ordered_successors = self.search_guidance_policy.order_goals(self.kb, node, unvisited_successors,)
+
+        for successor in ordered_successors:
+            proof = self._dfs(successor,depth_limit=depth_limit,min_confidence=min_confidence,visited=visited,)
+            if proof is not None:
+                return proof
+
+        self.kb, new_soft_facts, extended = self.search_guidance_policy.extend_on_backtrack(node, self.kb)
+
+        if not extended:
+            return None
+
+        successors = []
+        for soft_fact in new_soft_facts:
+            successors.extend(node.unify_soft_fact(soft_fact, min_confidence=min_confidence))
+        unvisited_successors = self._filter_out_visited_nodes(successors, visited)
+
+        ordered_successors = self.search_guidance_policy.order_goals(self.kb, node, unvisited_successors)
+
+        for successor in ordered_successors:
+            proof = self._dfs(successor,depth_limit=depth_limit,min_confidence=min_confidence,visited=visited,)
             if proof is not None:
                 return proof
 
@@ -61,12 +91,10 @@ class DFSSolver:
                     "success": True,
                     "proof": proof,
                     "confidence": proof.is_proven(),
-                    "failed_atoms": self.failed_atoms,
                 }
 
         return {
             "success": False,
             "proof": None,
             "confidence": 0.0,
-            "failed_atoms": self.failed_atoms,
         }

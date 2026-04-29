@@ -9,7 +9,7 @@ from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import config
 from logic.logic import AtomicFormula, Const, Term, Var
-from prolog.formula_parsing import parse_predicate, split_body_atoms
+from prolog.formula_parsing import parse_predicate, split_body_atoms, split_head_and_body
 from prolog.knowledge_base import SoftKnowledgeBase
 from prolog.prolog_command import SoftRule
 from prolog_llm.llm import LLMInterface
@@ -148,32 +148,6 @@ class LLMExtensionStrategy(ExtensionStrategy):
   ]
 }"""
 
-    def _normalize_clause(self, clause: str) -> Optional[Tuple[str, Optional[str]]]:
-        clause = (clause or "").strip()
-        if not clause:
-            return None
-        if not clause.endswith("."):
-            clause += "."
-
-        body = clause[:-1].strip()
-        if ":-" in body:
-            head, body_part = body.split(":-", 1)
-            head = head.strip()
-            body_part = body_part.strip()
-            try:
-                parse_predicate(head)
-                for atom in split_body_atoms(body_part):
-                    parse_predicate(atom.strip())
-            except Exception:
-                return None
-            return head, body_part
-
-        try:
-            parse_predicate(body)
-        except Exception:
-            return None
-        return body, None
-
     def extend(
         self,
         soft_kb: SoftKnowledgeBase,
@@ -221,11 +195,10 @@ class LLMExtensionStrategy(ExtensionStrategy):
             #if confidence < min_confidence:
             #    continue
 
-            normalized = self._normalize_clause(item.get("clause", ""))
-            if normalized is None:
+            head_or_atom, maybe_body = split_head_and_body(item.get("clause", ""))
+            if head_or_atom is None and maybe_body is None:
                 continue
 
-            head_or_atom, maybe_body = normalized
             if maybe_body is not None and not self.allow_soft_rules:
                 continue
 

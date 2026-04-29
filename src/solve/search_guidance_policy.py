@@ -6,7 +6,9 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 
 from prolog.knowledge_base import SoftKnowledgeBase
+from prolog.prolog_command import SoftFact
 from solve.goalnode import GoalNode
+from typing import Tuple
 
 
 class SearchGuidancePolicy(ABC):
@@ -26,8 +28,8 @@ class SearchGuidancePolicy(ABC):
         self,
         goal_node: GoalNode,
         soft_kb: SoftKnowledgeBase,
-    ) -> Optional[SoftKnowledgeBase]:
-        """Return an extended KB for backtracking, or ``None`` to keep the current KB."""
+    ) -> Tuple[SoftKnowledgeBase, list[SoftFact], bool]:
+        """Return an extended KB for backtracking."""
 
 
 class TrivialSearchGuidancePolicy(SearchGuidancePolicy):
@@ -45,5 +47,5 @@ class TrivialSearchGuidancePolicy(SearchGuidancePolicy):
         self,
         goal_node: GoalNode,
         soft_kb: SoftKnowledgeBase,
-    ) -> Optional[SoftKnowledgeBase]:
-        return None
+    ) -> Tuple[SoftKnowledgeBase, list[SoftFact], bool]:
+        return soft_kb, [], False

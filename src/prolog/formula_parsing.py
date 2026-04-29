@@ -2,6 +2,7 @@
 
 import re
 from typing import Optional
+from typing import Tuple
 
 from prolog.prolog_utils import is_variable
 
@@ -112,3 +113,33 @@ def split_inline_comment(s: str):
     code = code.strip()
     comment = comment.strip()
     return code, (comment if comment else None)
+
+
+def split_head_and_body(clause: str) -> Tuple[Optional[str], Optional[str]]:
+    """
+    Splits the formula into head and body.
+    """
+    clause = (clause or "").strip()
+    if not clause:
+        return None, None
+    if not clause.endswith("."):
+        clause += "."
+
+    body = clause[:-1].strip()
+    if ":-" in body:
+        head, body_part = body.split(":-", 1)
+        head = head.strip()
+        body_part = body_part.strip()
+        try:
+            parse_predicate(head)
+            for atom in split_body_atoms(body_part):
+                parse_predicate(atom.strip())
+        except Exception:
+            return None, None
+        return head, body_part
+
+    try:
+        parse_predicate(body)
+    except Exception:
+        return None, None
+    return body, None
