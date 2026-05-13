@@ -5,6 +5,7 @@ import config
 from logic.logic import AtomicFormula, Conjunction, Formula, Term, Var
 from prolog.knowledge_base import SoftKnowledgeBase
 from prolog.prolog_command import SoftFact, SoftRule
+from prolog.prolog_utils import is_grounded_atom
 
 
 @dataclass
@@ -173,20 +174,23 @@ class GoalNode:
         )
         return new_node
 
-    def unify_soft_rule(self, rule: SoftRule, min_confidence: float = 0.0) -> List["GoalNode"]:
+    def unify_soft_rule(self, rule: SoftRule, min_confidence: float = 0.0, only_grounded: bool=False) -> List["GoalNode"]:
         """Return all successor goal nodes produced by unifying this node with one soft rule."""
         new_nodes: List[GoalNode] = []
         for formula in self._formulas:
+            if only_grounded and not is_grounded_atom(formula):
+                continue
+
             new_node = self.unify_formula_with_soft_rule(formula, rule, min_confidence=min_confidence)
             if new_node is not None:
                 new_nodes.append(new_node)
         return new_nodes
 
-    def unify_soft_rules(self, soft_kb: SoftKnowledgeBase, min_confidence: float = 0.0) -> List["GoalNode"]:
+    def unify_soft_rules(self, soft_kb: SoftKnowledgeBase, min_confidence: float = 0.0, only_grounded: bool=False) -> List["GoalNode"]:
         """Return all successor goal nodes produced by unifying this node with rules from a soft KB."""
         new_nodes: List[GoalNode] = []
         for rule in soft_kb.rules:
-            new_nodes.extend(self.unify_soft_rule(rule, min_confidence=min_confidence))
+            new_nodes.extend(self.unify_soft_rule(rule, min_confidence=min_confidence, only_grounded=only_grounded))
         return new_nodes
 
     def is_proven(self) -> float:

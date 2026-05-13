@@ -8,10 +8,11 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import config
-from logic.logic import AtomicFormula, Const, Term, Var
-from prolog.formula_parsing import parse_predicate, split_body_atoms, split_head_and_body
+from logic.logic import AtomicFormula, Term, Var
+from prolog.formula_parsing import split_head_and_body
 from prolog.knowledge_base import SoftKnowledgeBase
 from prolog.prolog_command import SoftRule
+from prolog.prolog_utils import is_mixed_atom
 from prolog_llm.llm import LLMInterface
 from prolog_llm.prolog_utils import extract_first_json
 from solve.extension_strategy import ExtensionStrategy
@@ -64,12 +65,6 @@ class LLMExtensionStrategy(ExtensionStrategy):
         clauses.update(f"{rule.head} :- {rule.body}." for rule in soft_kb.rules)
         return clauses
 
-    def _is_mixed_atom(self, formula: AtomicFormula) -> bool:
-        """Return whether the atom contains at least one variable and one constant."""
-        has_variable = any(isinstance(arg, Var) for arg in formula.args)
-        has_constant = any(isinstance(arg, Const) for arg in formula.args)
-        return has_variable and has_constant
-
     def _standardize_atom_variables(self, formula: AtomicFormula) -> str:
         """Render an atom with short canonical variable names for prompting."""
         canonical_names = ["X", "Y", "Z", "U", "V", "W"]
@@ -86,7 +81,7 @@ class LLMExtensionStrategy(ExtensionStrategy):
         seen_signatures = set()
 
         for formula in failed_atoms:
-            if not self._is_mixed_atom(formula):
+            if not is_mixed_atom(formula):
                 continue
             atom_signature = self._standardize_atom_variables(formula)
             if atom_signature in seen_signatures:

@@ -4,12 +4,14 @@
 import os
 import sys
 
+from experiment.underground.prompts import KrebsPromptBuilder
+from solve import DFSMetaSolver, LLMSearchGuidancePolicy
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import config
 from prolog.formula_parsing import parse_prolog_to_formula
 from prolog.knowledge_base import KnowledgeBase
-from solve import LLMExtensionStrategy, MetaSolver
 from solve.llm_extension_strategy import LLMPromptContext
 from solve.solver import Solver
 
@@ -124,16 +126,7 @@ def main() -> None:
 
     print("==============================")
     print("solving meta")
-    s = MetaSolver(
-        kb_missing_obj,
-        LLMExtensionStrategy(
-            allow_soft_rules=True,
-            prompt_builder=build_prompt,
-        ),
-        max_depth=12,
-        min_confidence=1.0,
-        max_rounds=20,
-    )
+    s = DFSMetaSolver(kb_missing_obj, LLMSearchGuidancePolicy(KrebsPromptBuilder()))
     result = s.solve(test_goal_formula)
     print(f"Result solved {result['success']}")
     print(f"Proof: {result['proof']}")

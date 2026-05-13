@@ -49,7 +49,7 @@ class DFSSolver:
 
         successors = []
         successors.extend(node.unify_soft_kb(self.kb, min_confidence=min_confidence))
-        successors.extend(node.unify_soft_rules(self.kb, min_confidence=min_confidence))
+        successors.extend(node.unify_soft_rules(self.kb, min_confidence=min_confidence, only_grounded=True))
 
         unvisited_successors = self._filter_out_visited_nodes(successors, visited)
 
