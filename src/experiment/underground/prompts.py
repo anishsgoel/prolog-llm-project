@@ -65,6 +65,15 @@ class PrologPromptBuilder(PromptBuilder):
             allow_new_constants=self.allow_new_constants,
         ).strip()
 
+    def extend_on_init_prompt(self, context: LLMSearchGuidancePromptContext) -> str:
+        return self._ENV.get_template("extend_on_init_prompt.j2").render(
+            context=context,
+            max_hypotheses=self.max_hypotheses,
+            clause_kind_instruction=self._clause_kind_instruction(self.allow_soft_rules),
+            propose_facts=self.propose_facts,
+            allow_new_constants=self.allow_new_constants,
+        ).strip()
+
 
 class UndergroundPromptBuilder(PrologPromptBuilder):
     propose_facts = "connected/2"

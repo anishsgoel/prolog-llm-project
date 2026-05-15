@@ -48,10 +48,14 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
         ]
 
     def _prompt_context(self, goal: AtomicFormula, soft_kb: SoftKnowledgeBase,
-                        goal_node: GoalNode, min_confidence: float) -> LLMSearchGuidancePromptContext:
+                        min_confidence: float, goal_node: Optional[GoalNode] = None) -> LLMSearchGuidancePromptContext:
+        current_goal_lines = (
+            [f"- {formula}" for formula in goal_node.unresolved_formulas()]
+            if goal_node is not None else [f"- {goal}"]
+        )
         return LLMSearchGuidancePromptContext(
             goal=str(goal),
-            current_goal_lines=[f"- {formula}" for formula in goal_node.unresolved_formulas()],
+            current_goal_lines=current_goal_lines,
             hard_fact_lines=self._hard_fact_lines(soft_kb),
             hard_rule_lines=self._hard_rule_lines(soft_kb),
             soft_fact_lines=self._soft_fact_lines(soft_kb, min_confidence)[: config.HYP_PROMPT_FACT_LIMIT],
@@ -90,7 +94,7 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
         if cached is not None:
             return cached
 
-        context = self._prompt_context(goal, soft_kb, current_goal_node, min_confidence)
+        context = self._prompt_context(goal, soft_kb, min_confidence, current_goal_node)
         prompt = self.llm_search_guidance.order_prompt(context, goal_nodes)
         raw = self.llm.ask_with_retry(prompt, repair_schema=self.llm_search_guidance.order_schema())
 
@@ -119,26 +123,7 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
         self._order_cache[cache_key] = [node.signature() for node in ordered_goal_nodes]
         return ordered_goal_nodes
 
-    def extend_on_backtrack(self, goal: AtomicFormula, goal_node: GoalNode, min_confidence: float,
-                            soft_kb: SoftKnowledgeBase) -> Tuple[SoftKnowledgeBase, List[SoftFact], bool]:
-        signature = goal_node.signature()
-        if signature in self._backtrack_called_signatures:
-            return soft_kb, [], False
-        self._backtrack_called_signatures.add(signature)
-
-        context = self._prompt_context(goal, soft_kb, goal_node, min_confidence)
-        prompt = self.llm_search_guidance.backtrack_prompt(context)
-        raw = self.llm.ask_with_retry(prompt, repair_schema=self.llm_search_guidance.backtrack_schema())
-
-        try:
-            data = json.loads(extract_first_json(raw))
-        except Exception:
-            return soft_kb, [], False
-
-        clauses = data.get("clauses", [])
-        if not isinstance(clauses, list):
-            return soft_kb, [], False
-
+    def _apply_clauses(self, clauses: list, soft_kb: SoftKnowledgeBase) -> Tuple[SoftKnowledgeBase, List[SoftFact], bool]:
         new_kb = soft_kb.copy()
         next_num = max([0] + [fact.num for fact in new_kb.facts] + [rule.num for rule in new_kb.rules]) + 1
         new_soft_facts: List[SoftFact] = []
@@ -146,7 +131,6 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
         for item in clauses:
             if not isinstance(item, dict):
                 continue
-
             try:
                 confidence = float(item.get("confidence", 0.0))
             except Exception:
@@ -176,8 +160,46 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
 
             if not self.allow_soft_rules:
                 continue
-
             new_kb.rules.append(SoftRule(next_num, head_or_atom, maybe_body, confidence))
             next_num += 1
 
         return new_kb, new_soft_facts, len(new_soft_facts) != 0
+
+    def extend_on_backtrack(self, goal: AtomicFormula, goal_node: GoalNode, min_confidence: float,
+                            soft_kb: SoftKnowledgeBase) -> Tuple[SoftKnowledgeBase, List[SoftFact], bool]:
+        signature = goal_node.signature()
+        if signature in self._backtrack_called_signatures:
+            return soft_kb, [], False
+        self._backtrack_called_signatures.add(signature)
+
+        context = self._prompt_context(goal, soft_kb, min_confidence, goal_node)
+        prompt = self.llm_search_guidance.backtrack_prompt(context)
+        raw = self.llm.ask_with_retry(prompt, repair_schema=self.llm_search_guidance.backtrack_schema())
+
+        try:
+            data = json.loads(extract_first_json(raw))
+        except Exception:
+            return soft_kb, [], False
+
+        clauses = data.get("clauses", [])
+        if not isinstance(clauses, list):
+            return soft_kb, [], False
+
+        return self._apply_clauses(clauses, soft_kb)
+
+    def extend_on_init(self, goal: AtomicFormula, min_confidence: float,
+                       soft_kb: SoftKnowledgeBase) -> Tuple[SoftKnowledgeBase, List[SoftFact], bool]:
+        context = self._prompt_context(goal, soft_kb, min_confidence)
+        prompt = self.llm_search_guidance.extend_on_init_prompt(context)
+        raw = self.llm.ask_with_retry(prompt, repair_schema=self.llm_search_guidance.backtrack_schema())
+
+        try:
+            data = json.loads(extract_first_json(raw))
+        except Exception:
+            return soft_kb, [], False
+
+        clauses = data.get("clauses", [])
+        if not isinstance(clauses, list):
+            return soft_kb, [], False
+
+        return self._apply_clauses(clauses, soft_kb)

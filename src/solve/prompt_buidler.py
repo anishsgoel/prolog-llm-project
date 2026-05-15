@@ -48,3 +48,10 @@ class PromptBuilder(ABC):
         context: LLMSearchGuidancePromptContext,
     ) -> str:
         """Build the prompt used to extend the soft KB on backtracking."""
+
+    @abstractmethod
+    def extend_on_init_prompt(
+        self,
+        context: LLMSearchGuidancePromptContext,
+    ) -> str:
+        """Build the prompt used to extend the soft KB before search begins."""

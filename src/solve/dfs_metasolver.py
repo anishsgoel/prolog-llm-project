@@ -95,6 +95,8 @@ class DFSMetaSolver:
         goal: AtomicFormula,
         soft_kb: SoftKnowledgeBase,
         depth_limit: int,
+        low = 0.0,
+        high = 1.0
     ) -> tuple[Optional[Dict[str, Any]], SoftKnowledgeBase, float, List[Dict[str, Any]]]:
         low = 0.0
         high = 1.0
@@ -163,37 +165,36 @@ class DFSMetaSolver:
 
     def solve(self, goal: AtomicFormula) -> Dict[str, Any]:
         """Search over depth and confidence thresholds using DFSSolver."""
-        soft_kb = self.soft_kb
         attempts: List[Dict[str, Any]] = []
 
+        self.soft_kb, new_soft_facts, extended = self.search_guidance_policy.extend_on_init(goal, 1.0, self.soft_kb)
+        print(f"new soft facts {new_soft_facts}")
+        min_confidence_high = max([f.confidence for f in new_soft_facts]) if extended else 1.0
+
         for depth_limit in range(self.max_depth, self.max_depth_ceiling + 1):
-            best_result, soft_kb, best_threshold, depth_attempts = self._search_confidence(
-                goal=goal,
-                soft_kb=soft_kb,
-                depth_limit=depth_limit,
+            best_result, self.soft_kb, best_threshold, depth_attempts = self._search_confidence(
+                goal=goal, soft_kb=self.soft_kb, depth_limit=depth_limit, high = min_confidence_high
             )
             attempts.extend(depth_attempts)
 
             if best_result is None:
                 continue
 
-            self.soft_kb = soft_kb
             return {
                 "success": True,
                 "proof": best_result.get("proof"),
                 "confidence": best_result.get("confidence", 0.0),
-                "soft_kb": soft_kb,
+                "soft_kb": self.soft_kb,
                 "max_depth": depth_limit,
                 "min_confidence": best_threshold,
                 "attempts": attempts,
             }
 
-        self.soft_kb = soft_kb
         return {
             "success": False,
             "proof": None,
             "confidence": 0.0,
-            "soft_kb": soft_kb,
+            "soft_kb": self.soft_kb,
             "max_depth": self.max_depth_ceiling,
             "min_confidence": 0.0,
             "attempts": attempts,

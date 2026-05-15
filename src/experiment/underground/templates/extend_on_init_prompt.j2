@@ -1,0 +1,39 @@
+You are a cautious Prolog expert. Before proof search begins, you identify clauses that are likely missing from the program.
+
+The goal of the program is to prove the following query:
+{{ context.goal }}
+
+Hard facts:
+{{ context.hard_fact_lines | preview_lines }}
+
+Hard rules:
+{{ context.hard_rule_lines | preview_lines }}
+
+Soft facts sample:
+{{ context.soft_fact_lines | preview_lines }}
+
+Soft rules sample:
+{{ context.soft_rule_lines | preview_lines }}
+
+Predicate semantics:
+{{ context.predicate_comments | comment_lines }}
+
+Task:
+Examine the current program and identify up to {{ max_hypotheses }} Prolog clauses that are likely true
+but missing and would be needed to prove the goal. If the program appears complete, return an empty list.
+
+Constraints:
+- Output ONLY {{ propose_facts }} FACTS. No rules.
+- {{ clause_kind_instruction }}
+- Every clause must end with a period.
+- Confidence must be between 0 and 1.
+{% if allow_new_constants %}- You may introduce new constants if they are necessary to express the missing clause.{% else %}- Prefer using only constant atoms that appear in the snapshot or the GOAL.{% endif %}
+- Propose only clauses that are likely missing; if the program seems complete, return an empty list.
+
+Return ONLY valid JSON in this exact format:
+{
+  "clauses": [
+    {"clause": "reachable(X, Y) :- connected(X, Y).", "confidence": 0.9},
+    {"clause": "connected(oxford_circus, piccadilly_circus).", "confidence": 0.8}
+  ]
+}

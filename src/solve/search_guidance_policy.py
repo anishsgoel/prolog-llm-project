@@ -32,6 +32,15 @@ class SearchGuidancePolicy(ABC):
     ) -> Tuple[SoftKnowledgeBase, list[SoftFact], bool]:
         """Return an extended KB for backtracking."""
 
+    @abstractmethod
+    def extend_on_init(
+            self,
+            goal: AtomicFormula,
+            min_confidence: float,
+            soft_kb: SoftKnowledgeBase,
+    ) -> Tuple[SoftKnowledgeBase, list[SoftFact], bool]:
+        """Query the LLM about missing clauses and extend the KB before search begins."""
+
 
 class TrivialSearchGuidancePolicy(SearchGuidancePolicy):
     """Default policy that preserves the given order and never extends the KB."""
@@ -51,6 +60,14 @@ class TrivialSearchGuidancePolicy(SearchGuidancePolicy):
             goal: AtomicFormula,
             goal_node: GoalNode,
             min_confidence: float,
+            soft_kb: SoftKnowledgeBase,
+    ) -> Tuple[SoftKnowledgeBase, list[SoftFact], bool]:
+        return soft_kb, [], False
+
+    def extend_on_init(
+            self,
+            goal: AtomicFormula,
+            goal_node: GoalNode,
             soft_kb: SoftKnowledgeBase,
     ) -> Tuple[SoftKnowledgeBase, list[SoftFact], bool]:
         return soft_kb, [], False

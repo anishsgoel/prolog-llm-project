@@ -101,8 +101,11 @@ class DFSSolver:
 
         return None
 
+
+
     def solve(self, goal: AtomicFormula, min_confidence: float = 0.0) -> Dict[str, Any]:
         print(f"Solving with setting min_confidence={min_confidence}, depth_limit={self.max_depth}")
+
         """Run iterative-deepening DFS and return the first proven node found."""
         root = GoalNode(formulas=[goal], depth=0, confidence=1.0)
 
