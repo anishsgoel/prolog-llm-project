@@ -13,7 +13,7 @@ from prolog.prolog_command import SoftFact, SoftRule
 from prolog_llm.llm import LLMInterface
 from prolog_llm.prolog_utils import extract_first_json
 from solve.goalnode import GoalNode
-from solve.llm_search_guidance import PromptBuilder, LLMSearchGuidancePromptContext
+from solve.prompt_buidler import PromptBuilder, LLMSearchGuidancePromptContext
 from solve.search_guidance_policy import SearchGuidancePolicy
 
 

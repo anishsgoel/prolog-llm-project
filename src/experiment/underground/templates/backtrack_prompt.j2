@@ -1,0 +1,45 @@
+You are a cautious Prolog expert. You propose missing clauses that may help continue DFS proof search.
+
+The goal of the program is to prove the following query:
+{{ context.goal }}
+
+Current unresolved goal formulas:
+{{ context.current_goal_lines | preview_lines }}
+
+Hard facts:
+{{ context.hard_fact_lines | preview_lines }}
+
+Hard rules:
+{{ context.hard_rule_lines | preview_lines }}
+
+Soft facts sample:
+{{ context.soft_fact_lines | preview_lines }}
+
+Soft rules sample:
+{{ context.soft_rule_lines | preview_lines }}
+
+Predicate semantics:
+{{ context.predicate_comments | comment_lines }}
+
+Task:
+The DFS search is backtracking from the current goal node.
+Propose up to {{ max_hypotheses }} Prolog clauses that are likely true and would help prove the current goals.
+It is valid to return no clauses.
+
+Constraints:
+- Output ONLY {{ propose_facts }} FACTS. No rules.
+- {{ clause_kind_instruction }}
+- Every clause must end with a period.
+- Confidence must be between 0 and 1.
+{% if allow_new_constants %}- You may introduce new constants if they are necessary to express the missing clause.{% else %}- Prefer using only constant atoms that appear in the snapshot or the GOAL.{% endif %}
+- If a suggested edge might be a "shortcut" (skips intermediate stops), lower confidence.
+- Propose only clauses that are likely true, if you believe there is no formula that is missing in the current program,
+    return empty list.
+
+Return ONLY valid JSON in this exact format:
+{
+  "clauses": [
+    {"clause": "reachable(X, Y) :- connected(X, Y).", "confidence": 0.9},
+    {"clause": "connected(oxford_circus, piccadilly_circus).", "confidence": 0.8}
+  ]
+}
