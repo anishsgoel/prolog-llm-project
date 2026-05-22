@@ -18,8 +18,6 @@ class DFSMetaSolver:
         self,
         kb: KnowledgeBase,
         search_guidance_policy: SearchGuidancePolicy,
-        max_depth: Optional[int] = None,
-        min_confidence: float = 1.0,
         max_depth_ceiling: Optional[int] = None,
         confidence_tolerance: float = 0.05,
         max_binary_search_steps: int = 8,
@@ -27,9 +25,7 @@ class DFSMetaSolver:
         self.hard_kb = kb
         self.soft_kb = SoftKnowledgeBase(kb)
         self.search_guidance_policy = search_guidance_policy
-        self.max_depth = max_depth or config.DEFAULT_MAX_DEPTH
-        self.min_confidence = max(0.0, min(1.0, min_confidence))
-        self.max_depth_ceiling = max_depth_ceiling or (self.max_depth + config.DEFAULT_MAX_DEPTH)
+        self.max_depth_ceiling = max_depth_ceiling or config.DEFAULT_MAX_DEPTH_SHORTCUT
         self.confidence_tolerance = max(confidence_tolerance, 1e-6)
         self.max_binary_search_steps = max(1, max_binary_search_steps)
 
@@ -98,9 +94,7 @@ class DFSMetaSolver:
         low = 0.0,
         high = 1.0
     ) -> tuple[Optional[Dict[str, Any]], SoftKnowledgeBase, float, List[Dict[str, Any]]]:
-        low = 0.0
-        high = 1.0
-        probe = self.min_confidence
+        probe = high
         tried = set()
 
         best_result: Optional[Dict[str, Any]] = None
@@ -171,7 +165,10 @@ class DFSMetaSolver:
         print(f"new soft facts {new_soft_facts}")
         min_confidence_high = max([f.confidence for f in new_soft_facts]) if extended else 1.0
 
-        for depth_limit in range(self.max_depth, self.max_depth_ceiling + 1):
+        depth_start = self.search_guidance_policy.estimate_depth(goal, self.soft_kb)
+        depth_ceiling = max(depth_start, self.max_depth_ceiling)
+
+        for depth_limit in range(depth_start, depth_ceiling + 1):
             best_result, self.soft_kb, best_threshold, depth_attempts = self._search_confidence(
                 goal=goal, soft_kb=self.soft_kb, depth_limit=depth_limit, high = min_confidence_high
             )

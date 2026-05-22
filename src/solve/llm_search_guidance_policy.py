@@ -187,6 +187,16 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
 
         return self._apply_clauses(clauses, soft_kb)
 
+    def estimate_depth(self, goal: AtomicFormula, soft_kb: SoftKnowledgeBase) -> int:
+        context = self._prompt_context(goal, soft_kb, 1.0)
+        prompt = self.llm_search_guidance.estimate_depth_prompt(context)
+        raw = self.llm.ask_with_retry(prompt, repair_schema=self.llm_search_guidance.estimate_depth_schema())
+        try:
+            data = json.loads(extract_first_json(raw))
+            return max(1, int(data.get("depth", config.DEFAULT_MAX_DEPTH)))
+        except Exception:
+            return config.DEFAULT_MAX_DEPTH
+
     def extend_on_init(self, goal: AtomicFormula, min_confidence: float,
                        soft_kb: SoftKnowledgeBase) -> Tuple[SoftKnowledgeBase, List[SoftFact], bool]:
         context = self._prompt_context(goal, soft_kb, min_confidence)

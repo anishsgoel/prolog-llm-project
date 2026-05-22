@@ -74,6 +74,12 @@ class PrologPromptBuilder(PromptBuilder):
             allow_new_constants=self.allow_new_constants,
         ).strip()
 
+    def estimate_depth_schema(self) -> str:
+        return '{"depth": 5}'
+
+    def estimate_depth_prompt(self, context: LLMSearchGuidancePromptContext) -> str:
+        return self._ENV.get_template("estimate_depth_prompt.j2").render(context=context).strip()
+
 
 class UndergroundPromptBuilder(PrologPromptBuilder):
     propose_facts = "connected/2"

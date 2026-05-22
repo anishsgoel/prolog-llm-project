@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+
+import config
 from typing import List, Optional
 
 from logic.logic import AtomicFormula
@@ -41,6 +43,10 @@ class SearchGuidancePolicy(ABC):
     ) -> Tuple[SoftKnowledgeBase, list[SoftFact], bool]:
         """Query the LLM about missing clauses and extend the KB before search begins."""
 
+    @abstractmethod
+    def estimate_depth(self, goal: AtomicFormula, soft_kb: SoftKnowledgeBase) -> int:
+        """Estimate the proof depth needed to prove the goal."""
+
 
 class TrivialSearchGuidancePolicy(SearchGuidancePolicy):
     """Default policy that preserves the given order and never extends the KB."""
@@ -71,3 +77,6 @@ class TrivialSearchGuidancePolicy(SearchGuidancePolicy):
             soft_kb: SoftKnowledgeBase,
     ) -> Tuple[SoftKnowledgeBase, list[SoftFact], bool]:
         return soft_kb, [], False
+
+    def estimate_depth(self, goal: AtomicFormula, soft_kb: SoftKnowledgeBase) -> int:
+        return config.DEFAULT_MAX_DEPTH

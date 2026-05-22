@@ -1,0 +1,29 @@
+You are a Prolog proof-search expert. Estimate how many unification steps are needed to prove a goal.
+
+The goal to prove:
+{{ context.goal }}
+
+Hard facts:
+{{ context.hard_fact_lines | preview_lines }}
+
+Hard rules:
+{{ context.hard_rule_lines | preview_lines }}
+
+Soft facts sample:
+{{ context.soft_fact_lines | preview_lines }}
+
+Soft rules sample:
+{{ context.soft_rule_lines | preview_lines }}
+
+Predicate semantics:
+{{ context.predicate_comments | comment_lines }}
+
+Task:
+Estimate the minimum proof depth (number of unification steps) required to prove the goal given the
+current program. Count each rule application or fact lookup as one step. If the proof requires
+chaining through multiple rules, sum their depths.
+
+Return ONLY valid JSON in this exact format:
+{
+  "depth": 5
+}

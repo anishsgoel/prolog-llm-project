@@ -55,3 +55,11 @@ class PromptBuilder(ABC):
         context: LLMSearchGuidancePromptContext,
     ) -> str:
         """Build the prompt used to extend the soft KB before search begins."""
+
+    @abstractmethod
+    def estimate_depth_schema(self) -> str:
+        """Return the repair schema for depth estimation."""
+
+    @abstractmethod
+    def estimate_depth_prompt(self, context: LLMSearchGuidancePromptContext) -> str:
+        """Build the prompt used to estimate the proof depth."""
