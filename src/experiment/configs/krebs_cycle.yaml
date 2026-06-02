@@ -1,0 +1,7 @@
+name: krebs_cycle
+goal: "cycle(citrate)"
+kb_file: kb/krebs_cycle.pl
+prompt_builder: krebs
+omit_fact_ids: [4, 8]
+solver:
+  allow_new_constants: true

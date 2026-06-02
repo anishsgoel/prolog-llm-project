@@ -21,10 +21,12 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
     """Guide DFS ordering and backtracking by querying an LLM."""
 
     def __init__(self, llm_search_guidance: PromptBuilder, llm: Optional[LLMInterface] = None,
-                 max_hypotheses: int = 6, allow_soft_rules: bool = True):
+                 solver_cfg: Optional["SolverConfig"] = None):
+        from cfg import SolverConfig
         self.llm = llm or LLMInterface()
-        self.max_hypotheses = max_hypotheses
-        self.allow_soft_rules = allow_soft_rules
+        self.cfg = solver_cfg or SolverConfig()
+        self.max_hypotheses = self.cfg.max_hypotheses
+        self.allow_soft_rules = self.cfg.allow_soft_rules
         self.llm_search_guidance = llm_search_guidance
         self._backtrack_called_signatures: set = set()
         self._order_cache: Dict[tuple, List[tuple]] = {}

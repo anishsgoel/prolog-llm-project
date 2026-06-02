@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 import config
+from cfg import SolverConfig
 from logic.logic import AtomicFormula
 from prolog.knowledge_base import KnowledgeBase, SoftKnowledgeBase
 from solve.dfssolver import DFSSolver
@@ -18,16 +19,16 @@ class DFSMetaSolver:
         self,
         kb: KnowledgeBase,
         search_guidance_policy: SearchGuidancePolicy,
-        max_depth_ceiling: Optional[int] = None,
-        confidence_tolerance: float = 0.05,
-        max_binary_search_steps: int = 8,
+        solver_cfg: Optional[SolverConfig] = None,
     ):
         self.hard_kb = kb
         self.soft_kb = SoftKnowledgeBase(kb)
         self.search_guidance_policy = search_guidance_policy
-        self.max_depth_ceiling = max_depth_ceiling or config.DEFAULT_MAX_DEPTH_SHORTCUT
-        self.confidence_tolerance = max(confidence_tolerance, 1e-6)
-        self.max_binary_search_steps = max(1, max_binary_search_steps)
+        self.cfg\
+            = solver_cfg or SolverConfig()
+        self.max_depth_ceiling = self.cfg.max_depth_ceiling
+        self.confidence_tolerance = max(self.cfg.confidence_tolerance, 1e-6)
+        self.max_binary_search_steps = max(1, self.cfg.max_binary_search_steps)
 
     def _log_attempt(
         self,
@@ -91,8 +92,8 @@ class DFSMetaSolver:
         goal: AtomicFormula,
         soft_kb: SoftKnowledgeBase,
         depth_limit: int,
-        low = 0.0,
-        high = 1.0
+        low: float = 0.0,
+        high: float = 1.0,
     ) -> tuple[Optional[Dict[str, Any]], SoftKnowledgeBase, float, List[Dict[str, Any]]]:
         probe = high
         tried = set()
@@ -170,7 +171,7 @@ class DFSMetaSolver:
 
         for depth_limit in range(depth_start, depth_ceiling + 1):
             best_result, self.soft_kb, best_threshold, depth_attempts = self._search_confidence(
-                goal=goal, soft_kb=self.soft_kb, depth_limit=depth_limit, high = min_confidence_high
+                goal=goal, soft_kb=self.soft_kb, depth_limit=depth_limit, high=min_confidence_high
             )
             attempts.extend(depth_attempts)
 
@@ -192,7 +193,7 @@ class DFSMetaSolver:
             "proof": None,
             "confidence": 0.0,
             "soft_kb": self.soft_kb,
-            "max_depth": self.max_depth_ceiling,
+            "max_depth": depth_ceiling,
             "min_confidence": 0.0,
             "attempts": attempts,
         }
