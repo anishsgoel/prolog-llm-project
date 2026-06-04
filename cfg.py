@@ -82,7 +82,7 @@ class ProblemConfig(BaseModel):
     name: str
     goal: str
     kb_file: str
-    prompt_builder: Literal["underground", "krebs", "bohemia"] = "underground"
+    propose_facts: str  # base relation the LLM may hypothesise, e.g. "connected/2", "parentof/2"
     omit_fact_ids: List[int] = Field(default_factory=list)
     solver: SolverConfig = Field(default_factory=SolverConfig)
 

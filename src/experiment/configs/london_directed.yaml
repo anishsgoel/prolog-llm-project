@@ -1,7 +1,7 @@
 name: london_directed
 goal: "reachable(regents_park, elephant_and_castle)"
 kb_file: kb/london_directed.pl
-prompt_builder: underground
+propose_facts: connected/2
 omit_fact_ids: [4]
 solver:
   allow_new_constants: false

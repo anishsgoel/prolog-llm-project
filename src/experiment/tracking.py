@@ -26,7 +26,7 @@ for _p in (str(_SRC_DIR), str(_PROJECT_ROOT)):
 
 import config as _cfg_mod
 from cfg import ProblemConfig
-from experiment.underground.prompts import BohemiaPromptBuilder, KrebsPromptBuilder, UndergroundPromptBuilder
+from experiment.underground.prompts import PrologPromptBuilder
 from prolog.formula_parsing import parse_prolog_to_formula
 from prolog.knowledge_base import KnowledgeBase, SoftKnowledgeBase
 from prolog_llm.llm import LLMInterface
@@ -35,13 +35,6 @@ from solve.solver import Solver
 
 _CONFIGS_DIR = Path(__file__).parent / "configs"
 ALL_CONFIGS: List[str] = sorted(p.stem for p in _CONFIGS_DIR.glob("*.yaml"))
-
-_PROMPT_BUILDERS = {
-    "underground": UndergroundPromptBuilder,
-    "krebs": KrebsPromptBuilder,
-    "bohemia": BohemiaPromptBuilder,
-}
-
 
 # ---------------------------------------------------------------------------
 # RunMetrics
@@ -196,7 +189,7 @@ def run_tracked(config_name: str) -> RunMetrics:
 
     # --- LLM-guided run with instrumented components ---
     tracked_llm = TrackedLLMInterface()
-    prompt_builder = _PROMPT_BUILDERS[problem.prompt_builder](problem.solver)
+    prompt_builder = PrologPromptBuilder(problem.propose_facts, problem.solver)
     policy = TrackedLLMSearchGuidancePolicy(
         prompt_builder, tracked_llm=tracked_llm, solver_cfg=problem.solver
     )

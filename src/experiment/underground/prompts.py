@@ -41,15 +41,21 @@ def _clause_kind_instruction(allow_soft_rules: bool) -> str:
 
 
 class PrologPromptBuilder(PromptBuilder):
-    propose_facts: str
+    """Prompt builder for any Prolog domain.
+
+    The base relation the LLM is allowed to hypothesise (e.g. ``connected/2``,
+    ``productof/2``, ``parentof/2``) is supplied per problem via ``propose_facts``
+    rather than hard-coded in a subclass.
+    """
 
     _TEMPLATES_DIR = Path(__file__).parent / "templates"
     _ORDER_SCHEMA = _ORDER_SCHEMA
     _BACKTRACK_SCHEMA = _BACKTRACK_SCHEMA
     _ENV: Optional[jinja2.Environment] = None
 
-    def __init__(self, solver_cfg: Optional["SolverConfig"] = None):
+    def __init__(self, propose_facts: str, solver_cfg: Optional["SolverConfig"] = None):
         from cfg import SolverConfig
+        self.propose_facts = propose_facts
         self.cfg = solver_cfg or SolverConfig()
         self.allow_soft_rules = self.cfg.allow_soft_rules
         self.max_hypotheses = self.cfg.max_hypotheses
@@ -89,15 +95,3 @@ class PrologPromptBuilder(PromptBuilder):
 
     def estimate_depth_prompt(self, context: LLMSearchGuidancePromptContext) -> str:
         return self._ENV.get_template("estimate_depth_prompt.j2").render(context=context).strip()
-
-
-class UndergroundPromptBuilder(PrologPromptBuilder):
-    propose_facts = "connected/2"
-
-
-class KrebsPromptBuilder(PrologPromptBuilder):
-    propose_facts = "productof/2"
-
-
-class BohemiaPromptBuilder(PrologPromptBuilder):
-    propose_facts = "parentof/2"

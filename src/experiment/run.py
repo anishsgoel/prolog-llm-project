@@ -17,19 +17,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import config
 from cfg import ProblemConfig
-from experiment.underground.prompts import BohemiaPromptBuilder, KrebsPromptBuilder, UndergroundPromptBuilder
+from experiment.underground.prompts import PrologPromptBuilder
 from prolog.formula_parsing import parse_prolog_to_formula
 from prolog.knowledge_base import KnowledgeBase
 from solve import DFSMetaSolver, LLMSearchGuidancePolicy
 from solve.solver import Solver
 
 _CONFIGS_DIR = Path(__file__).parent / "configs"
-
-_PROMPT_BUILDERS = {
-    "underground": UndergroundPromptBuilder,
-    "krebs": KrebsPromptBuilder,
-    "bohemia": BohemiaPromptBuilder,
-}
 
 
 def run(config_name: str) -> None:
@@ -47,8 +41,7 @@ def run(config_name: str) -> None:
     result = s.solve(goal_formula)
     print(f"Baseline solver: success={result['success']}\n")
 
-    prompt_builder_cls = _PROMPT_BUILDERS[problem.prompt_builder]
-    prompt_builder = prompt_builder_cls(problem.solver)
+    prompt_builder = PrologPromptBuilder(problem.propose_facts, problem.solver)
     s = DFSMetaSolver(kb_missing_obj, LLMSearchGuidancePolicy(prompt_builder, solver_cfg=problem.solver), solver_cfg=problem.solver)
     result = s.solve(goal_formula)
     print(f"DFS meta-solver: success={result['success']}, confidence={result['confidence']}")

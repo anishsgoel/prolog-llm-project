@@ -1,7 +1,7 @@
 name: underground_directed
 goal: "reachable(union_square, bryant_park)"
 kb_file: kb/underground_nyc.pl
-prompt_builder: underground
+propose_facts: connected/2
 omit_fact_ids: [7]
 solver:
   allow_new_constants: false
