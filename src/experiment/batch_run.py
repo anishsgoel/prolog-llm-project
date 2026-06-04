@@ -17,6 +17,9 @@ Usage
     # Three independent repetitions of every config
     python src/experiment/batch_run.py --runs 3 --output results.csv
 
+    # Also export an Excel workbook (requires openpyxl)
+    python src/experiment/batch_run.py --xlsx results.xlsx
+
     # Custom MLflow server
     python src/experiment/batch_run.py --tracking-uri http://localhost:5000
 
@@ -68,7 +71,8 @@ def _log_to_mlflow(metrics: RunMetrics, run_index: int) -> None:
             mlflow.log_param(k, str(v))
 
 
-def _write_csv(rows: List[Dict[str, Any]], output: Path) -> None:
+def _collect_fieldnames(rows: List[Dict[str, Any]]) -> List[str]:
+    """Union of all keys across rows, preserving first-seen order."""
     seen: set[str] = set()
     fieldnames: List[str] = []
     for row in rows:
@@ -76,11 +80,35 @@ def _write_csv(rows: List[Dict[str, Any]], output: Path) -> None:
             if k not in seen:
                 fieldnames.append(k)
                 seen.add(k)
+    return fieldnames
+
+
+def _write_csv(rows: List[Dict[str, Any]], output: Path) -> None:
+    fieldnames = _collect_fieldnames(rows)
     with open(output, "w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
         for row in rows:
             writer.writerow(row)
+
+
+def _write_xlsx(rows: List[Dict[str, Any]], output: Path) -> None:
+    try:
+        from openpyxl import Workbook
+    except ImportError as exc:  # pragma: no cover - depends on optional dep
+        raise SystemExit(
+            "Writing .xlsx requires the 'openpyxl' package. Install it with "
+            "`pip install openpyxl`."
+        ) from exc
+
+    fieldnames = _collect_fieldnames(rows)
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "results"
+    ws.append(fieldnames)
+    for row in rows:
+        ws.append([row.get(k) for k in fieldnames])
+    wb.save(output)
 
 
 def main() -> None:
@@ -102,6 +130,11 @@ def main() -> None:
     parser.add_argument(
         "--output", default="results.csv", metavar="PATH",
         help="Output CSV file path (default: results.csv).",
+    )
+    parser.add_argument(
+        "--xlsx", default=None, metavar="PATH",
+        help="Also write results to this .xlsx file (requires openpyxl). "
+             "Omit to skip Excel output.",
     )
     parser.add_argument(
         "--mlflow-experiment", default="prolog-llm", metavar="NAME",
@@ -170,6 +203,10 @@ def main() -> None:
         output_path = Path(args.output)
         _write_csv(all_rows, output_path)
         print(f"\nWrote {len(all_rows)} row(s) to {output_path}")
+        if args.xlsx:
+            xlsx_path = Path(args.xlsx)
+            _write_xlsx(all_rows, xlsx_path)
+            print(f"Wrote {len(all_rows)} row(s) to {xlsx_path}")
         if use_mlflow:
             print(f"MLflow experiment: '{args.mlflow_experiment}'  "
                   f"(run `mlflow ui` then open http://127.0.0.1:5000)")
