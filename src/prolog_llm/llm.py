@@ -82,8 +82,8 @@ class LLMInterface:
             resp = self.client.chat(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
-                options=options,
-                format="json" if format_json else None,
+                #options=options,
+                #format="json" if format_json else None,
             )
             resp = resp["message"]
         except Exception as e:
