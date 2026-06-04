@@ -82,7 +82,7 @@ class ProblemConfig(BaseModel):
     name: str
     goal: str
     kb_file: str
-    prompt_builder: Literal["underground", "krebs"] = "underground"
+    prompt_builder: Literal["underground", "krebs", "bohemia"] = "underground"
     omit_fact_ids: List[int] = Field(default_factory=list)
     solver: SolverConfig = Field(default_factory=SolverConfig)
 

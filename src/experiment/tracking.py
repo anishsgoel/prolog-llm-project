@@ -26,7 +26,7 @@ for _p in (str(_SRC_DIR), str(_PROJECT_ROOT)):
 
 import config as _cfg_mod
 from cfg import ProblemConfig
-from experiment.underground.prompts import KrebsPromptBuilder, UndergroundPromptBuilder
+from experiment.underground.prompts import BohemiaPromptBuilder, KrebsPromptBuilder, UndergroundPromptBuilder
 from prolog.formula_parsing import parse_prolog_to_formula
 from prolog.knowledge_base import KnowledgeBase, SoftKnowledgeBase
 from prolog_llm.llm import LLMInterface
@@ -39,6 +39,7 @@ ALL_CONFIGS: List[str] = sorted(p.stem for p in _CONFIGS_DIR.glob("*.yaml"))
 _PROMPT_BUILDERS = {
     "underground": UndergroundPromptBuilder,
     "krebs": KrebsPromptBuilder,
+    "bohemia": BohemiaPromptBuilder,
 }
 
 

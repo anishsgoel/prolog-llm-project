@@ -97,3 +97,7 @@ class UndergroundPromptBuilder(PrologPromptBuilder):
 
 class KrebsPromptBuilder(PrologPromptBuilder):
     propose_facts = "productof/2"
+
+
+class BohemiaPromptBuilder(PrologPromptBuilder):
+    propose_facts = "parentof/2"

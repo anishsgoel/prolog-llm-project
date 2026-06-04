@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import config
 from cfg import ProblemConfig
-from experiment.underground.prompts import KrebsPromptBuilder, UndergroundPromptBuilder
+from experiment.underground.prompts import BohemiaPromptBuilder, KrebsPromptBuilder, UndergroundPromptBuilder
 from prolog.formula_parsing import parse_prolog_to_formula
 from prolog.knowledge_base import KnowledgeBase
 from solve import DFSMetaSolver, LLMSearchGuidancePolicy
@@ -28,6 +28,7 @@ _CONFIGS_DIR = Path(__file__).parent / "configs"
 _PROMPT_BUILDERS = {
     "underground": UndergroundPromptBuilder,
     "krebs": KrebsPromptBuilder,
+    "bohemia": BohemiaPromptBuilder,
 }
 
 
