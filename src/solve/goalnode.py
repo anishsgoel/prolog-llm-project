@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import List
 
 import config
@@ -8,7 +7,6 @@ from prolog.prolog_command import SoftFact, SoftRule
 from prolog.prolog_utils import is_grounded_atom
 
 
-@dataclass
 class GoalNode:
     def __init__(self, formulas: List[AtomicFormula], depth: int, confidence: float):
         self._formulas = formulas

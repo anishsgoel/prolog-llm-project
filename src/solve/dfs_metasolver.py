@@ -163,7 +163,8 @@ class DFSMetaSolver:
         attempts: List[Dict[str, Any]] = []
 
         self.soft_kb, new_soft_facts, extended = self.search_guidance_policy.extend_on_init(goal, 1.0, self.soft_kb)
-        print(f"new soft facts {new_soft_facts}")
+        if config.VERBOSE:
+            print(f"new soft facts {new_soft_facts}")
         min_confidence_high = max([f.confidence for f in new_soft_facts]) if extended else 1.0
 
         depth_start = self.search_guidance_policy.estimate_depth(goal, self.soft_kb)

@@ -6,6 +6,9 @@ import ollama
 
 from prolog_llm.prolog_utils import extract_first_json
 import config
+from log_setup import LLM_LOGGER, get_logger
+
+_llm_log = get_logger(LLM_LOGGER)
 
 
 class LLMInterface:
@@ -67,41 +70,24 @@ class LLMInterface:
         num_pred = num_predict or self.num_predict
         stops = stop_tokens or self.stop_tokens
 
-        if config.VERBOSE:
-            print("[LLMInterface.generate] Prompt:")
-            print(prompt)
+        _llm_log.debug("PROMPT (model=%s, temperature=%s, num_predict=%s):\n%s",
+                       self.model, temp, num_pred, prompt)
 
         try:
-            #kwargs = dict(
-            #    model=self.model,
-            #    prompt=prompt,
-            #    options={
-            #        "temperature": temp,
-            #        "num_predict": num_pred,
-            #        "stop": stops,
-            #    },
-            #)
-
-            #if format_json:
-            #    kwargs["format"] = "json"
-
-            #resp = self.client.generate(**kwargs)
+            options = {
+                "temperature": temp,
+                "num_predict": num_pred,
+                "stop": stops,
+            }
             resp = self.client.chat(
-                model= self.model,
-                messages=[{'role': 'user', 'content': prompt}]
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                options=options,
+                format="json" if format_json else None,
             )
             resp = resp["message"]
-
-        except TypeError as e:
-            #try:
-            #    if format_json:
-            #        kwargs.pop("format", None)
-            #    resp = self.client.generate(**kwargs)
-            #except Exception as e:
-                print("[LLMInterface.generate] Ollama generate() exception:", repr(e))
-                return ""
         except Exception as e:
-            print("[LLMInterface.generate] Ollama generate() exception:", repr(e))
+            _llm_log.error("Ollama chat() exception: %r", e)
             return ""
 
         answer = (resp.get("content") or "").strip()
@@ -109,15 +95,13 @@ class LLMInterface:
             answer = (resp.get("thinking") or "").strip()
 
         if not answer:
-            print("[LLMInterface.generate] EMPTY response+thinking. Raw resp:", resp)
+            _llm_log.warning("EMPTY response+thinking. Raw resp: %s", resp)
             return ""
 
         if "...done thinking." in answer:
             answer = answer.split("...done thinking.")[-1].strip()
 
-        if config.VERBOSE:
-            print("[LLMInterface.generate] Response:")
-            print(answer)
+        _llm_log.debug("RESPONSE:\n%s", answer)
 
         return answer
 

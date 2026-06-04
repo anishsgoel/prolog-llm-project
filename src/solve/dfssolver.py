@@ -53,7 +53,8 @@ class DFSSolver:
 
         unvisited_successors = self._filter_out_visited_nodes(successors, visited)
 
-        print(f"node {node} has unvisited successors: {unvisited_successors}")
+        if config.VERBOSE:
+            print(f"node {node} has unvisited successors: {unvisited_successors}")
 
         ordered_successors = self.search_guidance_policy.order_goals(
             goal,
@@ -63,7 +64,8 @@ class DFSSolver:
             unvisited_successors,
         )
 
-        print(f"sorted {ordered_successors}")
+        if config.VERBOSE:
+            print(f"sorted {ordered_successors}")
 
         for successor in ordered_successors:
             proof = self._dfs(successor,goal, depth_limit=depth_limit,min_confidence=min_confidence,visited=visited,)
@@ -76,7 +78,8 @@ class DFSSolver:
             min_confidence,
             self.kb,
         )
-        print(f"new soft facts {new_soft_facts}")
+        if config.VERBOSE:
+            print(f"new soft facts {new_soft_facts}")
 
         if not extended:
             return None
@@ -104,9 +107,10 @@ class DFSSolver:
 
 
     def solve(self, goal: AtomicFormula, min_confidence: float = 0.0) -> Dict[str, Any]:
-        print(f"Solving with setting min_confidence={min_confidence}, depth_limit={self.max_depth}")
-
         """Run iterative-deepening DFS and return the first proven node found."""
+        if config.VERBOSE:
+            print(f"Solving with setting min_confidence={min_confidence}, depth_limit={self.max_depth}")
+
         root = GoalNode(formulas=[goal], depth=0, confidence=1.0)
 
         visited = {root.signature()}

@@ -1,7 +1,0 @@
-name: underground_directed2
-goal: "reachable(union_square, bryant_park)"
-kb_file: kb/underground_nyc.pl
-prompt_builder: underground
-omit_fact_ids: [7]
-solver:
-  allow_new_constants: false

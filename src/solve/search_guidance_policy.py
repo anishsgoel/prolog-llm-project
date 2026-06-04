@@ -73,7 +73,7 @@ class TrivialSearchGuidancePolicy(SearchGuidancePolicy):
     def extend_on_init(
             self,
             goal: AtomicFormula,
-            goal_node: GoalNode,
+            min_confidence: float,
             soft_kb: SoftKnowledgeBase,
     ) -> Tuple[SoftKnowledgeBase, list[SoftFact], bool]:
         return soft_kb, [], False
