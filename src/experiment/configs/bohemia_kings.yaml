@@ -1,13 +1,13 @@
 name: bohemia_kings
-# Goal: are Wenceslaus II and Otto of Brandenburg first cousins?
+# Goal: are Wenceslaus II and John of Brandenburg first cousins?
 # Proof needs:  parentof(premysl_otakar_ii, wenceslaus_ii)        [fact 5]
-#               parentof(bozena, otto_of_brandenburg)             [fact 9]
+#               parentof(bozena, john_of_brandenburg)             [fact 9]
 #               sibling(premysl_otakar_ii, bozena), which needs
 #                 parentof(wenceslaus_i, premysl_otakar_ii)       [fact 3]
 #                 parentof(wenceslaus_i, bozena)                  [fact 4 - OMITTED]
 # Fact 4 is omitted, so the baseline solver fails and the LLM must
 # hypothesise parentof(wenceslaus_i, bozena) to recover the proof.
-goal: "cousin(wenceslaus_ii, otto_of_brandenburg)"
+goal: "cousin(wenceslaus_ii, john_of_brandenburg)"
 kb_file: kb/bohemia_kings.pl
 propose_facts: parentof/2
 omit_fact_ids: [4]

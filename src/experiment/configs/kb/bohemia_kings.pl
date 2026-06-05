@@ -6,7 +6,7 @@
 6. parentof(vladislaus, agnes).
 7. parentof(wenceslaus_ii, wenceslaus_iii).
 8. parentof(wenceslaus_ii, elizabeth_premyslid).
-9. parentof(bozena, otto_of_brandenburg).
+9. parentof(bozena, john_of_brandenburg).
 10. parentof(john_of_luxembourg, charles_iv).
 11. parentof(elizabeth_premyslid, charles_iv).
 12. parentof(charles_iv, wenceslaus_iv).

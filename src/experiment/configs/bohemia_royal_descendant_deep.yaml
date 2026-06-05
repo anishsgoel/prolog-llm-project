@@ -1,0 +1,18 @@
+name: bohemia_royal_descendant_deep
+# A long royal_descendant proof. Normally wenceslaus_iv's father (charles_iv)
+# is a king, giving a 1-hop witness. We omit the five nearer kings on his line
+# so the ONLY remaining royal ancestor is the dynasty's root, premysl_otakar_i,
+# forcing the full 6-generation ancestor chain:
+#   royal_descendant(wenceslaus_iv)
+#     :- king(premysl_otakar_i),
+#        ancestor(premysl_otakar_i, wenceslaus_iv)   # 6 parentof hops
+# Omitted king/1 facts: 15 wenceslaus_i, 16 premysl_otakar_ii, 17 wenceslaus_ii,
+#                       19 john_of_luxembourg, 20 charles_iv.
+# Note: the omitted clauses are king/1 facts, not parentof/2, so this is a
+# deep-search illustration rather than a hypothesis-recovery case.
+goal: "royal_descendant(wenceslaus_iv)"
+kb_file: kb/bohemia_kings.pl
+propose_facts: parentof/2
+omit_fact_ids: [15, 16, 17, 19, 20]
+solver:
+  allow_new_constants: false
