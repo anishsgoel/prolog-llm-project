@@ -1,0 +1,12 @@
+name: bio_glycolysis
+# Metabolic-network gap-filling on glycolysis.
+# Goal: can glucose be converted to pyruvate? We omit the committed step
+# reaction(f6p, f16bp) (phosphofructokinase-1); the pathway is then broken and
+# pyruvate is unreachable. The LLM should re-propose the missing reaction,
+# recovering the canonical route. Mirrors real genome-scale model gap-filling.
+goal: "produces(glucose, pyruvate)"
+kb_file: kb/bio_glycolysis.pl
+propose_facts: reaction/2
+omit_fact_ids: [3]
+solver:
+  allow_new_constants: false

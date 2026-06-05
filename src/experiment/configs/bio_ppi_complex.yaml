@@ -1,0 +1,13 @@
+name: bio_ppi_complex
+# Missing-edge prediction in a protein-protein interaction (PPI) network.
+# Question: are BRCA1 and RAD51 in the same repair complex?
+# The only bridge between the BRCA1 side and the RAD51 side is PALB2-BRCA2,
+# which we omit. The baseline solver then fails; the LLM should re-propose the
+# (textbook) PALB2-BRCA2 interaction with high confidence. A speculative direct
+# interacts(brca1, rad51) shortcut should lose to the well-supported path.
+goal: "co_complex(brca1, rad51)"
+kb_file: kb/bio_ppi_complex.pl
+propose_facts: interacts/2
+omit_fact_ids: [3]
+solver:
+  allow_new_constants: false

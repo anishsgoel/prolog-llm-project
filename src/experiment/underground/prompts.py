@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, Sequence, Union, TYPE_CHECKING
 
 import jinja2
 
@@ -53,9 +53,12 @@ class PrologPromptBuilder(PromptBuilder):
     _BACKTRACK_SCHEMA = _BACKTRACK_SCHEMA
     _ENV: Optional[jinja2.Environment] = None
 
-    def __init__(self, propose_facts: str, solver_cfg: Optional["SolverConfig"] = None):
+    def __init__(self, propose_facts: Union[str, Sequence[str]], solver_cfg: Optional["SolverConfig"] = None):
         from cfg import SolverConfig
-        self.propose_facts = propose_facts
+        relations = [propose_facts] if isinstance(propose_facts, str) else list(propose_facts)
+        self.propose_facts = relations
+        # Human-readable form rendered into the prompts, e.g. "targets/2 or implicated/2".
+        self.propose_facts_text = " or ".join(relations)
         self.cfg = solver_cfg or SolverConfig()
         self.allow_soft_rules = self.cfg.allow_soft_rules
         self.max_hypotheses = self.cfg.max_hypotheses
@@ -77,7 +80,7 @@ class PrologPromptBuilder(PromptBuilder):
             context=context,
             max_hypotheses=self.max_hypotheses,
             clause_kind_instruction=_clause_kind_instruction(self.allow_soft_rules),
-            propose_facts=self.propose_facts,
+            propose_facts=self.propose_facts_text,
             allow_new_constants=self.allow_new_constants,
         ).strip()
 
@@ -86,7 +89,7 @@ class PrologPromptBuilder(PromptBuilder):
             context=context,
             max_hypotheses=self.max_hypotheses,
             clause_kind_instruction=_clause_kind_instruction(self.allow_soft_rules),
-            propose_facts=self.propose_facts,
+            propose_facts=self.propose_facts_text,
             allow_new_constants=self.allow_new_constants,
         ).strip()
 

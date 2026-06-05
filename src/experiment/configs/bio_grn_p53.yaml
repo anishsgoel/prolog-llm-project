@@ -1,0 +1,12 @@
+name: bio_grn_p53
+# Gene-regulatory feedback-loop recovery in the p53 network.
+# Goal: does p53 sit on a regulatory feedback loop? The only cycle is
+# tp53 -> mdm2 -> tp53. We omit the closing edge regulates(mdm2, tp53);
+# feedback(tp53) then fails. The LLM should re-propose the (textbook) negative
+# MDM2 -> p53 feedback edge.
+goal: "feedback(tp53)"
+kb_file: kb/bio_grn_p53.pl
+propose_facts: regulates/2
+omit_fact_ids: [3]
+solver:
+  allow_new_constants: false

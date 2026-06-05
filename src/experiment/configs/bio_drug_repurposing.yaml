@@ -1,0 +1,12 @@
+name: bio_drug_repurposing
+# Drug repurposing over a heterogeneous drug -> target -> disease network.
+# Goal: can imatinib treat GIST? In the full network this holds because imatinib
+# targets KIT (and PDGFRA), which drive GIST. We omit both of imatinib's GIST-
+# relevant targets, so no path remains. The LLM (proposing targets/2 or
+# implicated/2) should re-propose the imatinib-KIT target edge.
+goal: "treats(imatinib, gist)"
+kb_file: kb/bio_drug_repurposing.pl
+propose_facts: [targets/2, implicated/2]
+omit_fact_ids: [2, 3]
+solver:
+  allow_new_constants: false

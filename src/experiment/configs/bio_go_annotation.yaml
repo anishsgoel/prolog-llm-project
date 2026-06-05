@@ -1,0 +1,13 @@
+name: bio_go_annotation
+# Gene Ontology DAG reasoning with the true-path rule.
+# Goal: does BRCA1 have the general function "metabolic_process"? This requires
+# propagating its specific annotation (homologous_recombination) up the is_a
+# chain. We omit one mid-hierarchy edge is_a(dna_metabolic_process,
+# metabolic_process); the chain breaks and the inference fails. The LLM should
+# re-propose the missing subsumption edge.
+goal: "has_function(brca1, metabolic_process)"
+kb_file: kb/bio_go_annotation.pl
+propose_facts: is_a/2
+omit_fact_ids: [4]
+solver:
+  allow_new_constants: false
