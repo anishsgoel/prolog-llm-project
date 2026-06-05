@@ -96,6 +96,7 @@ class DFSMetaSolver:
         high: float = 1.0,
     ) -> tuple[Optional[Dict[str, Any]], SoftKnowledgeBase, float, List[Dict[str, Any]]]:
         probe = high
+        floor = low  # original lower bound; the loop below mutates ``low``
         tried = set()
 
         best_result: Optional[Dict[str, Any]] = None
@@ -137,24 +138,24 @@ class DFSMetaSolver:
                     break
                 probe = (low + probe) / 2.0
 
-        if best_result is None and 0.0 not in tried:
+        if best_result is None and round(floor, 6) not in tried:
             result, soft_kb = self._run_solver(
                 goal=goal,
                 soft_kb=soft_kb,
                 depth_limit=depth_limit,
-                min_confidence=0.0,
+                min_confidence=floor,
             )
             attempts.append(
                 {
                     "max_depth": depth_limit,
-                    "min_confidence": 0.0,
+                    "min_confidence": floor,
                     "success": result.get("success", False),
                     "confidence": result.get("confidence", 0.0),
                 }
             )
             if result.get("success"):
                 best_result = result
-                best_threshold = 0.0
+                best_threshold = floor
 
         return best_result, soft_kb, best_threshold, attempts
 
@@ -170,21 +171,41 @@ class DFSMetaSolver:
         depth_start = self.search_guidance_policy.estimate_depth(goal, self.soft_kb)
         depth_ceiling = max(depth_start, self.max_depth_ceiling)
 
+        # Objective is the *highest-confidence* proof, not the shallowest one.
+        # Path confidence is weakest-link (min-aggregation) and therefore
+        # monotone non-decreasing in the depth budget, so we keep deepening and
+        # only accept a deeper proof when it beats the best confidence found so
+        # far. Each deeper sweep searches only above best_threshold, which both
+        # prunes the search and prevents a shallow low-confidence shortcut from
+        # ending it before the longer high-confidence path is reached.
+        best_result: Optional[Dict[str, Any]] = None
+        best_threshold = 0.0
+        best_depth = depth_ceiling
+
         for depth_limit in range(depth_start, depth_ceiling + 1):
-            best_result, self.soft_kb, best_threshold, depth_attempts = self._search_confidence(
-                goal=goal, soft_kb=self.soft_kb, depth_limit=depth_limit, high=min_confidence_high
+            result, self.soft_kb, threshold, depth_attempts = self._search_confidence(
+                goal=goal, soft_kb=self.soft_kb, depth_limit=depth_limit,
+                low=best_threshold, high=min_confidence_high,
             )
             attempts.extend(depth_attempts)
 
-            if best_result is None:
-                continue
+            if result is not None and (best_result is None or threshold > best_threshold):
+                best_result = result
+                best_threshold = threshold
+                best_depth = depth_limit
 
+            # No hypothesised clause exceeds min_confidence_high, so once we
+            # match it no deeper search can improve the proof confidence.
+            if best_result is not None and best_threshold >= min_confidence_high - self.confidence_tolerance:
+                break
+
+        if best_result is not None:
             return {
                 "success": True,
                 "proof": best_result.get("proof"),
                 "confidence": best_result.get("confidence", 0.0),
                 "soft_kb": self.soft_kb,
-                "max_depth": depth_limit,
+                "max_depth": best_depth,
                 "min_confidence": best_threshold,
                 "attempts": attempts,
             }

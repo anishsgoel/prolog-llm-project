@@ -2,10 +2,9 @@ name: bohemia_royal_descendant
 # royal_descendant(X) :- king(A), ancestor(A, X).
 # Shows the king + ancestor-chain composition. Sigismund descends from several
 # kings, so the solver finds the shortest witness (his father Charles IV).
-# No facts omitted: pure deduction.
 goal: "royal_descendant(sigismund)"
 kb_file: kb/bohemia_kings.pl
-propose_facts: parentof/2
-omit_fact_ids: []
+propose_facts: [parentof/2,king/1]
+omit_fact_ids: [20]
 solver:
   allow_new_constants: false

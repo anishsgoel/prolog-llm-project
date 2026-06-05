@@ -12,7 +12,7 @@ name: bohemia_royal_descendant_deep
 # deep-search illustration rather than a hypothesis-recovery case.
 goal: "royal_descendant(wenceslaus_iv)"
 kb_file: kb/bohemia_kings.pl
-propose_facts: parentof/2
+propose_facts: [parentof/2,king/1]
 omit_fact_ids: [15, 16, 17, 19, 20]
 solver:
   allow_new_constants: false

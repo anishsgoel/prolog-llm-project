@@ -1,0 +1,7 @@
+name: london_undirected
+goal: "reachable(regents_park, elephant_and_castle)"
+kb_file: kb/london_undirected.pl
+propose_facts: connected/2
+omit_fact_ids: [1,2,3,4,5,6,7]
+solver:
+  allow_new_constants: true

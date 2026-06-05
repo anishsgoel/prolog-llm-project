@@ -3,10 +3,9 @@ name: bohemia_ancestor_deep
 # ancestor(premysl_otakar_i, sigismund) has a single proof path with no shortcut:
 #   premysl_otakar_i -> wenceslaus_i -> premysl_otakar_ii -> wenceslaus_ii
 #   -> elizabeth_premyslid -> charles_iv -> sigismund
-# No facts omitted: this exercises deep iterative-deepening search, not hypothesis recovery.
 goal: "ancestor(premysl_otakar_i, sigismund)"
 kb_file: kb/bohemia_kings.pl
 propose_facts: parentof/2
-omit_fact_ids: []
+omit_fact_ids: [2,4,6,8]
 solver:
   allow_new_constants: false

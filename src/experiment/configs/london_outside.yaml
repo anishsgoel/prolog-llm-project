@@ -1,0 +1,7 @@
+name: london_undirected
+goal: "reachable(paddington, elephant_and_castle)"
+kb_file: kb/london_undirected.pl
+propose_facts: connected/2
+omit_fact_ids: [4]
+solver:
+  allow_new_constants: true
