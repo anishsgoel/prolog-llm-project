@@ -2,8 +2,10 @@
 """Batch Prolog-LLM experiment runner.
 
 Runs multiple problem configs, logs every run to MLflow, and writes a
-summary CSV.  The original run.py is unchanged and still available for
-quick single-problem debugging.
+summary CSV (optionally an .xlsx too).  Rows are flushed to disk as each
+run finishes, so an interrupted batch (crash, Ctrl-C, server dying) keeps
+every result completed so far.  The original run.py is unchanged and still
+available for quick single-problem debugging.
 
 Usage
 -----
@@ -35,9 +37,11 @@ from __future__ import annotations
 
 import argparse
 import csv
+import dataclasses
+import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 # ---- path setup ----
 _SRC_DIR = Path(__file__).parent.parent
@@ -71,28 +75,21 @@ def _log_to_mlflow(metrics: RunMetrics, run_index: int) -> None:
             mlflow.log_param(k, str(v))
 
 
-def _collect_fieldnames(rows: List[Dict[str, Any]]) -> List[str]:
-    """Union of all keys across rows, preserving first-seen order."""
-    seen: set[str] = set()
-    fieldnames: List[str] = []
-    for row in rows:
-        for k in row:
-            if k not in seen:
-                fieldnames.append(k)
-                seen.add(k)
-    return fieldnames
+def _result_fieldnames() -> List[str]:
+    """Stable, complete column set known up front.
+
+    Derived from the RunMetrics schema plus the extra keys added per row
+    (``run_index``) and on failure (``error``).  Knowing all columns in
+    advance lets us write the CSV header once and stream rows as they
+    complete, instead of buffering every row to discover the columns.
+    """
+    names = [f.name for f in dataclasses.fields(RunMetrics)]
+    names.append("run_index")
+    names.append("error")
+    return names
 
 
-def _write_csv(rows: List[Dict[str, Any]], output: Path) -> None:
-    fieldnames = _collect_fieldnames(rows)
-    with open(output, "w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=fieldnames, extrasaction="ignore")
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
-
-
-def _write_xlsx(rows: List[Dict[str, Any]], output: Path) -> None:
+def _write_xlsx(rows: List[Dict[str, Any]], output: Path, fieldnames: List[str]) -> None:
     try:
         from openpyxl import Workbook
     except ImportError as exc:  # pragma: no cover - depends on optional dep
@@ -101,7 +98,6 @@ def _write_xlsx(rows: List[Dict[str, Any]], output: Path) -> None:
             "`pip install openpyxl`."
         ) from exc
 
-    fieldnames = _collect_fieldnames(rows)
     wb = Workbook()
     ws = wb.active
     ws.title = "results"
@@ -109,6 +105,44 @@ def _write_xlsx(rows: List[Dict[str, Any]], output: Path) -> None:
     for row in rows:
         ws.append([row.get(k) for k in fieldnames])
     wb.save(output)
+
+
+class _ResultsWriter:
+    """Persist result rows incrementally so a mid-run crash keeps what finished.
+
+    The CSV is opened once, the header is written, and every appended row is
+    flushed straight to disk.  If an ``.xlsx`` path is given it is rewritten
+    atomically (temp file + ``os.replace``) after each row, so the workbook on
+    disk is always complete and never half-written.
+    """
+
+    def __init__(self, csv_path: Path, xlsx_path: Optional[Path] = None,
+                 fieldnames: Optional[List[str]] = None):
+        self.csv_path = csv_path
+        self.xlsx_path = xlsx_path
+        self.fieldnames = fieldnames or _result_fieldnames()
+        self.rows: List[Dict[str, Any]] = []
+
+        self._fh = open(csv_path, "w", newline="", encoding="utf-8")
+        self._writer = csv.DictWriter(self._fh, fieldnames=self.fieldnames, extrasaction="ignore")
+        self._writer.writeheader()
+        self._fh.flush()
+
+    def append(self, row: Dict[str, Any]) -> None:
+        self.rows.append(row)
+        self._writer.writerow(row)
+        self._fh.flush()
+        os.fsync(self._fh.fileno())
+        if self.xlsx_path is not None:
+            self._rewrite_xlsx()
+
+    def _rewrite_xlsx(self) -> None:
+        tmp = self.xlsx_path.with_name(self.xlsx_path.name + ".tmp")
+        _write_xlsx(self.rows, tmp, self.fieldnames)
+        os.replace(tmp, self.xlsx_path)
+
+    def close(self) -> None:
+        self._fh.close()
 
 
 def main() -> None:
@@ -161,52 +195,58 @@ def main() -> None:
             mlflow.set_tracking_uri(args.tracking_uri)
         mlflow.set_experiment(args.mlflow_experiment)
 
-    all_rows: List[Dict[str, Any]] = []
+    output_path = Path(args.output)
+    xlsx_path = Path(args.xlsx) if args.xlsx else None
     total = len(args.configs) * args.runs
+    written = 0
 
-    for cfg_name in args.configs:
-        for run_idx in range(args.runs):
-            label = f"[{len(all_rows) + 1}/{total}]"
-            print(f"\n{label} config={cfg_name}  run={run_idx + 1}/{args.runs}")
-            try:
-                if use_mlflow:
-                    with mlflow.start_run(run_name=f"{cfg_name}_{run_idx}"):
+    # The writer flushes each row to disk as soon as it is produced, so an
+    # interrupted run (crash, Ctrl-C, server dying) keeps every finished row.
+    writer = _ResultsWriter(output_path, xlsx_path)
+    try:
+        for cfg_name in args.configs:
+            for run_idx in range(args.runs):
+                label = f"[{written + 1}/{total}]"
+                print(f"\n{label} config={cfg_name}  run={run_idx + 1}/{args.runs}")
+                try:
+                    if use_mlflow:
+                        with mlflow.start_run(run_name=f"{cfg_name}_{run_idx}"):
+                            metrics = run_tracked(cfg_name)
+                            _log_to_mlflow(metrics, run_idx)
+                    else:
                         metrics = run_tracked(cfg_name)
-                        _log_to_mlflow(metrics, run_idx)
-                else:
-                    metrics = run_tracked(cfg_name)
 
-                row = metrics.to_dict()
-                row["run_index"] = run_idx
-                all_rows.append(row)
+                    row = metrics.to_dict()
+                    row["run_index"] = run_idx
 
-                print(
-                    f"  success={metrics.success}"
-                    f"  conf={metrics.proof_confidence:.3f}"
-                    f"  proof_depth={metrics.proof_depth}"
-                    f"  gt_depth={metrics.ground_truth_proof_depth}"
-                    f"  llm_queries={metrics.llm_queries_total}"
-                    f"  hallucination_rate={metrics.hallucination_rate:.2f}"
-                    f"  recall_omitted={metrics.recall_omitted:.2f}"
-                    f"  time={metrics.wall_time_s:.1f}s"
-                )
+                    print(
+                        f"  success={metrics.success}"
+                        f"  conf={metrics.proof_confidence:.3f}"
+                        f"  proof_depth={metrics.proof_depth}"
+                        f"  gt_depth={metrics.ground_truth_proof_depth}"
+                        f"  llm_queries={metrics.llm_queries_total}"
+                        f"  hallucination_rate={metrics.hallucination_rate:.2f}"
+                        f"  recall_omitted={metrics.recall_omitted:.2f}"
+                        f"  time={metrics.wall_time_s:.1f}s"
+                    )
 
-            except Exception as exc:
-                print(f"  ERROR: {exc}")
-                all_rows.append({
-                    "config_name": cfg_name,
-                    "run_index": run_idx,
-                    "error": str(exc),
-                })
+                except Exception as exc:
+                    print(f"  ERROR: {exc}")
+                    row = {
+                        "config_name": cfg_name,
+                        "run_index": run_idx,
+                        "error": str(exc),
+                    }
 
-    if all_rows:
-        output_path = Path(args.output)
-        _write_csv(all_rows, output_path)
-        print(f"\nWrote {len(all_rows)} row(s) to {output_path}")
-        if args.xlsx:
-            xlsx_path = Path(args.xlsx)
-            _write_xlsx(all_rows, xlsx_path)
-            print(f"Wrote {len(all_rows)} row(s) to {xlsx_path}")
+                writer.append(row)
+                written += 1
+    finally:
+        writer.close()
+
+    if written:
+        print(f"\nWrote {written} row(s) to {output_path}")
+        if xlsx_path is not None:
+            print(f"Wrote {written} row(s) to {xlsx_path}")
         if use_mlflow:
             print(f"MLflow experiment: '{args.mlflow_experiment}'  "
                   f"(run `mlflow ui` then open http://127.0.0.1:5000)")
