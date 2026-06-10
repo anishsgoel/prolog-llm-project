@@ -1,0 +1,19 @@
+name: london_large
+# Missing-station recovery on a larger, realistic network (the Bakerloo line).
+# Unlike london_outside (where paddington is absent from the KB, so every
+# proposed edge is necessarily OUTSIDE the knowledge base / a hallucination),
+# here paddington and every station are real members of the full network. We
+# hide an intermediate station - BAKER STREET - by omitting both of its
+# adjacency edges (facts 3 and 4: marylebone-baker_street, baker_street-
+# regents_park). The path paddington -> elephant_and_castle is then broken.
+# A model that knows the London tube should re-propose the two REAL edges
+# through baker_street (which exist verbatim in the full KB, so they count as
+# recovered, not hallucinated) rather than a connected(marylebone, regents_park)
+# shortcut. allow_new_constants is true because the hidden station's name no
+# longer appears in the (omitted) program and must be re-introduced.
+goal: "reachable(paddington, elephant_and_castle)"
+kb_file: kb/london_large.pl
+propose_facts: connected/2
+omit_fact_ids: [3, 4]
+solver:
+  allow_new_constants: true

@@ -1,7 +1,7 @@
-name: london_undirected
+name: london_outside
 goal: "reachable(paddington, elephant_and_castle)"
-kb_file: kb/london_undirected.pl
+kb_file: kb/london_large.pl
 propose_facts: connected/2
-omit_fact_ids: [4]
+omit_fact_ids: [1,2,3,4,12,13,14,15,16]
 solver:
   allow_new_constants: true
