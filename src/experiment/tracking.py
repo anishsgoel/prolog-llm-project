@@ -26,15 +26,20 @@ for _p in (str(_SRC_DIR), str(_PROJECT_ROOT)):
 
 import config as _cfg_mod
 from cfg import ProblemConfig
+from experiment.groundtruth import GROUND_TRUTH_TIMEOUT_S, solve_ground_truth
 from experiment.underground.prompts import PrologPromptBuilder
 from prolog.formula_parsing import parse_prolog_to_formula
 from prolog.knowledge_base import KnowledgeBase, SoftKnowledgeBase
 from prolog_llm.llm import LLMInterface
 from solve import DFSMetaSolver, LLMSearchGuidancePolicy
-from solve.solver import Solver
 
 _CONFIGS_DIR = Path(__file__).parent / "configs"
 ALL_CONFIGS: List[str] = sorted(p.stem for p in _CONFIGS_DIR.glob("*.yaml"))
+
+# Value recorded for ground-truth-derived metrics when the ground-truth search
+# exceeds its time budget. Flows through to CSV/xlsx as "NA"; in MLflow it is
+# logged as a param (since it cannot be cast to a float metric).
+NA = "NA"
 
 # ---------------------------------------------------------------------------
 # RunMetrics
@@ -169,7 +174,8 @@ def run_tracked(config_name: str) -> RunMetrics:
     _cfg_mod.init_config()
     problem = ProblemConfig.from_yaml(_CONFIGS_DIR / f"{config_name}.yaml")
 
-    kb_full = KnowledgeBase(problem.load_kb_text(_CONFIGS_DIR))
+    kb_text = problem.load_kb_text(_CONFIGS_DIR)
+    kb_full = KnowledgeBase(kb_text)
     kb_missing = kb_full.omit_facts(set(problem.omit_fact_ids))
     goal_formula = parse_prolog_to_formula(problem.goal)
 
@@ -181,11 +187,20 @@ def run_tracked(config_name: str) -> RunMetrics:
         omitted_facts_total=len(problem.omit_fact_ids),
     )
 
-    # --- Ground truth: classic BFS solver on the *complete* KB ---
-    gt_result = Solver(kb_full, max_depth=30).solve(goal_formula)
-    metrics.ground_truth_success = int(gt_result["success"])
-    if gt_result["success"] and gt_result.get("proof") is not None:
-        metrics.ground_truth_proof_depth = gt_result["proof"].depth
+    # --- Ground truth: classic solver on the *complete* KB, time-bounded ---
+    # If the search does not finish within the budget it is killed and the
+    # ground-truth metrics are recorded as NA.
+    gt = solve_ground_truth(kb_text, problem.goal, max_depth=30, timeout_s=GROUND_TRUTH_TIMEOUT_S)
+    ground_truth_timed_out = gt is None
+    if ground_truth_timed_out:
+        print(f"  ground-truth search exceeded {GROUND_TRUTH_TIMEOUT_S}s -> recording NA")
+        metrics.ground_truth_success = NA
+        metrics.ground_truth_proof_depth = NA
+    else:
+        gt_success, gt_depth = gt
+        metrics.ground_truth_success = int(gt_success)
+        if gt_success:
+            metrics.ground_truth_proof_depth = gt_depth
 
     # --- LLM-guided run with instrumented components ---
     tracked_llm = TrackedLLMInterface()
@@ -247,6 +262,9 @@ def run_tracked(config_name: str) -> RunMetrics:
                 metrics.omitted_facts_recovered / metrics.omitted_facts_total
             )
 
-    metrics.proof_depth_diff = metrics.proof_depth - metrics.ground_truth_proof_depth
+    if ground_truth_timed_out:
+        metrics.proof_depth_diff = NA
+    else:
+        metrics.proof_depth_diff = metrics.proof_depth - metrics.ground_truth_proof_depth
 
     return metrics

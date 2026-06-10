@@ -19,10 +19,10 @@ overridden in YAML:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Union
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ---------------------------------------------------------------------------
@@ -82,9 +82,17 @@ class ProblemConfig(BaseModel):
     name: str
     goal: str
     kb_file: str
-    propose_facts: str  # base relation the LLM may hypothesise, e.g. "connected/2", "parentof/2"
+    # base relation(s) the LLM may hypothesise. Accepts a single value
+    # ("connected/2") or a list (["targets/2", "implicated/2"]); both are
+    # normalised to a list.
+    propose_facts: List[str]
     omit_fact_ids: List[int] = Field(default_factory=list)
     solver: SolverConfig = Field(default_factory=SolverConfig)
+
+    @field_validator("propose_facts", mode="before")
+    @classmethod
+    def _wrap_propose_facts(cls, value: Union[str, List[str]]) -> List[str]:
+        return [value] if isinstance(value, str) else value
 
     @classmethod
     def from_yaml(cls, path: str | Path) -> "ProblemConfig":
