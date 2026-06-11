@@ -54,8 +54,12 @@ import mlflow
 
 from experiment.tracking import ALL_CONFIGS, RunMetrics, run_tracked
 
-# Fields stored as MLflow *params* (categorical / non-numeric)
-_PARAM_KEYS = {"config_name", "goal", "omit_fact_ids", "model", "run_index"}
+# Fields stored as MLflow *params* (categorical / non-numeric). The proof
+# strings are long free text, so they go to params too (the full text is always
+# preserved in the CSV/xlsx; only the MLflow copy is length-capped).
+_PARAM_KEYS = {"config_name", "goal", "omit_fact_ids", "model", "run_index",
+               "proof", "ground_truth_proof"}
+_MLFLOW_PARAM_MAXLEN = 480  # MLflow caps param value length; truncate to stay safe
 
 
 def _log_to_mlflow(metrics: RunMetrics, run_index: int) -> None:
@@ -63,8 +67,11 @@ def _log_to_mlflow(metrics: RunMetrics, run_index: int) -> None:
     d = metrics.to_dict()
     # Identity → params
     for k in ("config_name", "goal", "omit_fact_ids", "model"):
-        mlflow.log_param(k, d[k])
+        mlflow.log_param(k, str(d[k])[:_MLFLOW_PARAM_MAXLEN])
     mlflow.log_param("run_index", run_index)
+    # Proof text → params (truncated for MLflow only)
+    for k in ("proof", "ground_truth_proof"):
+        mlflow.log_param(k, str(d.get(k, ""))[:_MLFLOW_PARAM_MAXLEN])
     # Everything numeric → metrics
     for k, v in d.items():
         if k in _PARAM_KEYS:
@@ -72,7 +79,7 @@ def _log_to_mlflow(metrics: RunMetrics, run_index: int) -> None:
         try:
             mlflow.log_metric(k, float(v))
         except (ValueError, TypeError):
-            mlflow.log_param(k, str(v))
+            mlflow.log_param(k, str(v)[:_MLFLOW_PARAM_MAXLEN])
 
 
 def _result_fieldnames() -> List[str]:

@@ -63,10 +63,12 @@ class RunMetrics:
     success: int = 0               # 0 / 1
     proof_confidence: float = 0.0
     proof_depth: int = 0           # GoalNode.depth of the returned proof node
+    proof: str = ""                # string form of the proof node returned by the meta-solver
 
     # --- Ground truth comparison (Solver on the *full* KB) ---
     ground_truth_success: int = 0
     ground_truth_proof_depth: int = 0
+    ground_truth_proof: str = ""   # string form of the proof found on the full KB
     proof_depth_diff: int = 0      # proof_depth - ground_truth_proof_depth
 
     # --- Soft-KB analysis ---
@@ -196,11 +198,13 @@ def run_tracked(config_name: str) -> RunMetrics:
         print(f"  ground-truth search exceeded {GROUND_TRUTH_TIMEOUT_S}s -> recording NA")
         metrics.ground_truth_success = NA
         metrics.ground_truth_proof_depth = NA
+        metrics.ground_truth_proof = NA
     else:
-        gt_success, gt_depth = gt
+        gt_success, gt_depth, gt_proof = gt
         metrics.ground_truth_success = int(gt_success)
         if gt_success:
             metrics.ground_truth_proof_depth = gt_depth
+            metrics.ground_truth_proof = gt_proof
 
     # --- LLM-guided run with instrumented components ---
     tracked_llm = TrackedLLMInterface()
@@ -217,8 +221,10 @@ def run_tracked(config_name: str) -> RunMetrics:
     # Outcome
     metrics.success = int(result["success"])
     metrics.proof_confidence = result.get("confidence", 0.0)
-    if result["success"] and result.get("proof") is not None:
-        metrics.proof_depth = result["proof"].depth
+    if result.get("proof") is not None:
+        metrics.proof = str(result["proof"])
+        if result["success"]:
+            metrics.proof_depth = result["proof"].depth
     metrics.max_depth_reached = result.get("max_depth", 0)
     metrics.min_confidence_final = result.get("min_confidence", 0.0)
     metrics.attempts_total = len(result.get("attempts", []))

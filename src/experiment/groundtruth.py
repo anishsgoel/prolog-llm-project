@@ -40,7 +40,7 @@ def _ensure_pythonpath() -> None:
 
 
 def _gt_worker(kb_text: str, goal_str: str, max_depth: int, queue: mp.Queue) -> None:
-    """Child process: reconstruct the KB, solve, and return (success, depth)."""
+    """Child process: reconstruct the KB, solve, and return (success, depth, proof)."""
     from prolog.knowledge_base import KnowledgeBase
     from prolog.formula_parsing import parse_prolog_to_formula
     from solve.solver import Solver
@@ -51,7 +51,8 @@ def _gt_worker(kb_text: str, goal_str: str, max_depth: int, queue: mp.Queue) -> 
     success = bool(result.get("success"))
     proof = result.get("proof")
     depth = proof.depth if (success and proof is not None) else 0
-    queue.put((success, int(depth)))
+    proof_str = str(proof) if proof is not None else ""
+    queue.put((success, int(depth), proof_str))
 
 
 def solve_ground_truth(
@@ -59,12 +60,12 @@ def solve_ground_truth(
     goal_str: str,
     max_depth: int = 30,
     timeout_s: float = GROUND_TRUTH_TIMEOUT_S,
-) -> Optional[Tuple[bool, int]]:
+) -> Optional[Tuple[bool, int, str]]:
     """Solve the ground-truth goal with a wall-clock limit.
 
-    Returns ``(success, proof_depth)`` if the search finishes in time, or
-    ``None`` if it exceeds ``timeout_s`` (or the worker dies without a result),
-    signalling the caller to record NA.
+    Returns ``(success, proof_depth, proof_str)`` if the search finishes in
+    time, or ``None`` if it exceeds ``timeout_s`` (or the worker dies without a
+    result), signalling the caller to record NA.
     """
     _ensure_pythonpath()
     ctx = mp.get_context("spawn")
