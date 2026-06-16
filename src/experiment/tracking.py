@@ -27,7 +27,7 @@ for _p in (str(_SRC_DIR), str(_PROJECT_ROOT)):
 import config as _cfg_mod
 from cfg import ProblemConfig
 from experiment.groundtruth import GROUND_TRUTH_TIMEOUT_S, solve_ground_truth
-from experiment.underground.prompts import PrologPromptBuilder
+from experiment.prompts import PrologPromptBuilder
 from prolog.formula_parsing import parse_prolog_to_formula
 from prolog.knowledge_base import KnowledgeBase, SoftKnowledgeBase
 from prolog_llm.llm import LLMInterface
@@ -166,14 +166,19 @@ class TrackedLLMSearchGuidancePolicy(LLMSearchGuidancePolicy):
 # Main tracked-run entry point
 # ---------------------------------------------------------------------------
 
-def run_tracked(config_name: str) -> RunMetrics:
+def run_tracked(config_name: str, model: Optional[str] = None) -> RunMetrics:
     """Run one experiment problem with full metrics collection.
 
     Equivalent to run.run() but returns a populated RunMetrics instead of
     printing results.  The original run.py is untouched and remains usable
     for quick debugging.
+
+    If ``model`` is given it overrides the configured LLM model for this run,
+    so the same problem can be evaluated across several models.
     """
     _cfg_mod.init_config()
+    if model:
+        _cfg_mod.MODEL = model
     problem = ProblemConfig.from_yaml(_CONFIGS_DIR / f"{config_name}.yaml")
 
     kb_text = problem.load_kb_text(_CONFIGS_DIR)
@@ -207,7 +212,7 @@ def run_tracked(config_name: str) -> RunMetrics:
             metrics.ground_truth_proof = gt_proof
 
     # --- LLM-guided run with instrumented components ---
-    tracked_llm = TrackedLLMInterface()
+    tracked_llm = TrackedLLMInterface(model=_cfg_mod.MODEL)
     prompt_builder = PrologPromptBuilder(problem.propose_facts, problem.solver)
     policy = TrackedLLMSearchGuidancePolicy(
         prompt_builder, tracked_llm=tracked_llm, solver_cfg=problem.solver

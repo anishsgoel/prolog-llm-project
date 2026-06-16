@@ -19,7 +19,12 @@ Usage
     # Three independent repetitions of every config
     python src/experiment/batch_run.py --runs 3 --output results.csv
 
-    # Also export an Excel workbook (requires openpyxl)
+    # Evaluate several LLM models (each config is run with each model)
+    python src/experiment/batch_run.py --models gpt-oss:20b llama3:8b --xlsx results.xlsx
+
+    # Also export an Excel workbook (requires openpyxl). The workbook has a
+    # 'results' sheet (one row per run) and a 'summary' sheet (means per
+    # dataset x model).
     python src/experiment/batch_run.py --xlsx results.xlsx
 
     # Custom MLflow server
@@ -52,6 +57,7 @@ for _p in (str(_SRC_DIR), str(_PROJECT_ROOT)):
 
 import mlflow
 
+import config as _cfg_mod
 from experiment.tracking import ALL_CONFIGS, RunMetrics, run_tracked
 
 # Fields stored as MLflow *params* (categorical / non-numeric). The proof
@@ -96,6 +102,51 @@ def _result_fieldnames() -> List[str]:
     return names
 
 
+def _numeric_metric_fields() -> List[str]:
+    """RunMetrics fields that hold a number (so they can be averaged)."""
+    return [f.name for f in dataclasses.fields(RunMetrics) if f.type in ("int", "float")]
+
+
+def _summary_fieldnames() -> List[str]:
+    return ["config_name", "model", "n_runs", "n_errors"] + \
+           ["mean_" + f for f in _numeric_metric_fields()]
+
+
+def _summary_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Aggregate raw rows into one summary row per (dataset, model).
+
+    The mean of each numeric metric is taken over the rows where that metric is
+    actually a number, so error rows and NA ground-truth values are skipped
+    rather than corrupting the average.
+    """
+    numeric = _numeric_metric_fields()
+    groups: Dict[tuple, List[Dict[str, Any]]] = {}
+    order: List[tuple] = []
+    for row in rows:
+        key = (row.get("config_name", ""), row.get("model", ""))
+        if key not in groups:
+            groups[key] = []
+            order.append(key)
+        groups[key].append(row)
+
+    summary: List[Dict[str, Any]] = []
+    for key in order:
+        cfg_name, model = key
+        grp = groups[key]
+        out: Dict[str, Any] = {
+            "config_name": cfg_name,
+            "model": model,
+            "n_runs": len(grp),
+            "n_errors": sum(1 for r in grp if r.get("error")),
+        }
+        for field in numeric:
+            vals = [r[field] for r in grp
+                    if isinstance(r.get(field), (int, float)) and not isinstance(r.get(field), bool)]
+            out["mean_" + field] = (sum(vals) / len(vals)) if vals else None
+        summary.append(out)
+    return summary
+
+
 def _write_xlsx(rows: List[Dict[str, Any]], output: Path, fieldnames: List[str]) -> None:
     try:
         from openpyxl import Workbook
@@ -111,6 +162,14 @@ def _write_xlsx(rows: List[Dict[str, Any]], output: Path, fieldnames: List[str])
     ws.append(fieldnames)
     for row in rows:
         ws.append([row.get(k) for k in fieldnames])
+
+    # Per-(dataset, model) summary sheet.
+    ws_summary = wb.create_sheet("summary")
+    summary_fieldnames = _summary_fieldnames()
+    ws_summary.append(summary_fieldnames)
+    for srow in _summary_rows(rows):
+        ws_summary.append([srow.get(k) for k in summary_fieldnames])
+
     wb.save(output)
 
 
@@ -164,6 +223,12 @@ def main() -> None:
              f"Available: {', '.join(ALL_CONFIGS)}",
     )
     parser.add_argument(
+        "--models", nargs="+", default=None, metavar="MODEL",
+        help="One or more LLM model names to evaluate (e.g. gpt-oss:20b llama3:8b). "
+             "Each config is run with each model. Omit to use the model from the "
+             "active configuration.",
+    )
+    parser.add_argument(
         "--runs", type=int, default=1, metavar="N",
         help="Independent runs per config (default: 1). "
              "Useful for estimating variance over stochastic LLM responses.",
@@ -196,6 +261,14 @@ def main() -> None:
     if args.configs == ["*"] or "*" in args.configs:
         args.configs = ALL_CONFIGS
 
+    # Resolve the model list. With no --models, use the configured default so
+    # rows (and the summary) are still labelled with a concrete model name.
+    if args.models:
+        models = args.models
+    else:
+        _cfg_mod.init_config()
+        models = [_cfg_mod.MODEL]
+
     use_mlflow = not args.no_mlflow
     if use_mlflow:
         if args.tracking_uri:
@@ -204,56 +277,58 @@ def main() -> None:
 
     output_path = Path(args.output)
     xlsx_path = Path(args.xlsx) if args.xlsx else None
-    total = len(args.configs) * args.runs
+    total = len(models) * len(args.configs) * args.runs
     written = 0
 
     # The writer flushes each row to disk as soon as it is produced, so an
     # interrupted run (crash, Ctrl-C, server dying) keeps every finished row.
     writer = _ResultsWriter(output_path, xlsx_path)
     try:
-        for cfg_name in args.configs:
-            for run_idx in range(args.runs):
-                label = f"[{written + 1}/{total}]"
-                print(f"\n{label} config={cfg_name}  run={run_idx + 1}/{args.runs}")
-                try:
-                    if use_mlflow:
-                        with mlflow.start_run(run_name=f"{cfg_name}_{run_idx}"):
-                            metrics = run_tracked(cfg_name)
-                            _log_to_mlflow(metrics, run_idx)
-                    else:
-                        metrics = run_tracked(cfg_name)
+        for model in models:
+            for cfg_name in args.configs:
+                for run_idx in range(args.runs):
+                    label = f"[{written + 1}/{total}]"
+                    print(f"\n{label} model={model}  config={cfg_name}  run={run_idx + 1}/{args.runs}")
+                    try:
+                        if use_mlflow:
+                            with mlflow.start_run(run_name=f"{model}_{cfg_name}_{run_idx}"):
+                                metrics = run_tracked(cfg_name, model=model)
+                                _log_to_mlflow(metrics, run_idx)
+                        else:
+                            metrics = run_tracked(cfg_name, model=model)
 
-                    row = metrics.to_dict()
-                    row["run_index"] = run_idx
+                        row = metrics.to_dict()
+                        row["run_index"] = run_idx
 
-                    print(
-                        f"  success={metrics.success}"
-                        f"  conf={metrics.proof_confidence:.3f}"
-                        f"  proof_depth={metrics.proof_depth}"
-                        f"  gt_depth={metrics.ground_truth_proof_depth}"
-                        f"  llm_queries={metrics.llm_queries_total}"
-                        f"  hallucination_rate={metrics.hallucination_rate:.2f}"
-                        f"  recall_omitted={metrics.recall_omitted:.2f}"
-                        f"  time={metrics.wall_time_s:.1f}s"
-                    )
+                        print(
+                            f"  success={metrics.success}"
+                            f"  conf={metrics.proof_confidence:.3f}"
+                            f"  proof_depth={metrics.proof_depth}"
+                            f"  gt_depth={metrics.ground_truth_proof_depth}"
+                            f"  llm_queries={metrics.llm_queries_total}"
+                            f"  hallucination_rate={metrics.hallucination_rate:.2f}"
+                            f"  recall_omitted={metrics.recall_omitted:.2f}"
+                            f"  time={metrics.wall_time_s:.1f}s"
+                        )
 
-                except Exception as exc:
-                    print(f"  ERROR: {exc}")
-                    row = {
-                        "config_name": cfg_name,
-                        "run_index": run_idx,
-                        "error": str(exc),
-                    }
+                    except Exception as exc:
+                        print(f"  ERROR: {exc}")
+                        row = {
+                            "config_name": cfg_name,
+                            "model": model,
+                            "run_index": run_idx,
+                            "error": str(exc),
+                        }
 
-                writer.append(row)
-                written += 1
+                    writer.append(row)
+                    written += 1
     finally:
         writer.close()
 
     if written:
         print(f"\nWrote {written} row(s) to {output_path}")
         if xlsx_path is not None:
-            print(f"Wrote {written} row(s) to {xlsx_path}")
+            print(f"Wrote {written} row(s) to {xlsx_path} (sheets: 'results', 'summary')")
         if use_mlflow:
             print(f"MLflow experiment: '{args.mlflow_experiment}'  "
                   f"(run `mlflow ui` then open http://127.0.0.1:5000)")
