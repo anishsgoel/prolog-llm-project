@@ -1,12 +1,14 @@
 """Centralised logging configuration for the Prolog-LLM system.
 
-Three named loggers are configured:
+Four named loggers are configured:
 
   ``pllm``         – general application logger (console output).
   ``pllm.llm``     – every LLM prompt and response, written to
                      ``logs/llm_prompts.log`` only (kept off the console).
   ``pllm.solver``  – verbose proof-search trace, written to
                      ``logs/solver_trace.log`` only.
+  ``pllm.errors``  – every caught exception (message + full stack trace),
+                     written to ``logs/errors.log`` only.
 
 Call :func:`setup_logging` once at start-up (``config.init_config`` does this).
 Modules obtain their logger via :func:`get_logger`.
@@ -23,6 +25,7 @@ _LOG_DIR = Path(__file__).resolve().parent / "logs"
 APP_LOGGER = "pllm"
 LLM_LOGGER = "pllm.llm"
 SOLVER_LOGGER = "pllm.solver"
+ERROR_LOGGER = "pllm.errors"
 
 _configured = False
 
@@ -46,13 +49,15 @@ def setup_logging(
     app = logging.getLogger(APP_LOGGER)
     llm = logging.getLogger(LLM_LOGGER)
     solver = logging.getLogger(SOLVER_LOGGER)
+    errors = logging.getLogger(ERROR_LOGGER)
 
     app.setLevel(logging.DEBUG if debug else logging.INFO if verbose else logging.WARNING)
     llm.setLevel(logging.DEBUG)
     solver.setLevel(logging.DEBUG if (verbose or debug) else logging.WARNING)
+    errors.setLevel(logging.ERROR)
 
     # Child loggers write only to their own files, never to the console.
-    for lg in (app, llm, solver):
+    for lg in (app, llm, solver, errors):
         lg.propagate = False
         for handler in list(lg.handlers):
             lg.removeHandler(handler)
@@ -71,6 +76,10 @@ def setup_logging(
     solver_handler = logging.FileHandler(directory / "solver_trace.log", encoding="utf-8")
     solver_handler.setFormatter(file_formatter)
     solver.addHandler(solver_handler)
+
+    error_handler = logging.FileHandler(directory / "errors.log", encoding="utf-8")
+    error_handler.setFormatter(file_formatter)
+    errors.addHandler(error_handler)
 
     _configured = True
 

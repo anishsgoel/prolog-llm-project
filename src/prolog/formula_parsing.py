@@ -6,6 +6,7 @@ from typing import Tuple
 
 from prolog.prolog_utils import is_variable
 
+from log_setup import ERROR_LOGGER, get_logger
 from logic.logic import (
     Pred,
     Var,
@@ -14,6 +15,8 @@ from logic.logic import (
     Formula,
     Conjunction,
 )
+
+_err_log = get_logger(ERROR_LOGGER)
 
 
 def parse_prolog_to_formula(term: str) -> AtomicFormula:
@@ -135,11 +138,13 @@ def split_head_and_body(clause: str) -> Tuple[Optional[str], Optional[str]]:
             for atom in split_body_atoms(body_part):
                 parse_predicate(atom.strip())
         except Exception:
+            _err_log.exception("split_head_and_body: unparseable rule clause %r", clause)
             return None, None
         return head, body_part
 
     try:
         parse_predicate(body)
     except Exception:
+        _err_log.exception("split_head_and_body: unparseable fact clause %r", clause)
         return None, None
     return body, None

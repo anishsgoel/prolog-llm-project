@@ -22,6 +22,10 @@ Usage
     # Evaluate several LLM models (each config is run with each model)
     python src/experiment/batch_run.py --models gpt-oss:20b llama3:8b --xlsx results.xlsx
 
+    # Give up on any single evaluation that runs longer than 30 minutes
+    python src/experiment/batch_run.py --eval-timeout 1800
+    # (default is 7200s = 2 hours; use --eval-timeout 0 to disable the limit)
+
     # Also export an Excel workbook (requires openpyxl). The workbook has a
     # 'results' sheet (one row per run) and a 'summary' sheet (means per
     # dataset x model).
@@ -59,6 +63,10 @@ import mlflow
 
 import config as _cfg_mod
 from experiment.tracking import ALL_CONFIGS, RunMetrics, run_tracked
+from experiment.timed_run import run_tracked_timed
+from log_setup import ERROR_LOGGER, get_logger
+
+_err_log = get_logger(ERROR_LOGGER)
 
 # Fields stored as MLflow *params* (categorical / non-numeric). The proof
 # strings are long free text, so they go to params too (the full text is always
@@ -86,6 +94,27 @@ def _log_to_mlflow(metrics: RunMetrics, run_index: int) -> None:
             mlflow.log_metric(k, float(v))
         except (ValueError, TypeError):
             mlflow.log_param(k, str(v)[:_MLFLOW_PARAM_MAXLEN])
+
+
+def _evaluate(config_name: str, model: Optional[str], eval_timeout: float):
+    """Run one evaluation, optionally under a wall-clock limit.
+
+    Returns ``(RunMetrics, None)`` on success, or ``(None, message)`` if the run
+    timed out or failed. When ``eval_timeout`` is 0/negative the evaluation runs
+    in-process with no limit (original behaviour).
+    """
+    try:
+        if eval_timeout and eval_timeout > 0:
+            res = run_tracked_timed(config_name, model, eval_timeout)
+            if res["status"] == "ok":
+                return RunMetrics(**res["metrics"]), None
+            if res["status"] == "timeout":
+                return None, f"timed out after {eval_timeout:g}s"
+            return None, res.get("message", "evaluation worker error")
+        return run_tracked(config_name, model=model), None
+    except Exception as exc:
+        _err_log.exception("_evaluate: evaluation failed: config=%s model=%s", config_name, model)
+        return None, f"{exc.__class__.__name__}: {exc}"
 
 
 def _result_fieldnames() -> List[str]:
@@ -151,6 +180,7 @@ def _write_xlsx(rows: List[Dict[str, Any]], output: Path, fieldnames: List[str])
     try:
         from openpyxl import Workbook
     except ImportError as exc:  # pragma: no cover - depends on optional dep
+        _err_log.exception("_write_xlsx: openpyxl not installed")
         raise SystemExit(
             "Writing .xlsx requires the 'openpyxl' package. Install it with "
             "`pip install openpyxl`."
@@ -234,6 +264,12 @@ def main() -> None:
              "Useful for estimating variance over stochastic LLM responses.",
     )
     parser.add_argument(
+        "--eval-timeout", type=float, default=7200, metavar="SECONDS",
+        help="Per-evaluation wall-clock limit in seconds (default: 7200 = 2 hours). "
+             "If a single config x model run exceeds it, the run is killed and "
+             "recorded as a timeout. Set 0 to disable (run in-process, no limit).",
+    )
+    parser.add_argument(
         "--output", default="results.csv", metavar="PATH",
         help="Output CSV file path (default: results.csv).",
     )
@@ -289,17 +325,22 @@ def main() -> None:
                 for run_idx in range(args.runs):
                     label = f"[{written + 1}/{total}]"
                     print(f"\n{label} model={model}  config={cfg_name}  run={run_idx + 1}/{args.runs}")
-                    try:
-                        if use_mlflow:
-                            with mlflow.start_run(run_name=f"{model}_{cfg_name}_{run_idx}"):
-                                metrics = run_tracked(cfg_name, model=model)
-                                _log_to_mlflow(metrics, run_idx)
-                        else:
-                            metrics = run_tracked(cfg_name, model=model)
 
+                    metrics, err = _evaluate(cfg_name, model, args.eval_timeout)
+
+                    if use_mlflow:
+                        with mlflow.start_run(run_name=f"{model}_{cfg_name}_{run_idx}"):
+                            if metrics is not None:
+                                _log_to_mlflow(metrics, run_idx)
+                            else:
+                                mlflow.log_param("config_name", cfg_name)
+                                mlflow.log_param("model", model)
+                                mlflow.log_param("run_index", run_idx)
+                                mlflow.log_param("error", str(err)[:_MLFLOW_PARAM_MAXLEN])
+
+                    if metrics is not None:
                         row = metrics.to_dict()
                         row["run_index"] = run_idx
-
                         print(
                             f"  success={metrics.success}"
                             f"  conf={metrics.proof_confidence:.3f}"
@@ -310,14 +351,13 @@ def main() -> None:
                             f"  recall_omitted={metrics.recall_omitted:.2f}"
                             f"  time={metrics.wall_time_s:.1f}s"
                         )
-
-                    except Exception as exc:
-                        print(f"  ERROR: {exc}")
+                    else:
+                        print(f"  GAVE UP: {err}")
                         row = {
                             "config_name": cfg_name,
                             "model": model,
                             "run_index": run_idx,
-                            "error": str(exc),
+                            "error": err,
                         }
 
                     writer.append(row)

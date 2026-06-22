@@ -6,6 +6,7 @@ import json
 from typing import Dict, List, Optional, Tuple
 
 import config
+from log_setup import ERROR_LOGGER, get_logger
 from logic.logic import AtomicFormula
 from prolog.formula_parsing import split_head_and_body
 from prolog.knowledge_base import SoftKnowledgeBase
@@ -15,6 +16,8 @@ from prolog_llm.prolog_utils import extract_first_json
 from solve.goalnode import GoalNode
 from solve.prompt_buidler import PromptBuilder, LLMSearchGuidancePromptContext
 from solve.search_guidance_policy import SearchGuidancePolicy
+
+_err_log = get_logger(ERROR_LOGGER)
 
 
 class LLMSearchGuidancePolicy(SearchGuidancePolicy):
@@ -104,6 +107,7 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
             data = json.loads(extract_first_json(raw))
             order = data.get("order", [])
         except Exception:
+            _err_log.exception("order_goals: failed to parse LLM ordering response; keeping original order. raw=%r", raw)
             return goal_nodes
 
         if not isinstance(order, list):
@@ -136,6 +140,7 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
             try:
                 confidence = float(item.get("confidence", 0.0))
             except Exception:
+                _err_log.exception("_apply_clauses: non-numeric confidence in proposed clause %r; skipping", item)
                 continue
             confidence = max(0.0, min(1.0, confidence))
 
@@ -181,6 +186,7 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
         try:
             data = json.loads(extract_first_json(raw))
         except Exception:
+            _err_log.exception("extend_on_backtrack: failed to parse LLM clauses response. raw=%r", raw)
             return soft_kb, [], False
 
         clauses = data.get("clauses", [])
@@ -197,6 +203,7 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
             data = json.loads(extract_first_json(raw))
             return max(1, int(data.get("depth", config.DEFAULT_MAX_DEPTH)))
         except Exception:
+            _err_log.exception("estimate_depth: failed to parse LLM depth response; using default. raw=%r", raw)
             return config.DEFAULT_MAX_DEPTH
 
     def extend_on_init(self, goal: AtomicFormula, min_confidence: float,
@@ -208,6 +215,7 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
         try:
             data = json.loads(extract_first_json(raw))
         except Exception:
+            _err_log.exception("extend_on_init: failed to parse LLM clauses response. raw=%r", raw)
             return soft_kb, [], False
 
         clauses = data.get("clauses", [])

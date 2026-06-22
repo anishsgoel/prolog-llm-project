@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import config
+from log_setup import ERROR_LOGGER, get_logger
 from logic.logic import AtomicFormula, Term, Var
 from prolog.formula_parsing import split_head_and_body
 from prolog.knowledge_base import SoftKnowledgeBase
@@ -16,6 +17,8 @@ from prolog.prolog_utils import is_mixed_atom
 from prolog_llm.llm import LLMInterface
 from prolog_llm.prolog_utils import extract_first_json
 from solve.extension_strategy import ExtensionStrategy
+
+_err_log = get_logger(ERROR_LOGGER)
 
 
 @dataclass(frozen=True)
@@ -162,6 +165,7 @@ class LLMExtensionStrategy(ExtensionStrategy):
         try:
             data = json.loads(extract_first_json(raw))
         except Exception:
+            _err_log.exception("LLMExtensionStrategy.extend: failed to parse LLM clauses response. raw=%r", raw)
             print("Extension empty.")
             next_depth = max_depth + 1 if self.increase_depth_on_empty else max_depth
             return soft_kb, next_depth, min_confidence
@@ -184,6 +188,7 @@ class LLMExtensionStrategy(ExtensionStrategy):
             try:
                 confidence = float(item.get("confidence", 0.0))
             except Exception:
+                _err_log.exception("LLMExtensionStrategy.extend: non-numeric confidence in clause %r; skipping", item)
                 continue
             confidence = max(0.0, min(1.0, confidence))
             max_confidence_added = max(confidence, max_confidence_added)

@@ -19,6 +19,10 @@ import sys
 from pathlib import Path
 from typing import Optional, Tuple
 
+from log_setup import ERROR_LOGGER, get_logger
+
+_err_log = get_logger(ERROR_LOGGER)
+
 _SRC_DIR = Path(__file__).resolve().parent.parent   # …/src
 _PROJECT_ROOT = _SRC_DIR.parent                     # …/prolog-llm-project
 
@@ -82,4 +86,5 @@ def solve_ground_truth(
     try:
         return queue.get_nowait()
     except Exception:
+        _err_log.exception("solve_ground_truth: worker finished without a result")
         return None

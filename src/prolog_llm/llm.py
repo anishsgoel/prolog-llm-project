@@ -6,9 +6,10 @@ import ollama
 
 from prolog_llm.prolog_utils import extract_first_json
 import config
-from log_setup import LLM_LOGGER, get_logger
+from log_setup import ERROR_LOGGER, LLM_LOGGER, get_logger
 
 _llm_log = get_logger(LLM_LOGGER)
+_err_log = get_logger(ERROR_LOGGER)
 
 
 class LLMInterface:
@@ -88,6 +89,7 @@ class LLMInterface:
             resp = resp["message"]
         except Exception as e:
             _llm_log.error("Ollama chat() exception: %r", e)
+            _err_log.exception("LLMInterface.generate: Ollama chat() failed")
             return ""
 
         answer = (resp.get("content") or "").strip()
@@ -128,7 +130,7 @@ class LLMInterface:
             _ = extract_first_json(raw)
             return raw
         except Exception:
-            pass
+            _err_log.exception("ask_with_retry: no valid JSON in first response; retrying with repair prompt. raw=%r", raw)
 
         if not repair_schema:
             return raw
