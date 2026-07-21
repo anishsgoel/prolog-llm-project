@@ -8,5 +8,4 @@ goal: "treats(imatinib, gist)"
 kb_file: kb/bio_drug_repurposing.pl
 propose_facts: [targets/2, implicated/2]
 omit_fact_ids: [2, 3]
-solver:
-  allow_new_constants: false
+allow_new_constants: false

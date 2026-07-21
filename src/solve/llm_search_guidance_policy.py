@@ -30,6 +30,7 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
         self.cfg = solver_cfg or SolverConfig()
         self.max_hypotheses = self.cfg.max_hypotheses
         self.allow_soft_rules = self.cfg.allow_soft_rules
+        self.verify_hypotheses = config.VERIFY_HYPOTHESES
         self.llm_search_guidance = llm_search_guidance
         self._backtrack_called_signatures: set = set()
         self._order_cache: Dict[tuple, List[tuple]] = {}
@@ -129,6 +130,35 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
         self._order_cache[cache_key] = [node.signature() for node in ordered_goal_nodes]
         return ordered_goal_nodes
 
+    def _verify_clauses(self, clauses: list, goal: AtomicFormula, soft_kb: SoftKnowledgeBase,
+                        min_confidence: float) -> list:
+        """Second LLM pass: keep only clauses judged plausible (not shortcuts).
+
+        Fail-open: on any parse error (or when disabled) the clauses are returned
+        unchanged, mirroring the defensive pattern in ``order_goals``.
+        """
+        if not self.verify_hypotheses or not clauses:
+            return clauses
+
+        context = self._prompt_context(goal, soft_kb, min_confidence)
+        prompt = self.llm_search_guidance.verify_prompt(
+            context, [item.get("clause", "") for item in clauses]
+        )
+        raw = self.llm.ask_with_retry(prompt, repair_schema=self.llm_search_guidance.verify_schema())
+
+        try:
+            data = json.loads(extract_first_json(raw))
+            verdicts = data.get("verdicts", [])
+            kept = {
+                v.get("clause", "") for v in verdicts
+                if isinstance(v, dict) and v.get("keep") is True
+            }
+        except Exception:
+            _err_log.exception("_verify_clauses: failed to parse LLM verdicts; keeping all clauses. raw=%r", raw)
+            return clauses
+
+        return [item for item in clauses if item.get("clause", "") in kept]
+
     def _apply_clauses(self, clauses: list, soft_kb: SoftKnowledgeBase) -> Tuple[SoftKnowledgeBase, List[SoftFact], bool]:
         new_kb = soft_kb.copy()
         next_num = max([0] + [fact.num for fact in new_kb.facts] + [rule.num for rule in new_kb.rules]) + 1
@@ -193,6 +223,7 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
         if not isinstance(clauses, list):
             return soft_kb, [], False
 
+        clauses = self._verify_clauses(clauses, goal, soft_kb, min_confidence)
         return self._apply_clauses(clauses, soft_kb)
 
     def estimate_depth(self, goal: AtomicFormula, soft_kb: SoftKnowledgeBase) -> int:
@@ -222,4 +253,5 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
         if not isinstance(clauses, list):
             return soft_kb, [], False
 
+        clauses = self._verify_clauses(clauses, goal, soft_kb, min_confidence)
         return self._apply_clauses(clauses, soft_kb)

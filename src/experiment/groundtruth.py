@@ -56,7 +56,8 @@ def _gt_worker(kb_text: str, goal_str: str, max_depth: int, queue: mp.Queue) -> 
     proof = result.get("proof")
     depth = proof.depth if (success and proof is not None) else 0
     proof_str = str(proof) if proof is not None else ""
-    queue.put((success, int(depth), proof_str))
+    leaves = sorted(proof.leaf_atoms()) if (success and proof is not None) else []
+    queue.put((success, int(depth), proof_str, leaves))
 
 
 def solve_ground_truth(
@@ -64,12 +65,12 @@ def solve_ground_truth(
     goal_str: str,
     max_depth: int = 30,
     timeout_s: float = GROUND_TRUTH_TIMEOUT_S,
-) -> Optional[Tuple[bool, int, str]]:
+) -> Optional[Tuple[bool, int, str, list]]:
     """Solve the ground-truth goal with a wall-clock limit.
 
-    Returns ``(success, proof_depth, proof_str)`` if the search finishes in
-    time, or ``None`` if it exceeds ``timeout_s`` (or the worker dies without a
-    result), signalling the caller to record NA.
+    Returns ``(success, proof_depth, proof_str, leaf_atoms)`` if the search
+    finishes in time, or ``None`` if it exceeds ``timeout_s`` (or the worker
+    dies without a result), signalling the caller to record NA.
     """
     _ensure_pythonpath()
     ctx = mp.get_context("spawn")

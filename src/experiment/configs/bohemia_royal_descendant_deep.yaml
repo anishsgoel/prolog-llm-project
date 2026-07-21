@@ -14,5 +14,4 @@ goal: "royal_descendant(wenceslaus_iv)"
 kb_file: kb/bohemia_kings.pl
 propose_facts: [parentof/2,king/1]
 omit_fact_ids: [15, 16, 17, 19, 20]
-solver:
-  allow_new_constants: false
+allow_new_constants: false

@@ -1,0 +1,32 @@
+# Global configuration for the Prolog-LLM system (loaded by config.init_config()).
+# Every value below is the built-in default, so this file is a no-op until you
+# change something. Mirrors cfg.GlobalConfig.
+
+# --- LLM backend ---
+llm:
+  model: gpt-oss:20b
+  temperature: 0.0
+  num_predict: 256
+  stop_tokens: ["\n\n", "\nWe ", "\nI ", "\nExplanation", "```"]
+
+# --- output / logging ---
+debug: false
+verbose: true
+
+# --- system-wide search limits ---
+hyp_prompt_fact_limit: 25      # max soft facts/rules shown to the LLM in a prompt
+soft_bfs_max_solutions: 25
+path_aggregation: min          # how path confidence is aggregated: "min" or "max"
+default_max_depth: 10
+default_max_depth_shortcut: 30
+hyp_max_atoms: 1
+hyp_max_hyp_per_atom: 1
+
+# --- system-wide solver behaviour ---
+# "max_confidence" (default) keeps the existing behaviour; "min_hypotheses"
+# prefers the shallowest all-hard-facts proof and otherwise the proof with the
+# fewest hypothesised leaves.
+proof_objective: max_confidence
+# When true, the LLM judges each proposed clause (keep/drop) before it enters
+# the soft KB.
+verify_hypotheses: false

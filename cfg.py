@@ -49,6 +49,15 @@ class GlobalConfig(BaseModel):
     default_max_depth_shortcut: int = Field(30, ge=1)
     hyp_max_atoms: int = Field(1, ge=1)
     hyp_max_hyp_per_atom: int = Field(1, ge=1)
+    # --- system-wide solver behaviour ---
+    # Proof selection objective. "max_confidence" (default) keeps the existing
+    # behaviour; "min_hypotheses" prefers the shallowest all-hard-facts proof and
+    # only falls back to soft search, picking the proof with the fewest
+    # hypothesised leaves.
+    proof_objective: Literal["max_confidence", "min_hypotheses"] = "max_confidence"
+    # When True, the LLM judges each proposed clause (keep/drop) before it enters
+    # the soft KB. Default keeps the current behaviour (no self-critique pass).
+    verify_hypotheses: bool = False
 
     @classmethod
     def from_yaml(cls, path: str | Path) -> "GlobalConfig":
@@ -65,8 +74,7 @@ class SolverConfig(BaseModel):
     confidence_tolerance: float = Field(0.05, ge=0.0, le=1.0)
     max_binary_search_steps: int = Field(8, ge=1)
     max_hypotheses: int = Field(6, ge=1)
-    allow_soft_rules: bool = True
-    allow_new_constants: bool = False
+    allow_soft_rules: bool = False
 
     @classmethod
     def from_yaml(cls, path: str | Path) -> "SolverConfig":
@@ -86,6 +94,10 @@ class ProblemConfig(BaseModel):
     # ("connected/2") or a list (["targets/2", "implicated/2"]); both are
     # normalised to a list.
     propose_facts: List[str]
+    # Whether the LLM may introduce constants not already present in the program.
+    # This is a property of the problem (e.g. recovering a hidden node), so it
+    # lives here rather than in the shared SolverConfig.
+    allow_new_constants: bool = False
     omit_fact_ids: List[int] = Field(default_factory=list)
     solver: SolverConfig = Field(default_factory=SolverConfig)
 

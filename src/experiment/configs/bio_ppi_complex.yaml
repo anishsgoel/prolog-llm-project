@@ -9,5 +9,4 @@ goal: "co_complex(brca1, rad51)"
 kb_file: kb/bio_ppi_complex.pl
 propose_facts: interacts/2
 omit_fact_ids: [3]
-solver:
-  allow_new_constants: false
+allow_new_constants: false

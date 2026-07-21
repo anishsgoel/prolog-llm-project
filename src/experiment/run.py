@@ -41,7 +41,8 @@ def run(config_name: str) -> None:
     result = s.solve(goal_formula)
     print(f"Baseline solver: success={result['success']}\n")
 
-    prompt_builder = PrologPromptBuilder(problem.propose_facts, problem.solver)
+    prompt_builder = PrologPromptBuilder(problem.propose_facts, problem.solver,
+                                         allow_new_constants=problem.allow_new_constants)
     s = DFSMetaSolver(kb_missing_obj, LLMSearchGuidancePolicy(prompt_builder, solver_cfg=problem.solver), solver_cfg=problem.solver)
     result = s.solve(goal_formula)
     print(f"DFS meta-solver: success={result['success']}, confidence={result['confidence']}")

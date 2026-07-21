@@ -29,6 +29,8 @@ _BACKTRACK_SCHEMA = """{
   ]
 }"""
 
+_VERIFY_SCHEMA = '{ "verdicts": [ {"clause": "connected(a,b).", "keep": true, "reason": ""} ] }'
+
 
 def _candidate_lines(goal_nodes: List[GoalNode]) -> List[str]:
     return [
@@ -51,9 +53,11 @@ class PrologPromptBuilder(PromptBuilder):
     _TEMPLATES_DIR = Path(__file__).parent / "templates"
     _ORDER_SCHEMA = _ORDER_SCHEMA
     _BACKTRACK_SCHEMA = _BACKTRACK_SCHEMA
+    _VERIFY_SCHEMA = _VERIFY_SCHEMA
     _ENV: Optional[jinja2.Environment] = None
 
-    def __init__(self, propose_facts: Union[str, Sequence[str]], solver_cfg: Optional["SolverConfig"] = None):
+    def __init__(self, propose_facts: Union[str, Sequence[str]], solver_cfg: Optional["SolverConfig"] = None,
+                 allow_new_constants: bool = False):
         from cfg import SolverConfig
         relations = [propose_facts] if isinstance(propose_facts, str) else list(propose_facts)
         self.propose_facts = relations
@@ -62,7 +66,8 @@ class PrologPromptBuilder(PromptBuilder):
         self.cfg = solver_cfg or SolverConfig()
         self.allow_soft_rules = self.cfg.allow_soft_rules
         self.max_hypotheses = self.cfg.max_hypotheses
-        self.allow_new_constants = self.cfg.allow_new_constants
+        # allow_new_constants is a problem-level property (see ProblemConfig).
+        self.allow_new_constants = allow_new_constants
         if PrologPromptBuilder._ENV is None:
             PrologPromptBuilder._ENV = _make_env()
 
@@ -98,3 +103,12 @@ class PrologPromptBuilder(PromptBuilder):
 
     def estimate_depth_prompt(self, context: LLMSearchGuidancePromptContext) -> str:
         return self._ENV.get_template("estimate_depth_prompt.j2").render(context=context).strip()
+
+    def verify_schema(self) -> str:
+        return self._VERIFY_SCHEMA
+
+    def verify_prompt(self, context: LLMSearchGuidancePromptContext, clauses: List[str]) -> str:
+        return self._ENV.get_template("verify_hypotheses_prompt.j2").render(
+            context=context,
+            candidate_clause_lines=[f"- {c}" for c in clauses],
+        ).strip()

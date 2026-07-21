@@ -9,5 +9,4 @@ goal: "has_function(brca1, metabolic_process)"
 kb_file: kb/bio_go_annotation.pl
 propose_facts: is_a/2
 omit_fact_ids: [4]
-solver:
-  allow_new_constants: false
+allow_new_constants: false

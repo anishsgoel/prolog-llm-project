@@ -8,5 +8,4 @@ goal: "produces(glucose, pyruvate)"
 kb_file: kb/bio_glycolysis.pl
 propose_facts: reaction/2
 omit_fact_ids: [3]
-solver:
-  allow_new_constants: false
+allow_new_constants: false

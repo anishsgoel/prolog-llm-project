@@ -75,6 +75,7 @@ class DFSMetaSolver:
         soft_kb: SoftKnowledgeBase,
         depth_limit: int,
         min_confidence: float,
+        allow_extension: bool = True,
     ) -> tuple[Dict[str, Any], SoftKnowledgeBase]:
         old_soft_kb = soft_kb.copy()
         solver = DFSSolver(
@@ -82,7 +83,7 @@ class DFSMetaSolver:
             max_depth=depth_limit,
             search_guidance_policy=self.search_guidance_policy,
         )
-        result = solver.solve(goal, min_confidence=min_confidence)
+        result = solver.solve(goal, min_confidence=min_confidence, allow_extension=allow_extension)
         updated_soft_kb = solver.kb
         self._log_attempt(depth_limit, min_confidence, result, old_soft_kb, updated_soft_kb)
         return result, updated_soft_kb
@@ -160,6 +161,95 @@ class DFSMetaSolver:
         return best_result, soft_kb, best_threshold, attempts
 
     def solve(self, goal: AtomicFormula) -> Dict[str, Any]:
+        """Dispatch to the configured proof objective."""
+        if config.PROOF_OBJECTIVE == "min_hypotheses":
+            return self._solve_min_hypotheses(goal)
+        return self._solve_max_confidence(goal)
+
+    def _solve_min_hypotheses(self, goal: AtomicFormula) -> Dict[str, Any]:
+        """Prefer the shallowest all-hard-facts proof; fall back to the soft
+        search picking the proof with the fewest hypothesised leaves."""
+        attempts: List[Dict[str, Any]] = []
+
+        # --- Phase A: hard-only deduction (no soft fact injection at all). ---
+        depth_start = self.search_guidance_policy.estimate_depth(goal, self.soft_kb)
+        depth_ceiling = max(depth_start, self.max_depth_ceiling)
+
+        for depth_limit in range(depth_start, depth_ceiling + 1):
+            result, self.soft_kb = self._run_solver(
+                goal=goal, soft_kb=self.soft_kb, depth_limit=depth_limit,
+                min_confidence=1.0, allow_extension=False,
+            )
+            attempts.append({
+                "max_depth": depth_limit,
+                "min_confidence": 1.0,
+                "success": result.get("success", False),
+                "confidence": result.get("confidence", 0.0),
+            })
+            if result.get("success"):
+                return {
+                    "success": True,
+                    "proof": result.get("proof"),
+                    "confidence": result.get("confidence", 0.0),
+                    "soft_kb": self.soft_kb,
+                    "max_depth": depth_limit,
+                    "min_confidence": 1.0,
+                    "attempts": attempts,
+                }
+
+        # --- Phase B: soft search, selecting the fewest-hypotheses proof. ---
+        self.soft_kb, new_soft_facts, extended = self.search_guidance_policy.extend_on_init(goal, 1.0, self.soft_kb)
+        if config.VERBOSE:
+            print(f"new soft facts {new_soft_facts}")
+        min_confidence_high = max([f.confidence for f in new_soft_facts]) if extended else 1.0
+
+        depth_start = self.search_guidance_policy.estimate_depth(goal, self.soft_kb)
+        depth_ceiling = max(depth_start, self.max_depth_ceiling)
+
+        # Selection key: fewest soft leaves, then higher confidence, then shallower.
+        best_key: Optional[tuple] = None
+        best_result: Optional[Dict[str, Any]] = None
+        best_threshold = 0.0
+        best_depth = depth_ceiling
+
+        for depth_limit in range(depth_start, depth_ceiling + 1):
+            result, self.soft_kb, threshold, depth_attempts = self._search_confidence(
+                goal=goal, soft_kb=self.soft_kb, depth_limit=depth_limit,
+                low=0.0, high=min_confidence_high,
+            )
+            attempts.extend(depth_attempts)
+
+            if result is not None and result.get("proof") is not None:
+                proof = result["proof"]
+                key = (proof.num_soft_leaves(), -result.get("confidence", 0.0), proof.depth)
+                if best_key is None or key < best_key:
+                    best_key = key
+                    best_result = result
+                    best_threshold = threshold
+                    best_depth = depth_limit
+
+        if best_result is not None:
+            return {
+                "success": True,
+                "proof": best_result.get("proof"),
+                "confidence": best_result.get("confidence", 0.0),
+                "soft_kb": self.soft_kb,
+                "max_depth": best_depth,
+                "min_confidence": best_threshold,
+                "attempts": attempts,
+            }
+
+        return {
+            "success": False,
+            "proof": None,
+            "confidence": 0.0,
+            "soft_kb": self.soft_kb,
+            "max_depth": depth_ceiling,
+            "min_confidence": 0.0,
+            "attempts": attempts,
+        }
+
+    def _solve_max_confidence(self, goal: AtomicFormula) -> Dict[str, Any]:
         """Search over depth and confidence thresholds using DFSSolver."""
         attempts: List[Dict[str, Any]] = []
 

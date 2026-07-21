@@ -63,3 +63,11 @@ class PromptBuilder(ABC):
     @abstractmethod
     def estimate_depth_prompt(self, context: LLMSearchGuidancePromptContext) -> str:
         """Build the prompt used to estimate the proof depth."""
+
+    @abstractmethod
+    def verify_schema(self) -> str:
+        """Return the repair schema for the hypothesis-verification pass."""
+
+    @abstractmethod
+    def verify_prompt(self, context: LLMSearchGuidancePromptContext, clauses: List[str]) -> str:
+        """Build the prompt that judges keep/drop for each candidate clause."""

@@ -10,5 +10,4 @@ goal: "propagates(egf, myc)"
 kb_file: kb/bio_signal_mapk.pl
 propose_facts: signals/2
 omit_fact_ids: [7]
-solver:
-  allow_new_constants: false
+allow_new_constants: false

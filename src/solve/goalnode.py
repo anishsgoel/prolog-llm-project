@@ -212,6 +212,14 @@ class GoalNode:
             if proof_confidence <= 0.0
         ]
 
+    def leaf_atoms(self) -> List[str]:
+        """String form of every leaf formula of this (proof) node."""
+        return [str(formula) for formula in self._formulas]
+
+    def num_soft_leaves(self) -> int:
+        """Leaves proved with confidence < 1.0 (i.e. via hypothesised facts)."""
+        return sum(1 for confidence in self._proved if 0.0 < confidence < 1.0)
+
     def signature(self) -> tuple[str, ...]:
         """Return a canonical signature of the unresolved formulas.
 

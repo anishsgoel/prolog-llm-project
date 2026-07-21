@@ -65,11 +65,18 @@ class RunMetrics:
     proof_depth: int = 0           # GoalNode.depth of the returned proof node
     proof: str = ""                # string form of the proof node returned by the meta-solver
 
+    # --- Soundness of the returned proof (against the full model) ---
+    proof_num_leaves: int = 0           # leaves in the returned proof
+    proof_hallucinated_leaves: int = 0  # returned-proof leaves NOT in the full KB
+    proof_is_sound: int = 0             # 1 iff success AND 0 hallucinated leaves
+    valid_success: int = 0              # 1 iff success AND proof_is_sound
+
     # --- Ground truth comparison (Solver on the *full* KB) ---
     ground_truth_success: int = 0
     ground_truth_proof_depth: int = 0
     ground_truth_proof: str = ""   # string form of the proof found on the full KB
     proof_depth_diff: int = 0      # proof_depth - ground_truth_proof_depth
+    proof_matches_gt: int = 0      # 1 iff leaf-atom set == ground-truth leaf-atom set; "NA" if GT timed out
 
     # --- Soft-KB analysis ---
     soft_facts_proposed: int = 0          # hypothesised facts in the final soft KB
@@ -94,6 +101,7 @@ class RunMetrics:
     llm_queries_backtrack: int = 0
     llm_queries_extend_on_init: int = 0
     llm_queries_estimate_depth: int = 0
+    llm_queries_verify: int = 0
 
     # --- Timing ---
     wall_time_s: float = 0.0
@@ -161,6 +169,10 @@ class TrackedLLMSearchGuidancePolicy(LLMSearchGuidancePolicy):
         self.depth_estimate = depth
         return depth
 
+    def _verify_clauses(self, *args, **kwargs):
+        self._tracked_llm.set_call_type("verify")
+        return super()._verify_clauses(*args, **kwargs)
+
 
 # ---------------------------------------------------------------------------
 # Main tracked-run entry point
@@ -199,13 +211,15 @@ def run_tracked(config_name: str, model: Optional[str] = None) -> RunMetrics:
     # ground-truth metrics are recorded as NA.
     gt = solve_ground_truth(kb_text, problem.goal, max_depth=30, timeout_s=GROUND_TRUTH_TIMEOUT_S)
     ground_truth_timed_out = gt is None
+    gt_success = False
+    gt_leaves: List[str] = []
     if ground_truth_timed_out:
         print(f"  ground-truth search exceeded {GROUND_TRUTH_TIMEOUT_S}s -> recording NA")
         metrics.ground_truth_success = NA
         metrics.ground_truth_proof_depth = NA
         metrics.ground_truth_proof = NA
     else:
-        gt_success, gt_depth, gt_proof = gt
+        gt_success, gt_depth, gt_proof, gt_leaves = gt
         metrics.ground_truth_success = int(gt_success)
         if gt_success:
             metrics.ground_truth_proof_depth = gt_depth
@@ -213,7 +227,8 @@ def run_tracked(config_name: str, model: Optional[str] = None) -> RunMetrics:
 
     # --- LLM-guided run with instrumented components ---
     tracked_llm = TrackedLLMInterface(model=_cfg_mod.MODEL)
-    prompt_builder = PrologPromptBuilder(problem.propose_facts, problem.solver)
+    prompt_builder = PrologPromptBuilder(problem.propose_facts, problem.solver,
+                                         allow_new_constants=problem.allow_new_constants)
     policy = TrackedLLMSearchGuidancePolicy(
         prompt_builder, tracked_llm=tracked_llm, solver_cfg=problem.solver
     )
@@ -235,12 +250,24 @@ def run_tracked(config_name: str, model: Optional[str] = None) -> RunMetrics:
     metrics.attempts_total = len(result.get("attempts", []))
     metrics.depth_start_estimate = policy.depth_estimate
 
+    # Soundness: is every leaf of the returned proof a real fact in the full model?
+    if result["success"] and result.get("proof") is not None:
+        leaves = result["proof"].leaf_atoms()
+        metrics.proof_num_leaves = len(leaves)
+        # Normalise both sides through AtomicFormula.__str__ so spacing differences
+        # in the raw KB text do not cause spurious "hallucinated" mismatches.
+        full_fact_strs = {str(f.formula) for f in kb_full.facts}
+        metrics.proof_hallucinated_leaves = sum(1 for s in leaves if s not in full_fact_strs)
+        metrics.proof_is_sound = int(metrics.proof_hallucinated_leaves == 0)
+        metrics.valid_success = int(bool(result["success"]) and bool(metrics.proof_is_sound))
+
     # LLM query counts
     metrics.llm_queries_total = tracked_llm.total_queries
     metrics.llm_queries_order = tracked_llm._counts.get("order", 0)
     metrics.llm_queries_backtrack = tracked_llm._counts.get("backtrack", 0)
     metrics.llm_queries_extend_on_init = tracked_llm._counts.get("extend_on_init", 0)
     metrics.llm_queries_estimate_depth = tracked_llm._counts.get("estimate_depth", 0)
+    metrics.llm_queries_verify = tracked_llm._counts.get("verify", 0)
 
     # Soft KB analysis
     final_soft_kb: Optional[SoftKnowledgeBase] = result.get("soft_kb")
@@ -275,7 +302,12 @@ def run_tracked(config_name: str, model: Optional[str] = None) -> RunMetrics:
 
     if ground_truth_timed_out:
         metrics.proof_depth_diff = NA
+        metrics.proof_matches_gt = NA
     else:
         metrics.proof_depth_diff = metrics.proof_depth - metrics.ground_truth_proof_depth
+        if gt_success and result["success"] and result.get("proof") is not None:
+            metrics.proof_matches_gt = int(set(result["proof"].leaf_atoms()) == set(gt_leaves))
+        else:
+            metrics.proof_matches_gt = 0
 
     return metrics

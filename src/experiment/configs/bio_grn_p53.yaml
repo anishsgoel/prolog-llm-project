@@ -8,5 +8,4 @@ goal: "feedback(tp53)"
 kb_file: kb/bio_grn_p53.pl
 propose_facts: regulates/2
 omit_fact_ids: [3]
-solver:
-  allow_new_constants: false
+allow_new_constants: false

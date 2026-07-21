@@ -6,5 +6,4 @@ goal: "royal_descendant(sigismund)"
 kb_file: kb/bohemia_kings.pl
 propose_facts: [parentof/2,king/1]
 omit_fact_ids: [20]
-solver:
-  allow_new_constants: false
+allow_new_constants: false

@@ -27,7 +27,7 @@ Propose up to {{ max_hypotheses }} Prolog clauses that are likely true and would
 It is valid to return no clauses.
 
 Constraints:
-- Output ONLY {{ propose_facts }} FACTS. No rules.
+- Output ONLY {{ propose_facts }} FACTS. No other predicates are allowed in facts.
 - {{ clause_kind_instruction }}
 - Every clause must end with a period.
 - Confidence must be between 0 and 1.

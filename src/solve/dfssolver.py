@@ -21,6 +21,7 @@ class DFSSolver:
         self.kb = kb if isinstance(kb, SoftKnowledgeBase) else SoftKnowledgeBase(kb)
         self.max_depth = max_depth or config.DEFAULT_MAX_DEPTH
         self.search_guidance_policy = search_guidance_policy or TrivialSearchGuidancePolicy()
+        self.allow_extension = True
 
     def _filter_out_visited_nodes(self, nodes: List[GoalNode], visited: set) -> List[GoalNode]:
         unvisited = []
@@ -56,13 +57,16 @@ class DFSSolver:
         if config.VERBOSE:
             print(f"node {node} has unvisited successors: {unvisited_successors}")
 
-        ordered_successors = self.search_guidance_policy.order_goals(
-            goal,
-            self.kb,
-            node,
-            min_confidence,
-            unvisited_successors,
-        )
+        if len(unvisited_successors) > 1:
+            ordered_successors = self.search_guidance_policy.order_goals(
+                goal,
+                self.kb,
+                node,
+                min_confidence,
+                unvisited_successors,
+            )
+        else:
+            ordered_successors = unvisited_successors
 
         if config.VERBOSE:
             print(f"sorted {ordered_successors}")
@@ -71,6 +75,9 @@ class DFSSolver:
             proof = self._dfs(successor,goal, depth_limit=depth_limit,min_confidence=min_confidence,visited=visited,)
             if proof is not None:
                 return proof
+
+        if not self.allow_extension:
+            return None
 
         self.kb, new_soft_facts, extended = self.search_guidance_policy.extend_on_backtrack(
             goal,
@@ -89,13 +96,16 @@ class DFSSolver:
             successors.extend(node.unify_soft_fact(soft_fact, min_confidence=min_confidence))
         unvisited_successors = self._filter_out_visited_nodes(successors, visited)
 
-        ordered_successors = self.search_guidance_policy.order_goals(
-            goal,
-            self.kb,
-            node,
-            min_confidence,
-            unvisited_successors,
-        )
+        if len(unvisited_successors) > 1:
+            ordered_successors = self.search_guidance_policy.order_goals(
+                goal,
+                self.kb,
+                node,
+                min_confidence,
+                unvisited_successors,
+            )
+        else:
+            ordered_successors = unvisited_successors
 
         for successor in ordered_successors:
             proof = self._dfs(successor,goal,depth_limit=depth_limit,min_confidence=min_confidence,visited=visited,)
@@ -106,8 +116,14 @@ class DFSSolver:
 
 
 
-    def solve(self, goal: AtomicFormula, min_confidence: float = 0.0) -> Dict[str, Any]:
-        """Run iterative-deepening DFS and return the first proven node found."""
+    def solve(self, goal: AtomicFormula, min_confidence: float = 0.0,
+              allow_extension: bool = True) -> Dict[str, Any]:
+        """Run iterative-deepening DFS and return the first proven node found.
+
+        When ``allow_extension`` is False the solver never proposes new soft
+        facts on backtracking (used for a hard-facts-only phase).
+        """
+        self.allow_extension = allow_extension
         if config.VERBOSE:
             print(f"Solving with setting min_confidence={min_confidence}, depth_limit={self.max_depth}")
 

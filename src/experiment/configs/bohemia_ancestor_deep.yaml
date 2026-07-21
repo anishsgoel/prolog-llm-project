@@ -7,5 +7,4 @@ goal: "ancestor(premysl_otakar_i, sigismund)"
 kb_file: kb/bohemia_kings.pl
 propose_facts: parentof/2
 omit_fact_ids: [2,4,6,8]
-solver:
-  allow_new_constants: false
+allow_new_constants: false
