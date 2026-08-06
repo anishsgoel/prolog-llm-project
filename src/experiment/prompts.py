@@ -112,3 +112,39 @@ class PrologPromptBuilder(PromptBuilder):
             context=context,
             candidate_clause_lines=[f"- {c}" for c in clauses],
         ).strip()
+
+    # --- Baseline prompts (single-shot / QA / Logic-LM refine) -------------
+    # These are used by experiment.methods, not by the DFS guidance policy.
+    # They take the whole program text plus the goal rather than the structured
+    # DFS context, keeping the "output ONLY JSON" convention.
+
+    def oneshot_completion_prompt(self, goal: str, kb_text: str,
+                                  predicate_comments: dict) -> str:
+        return self._ENV.get_template("oneshot_completion_prompt.j2").render(
+            goal=goal,
+            kb_text=kb_text,
+            predicate_comments=dict(sorted(predicate_comments.items())),
+            propose_facts=self.propose_facts_text,
+            allow_new_constants=self.allow_new_constants,
+            max_hypotheses=self.max_hypotheses,
+        ).strip()
+
+    def qa_prompt(self, goal: str, kb_text: str, predicate_comments: dict) -> str:
+        return self._ENV.get_template("qa_prompt.j2").render(
+            goal=goal,
+            kb_text=kb_text,
+            predicate_comments=dict(sorted(predicate_comments.items())),
+        ).strip()
+
+    def logic_lm_refine_prompt(self, goal: str, kb_text: str, predicate_comments: dict,
+                               proposed_lines: List[str], open_goal_lines: List[str]) -> str:
+        return self._ENV.get_template("logic_lm_refine_prompt.j2").render(
+            goal=goal,
+            kb_text=kb_text,
+            predicate_comments=dict(sorted(predicate_comments.items())),
+            proposed_lines=proposed_lines,
+            open_goal_lines=open_goal_lines,
+            propose_facts=self.propose_facts_text,
+            allow_new_constants=self.allow_new_constants,
+            max_hypotheses=self.max_hypotheses,
+        ).strip()

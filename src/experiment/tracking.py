@@ -102,6 +102,14 @@ class RunMetrics:
     llm_queries_extend_on_init: int = 0
     llm_queries_estimate_depth: int = 0
     llm_queries_verify: int = 0
+    # Extra call types used by the LLM baselines (llm_oneshot / logic_lm). They
+    # stay 0 for the PLLM run so its numbers are unchanged; adding them only
+    # appends two all-zero columns for PLLM. Annotated as plain ``int`` so they
+    # are picked up as numeric MLflow metrics (batch_run derives that from the
+    # dataclass field type, which is a *string* here because of
+    # ``from __future__ import annotations``).
+    llm_queries_formalize: int = 0
+    llm_queries_refine: int = 0
 
     # --- Timing ---
     wall_time_s: float = 0.0
@@ -178,15 +186,23 @@ class TrackedLLMSearchGuidancePolicy(LLMSearchGuidancePolicy):
 # Main tracked-run entry point
 # ---------------------------------------------------------------------------
 
-def run_tracked(config_name: str, model: Optional[str] = None) -> RunMetrics:
-    """Run one experiment problem with full metrics collection.
+def build_problem(config_name: str, model: Optional[str] = None):
+    """Load a problem config and prepare everything the solvers need.
 
-    Equivalent to run.run() but returns a populated RunMetrics instead of
-    printing results.  The original run.py is untouched and remains usable
-    for quick debugging.
+    Extracted from ``run_tracked`` so every baseline in ``experiment.methods``
+    starts from an identical setup (KB, ablated KB, goal, ground truth). Runs
+    the classic solver on the *complete* KB under a wall-clock limit to obtain
+    the ground truth.
 
-    If ``model`` is given it overrides the configured LLM model for this run,
-    so the same problem can be evaluated across several models.
+    Returns ``(problem, kb_text, kb_full, kb_missing, goal_formula, gt)`` where
+    ``gt`` is the tuple ``(success, depth, proof_str, leaf_atoms)`` from
+    ``solve_ground_truth`` or ``None`` if the ground-truth search timed out.
+
+    Side effects (deliberately mirroring the old ``run_tracked``): calls
+    ``config.init_config()`` (which reloads global.yaml and resets
+    ``PROOF_OBJECTIVE`` / ``VERIFY_HYPOTHESES``) and overrides ``config.MODEL``.
+    Callers that flip config knobs for an ablation must do so *after* this
+    returns (and, for ``VERIFY_HYPOTHESES``, before constructing the policy).
     """
     _cfg_mod.init_config()
     if model:
@@ -198,23 +214,54 @@ def run_tracked(config_name: str, model: Optional[str] = None) -> RunMetrics:
     kb_missing = kb_full.omit_facts(set(problem.omit_fact_ids))
     goal_formula = parse_prolog_to_formula(problem.goal)
 
-    metrics = RunMetrics(
-        config_name=config_name,
-        goal=problem.goal,
-        omit_fact_ids=str(problem.omit_fact_ids),
-        model=_cfg_mod.MODEL,
-        omitted_facts_total=len(problem.omit_fact_ids),
-    )
-
     # --- Ground truth: classic solver on the *complete* KB, time-bounded ---
     # If the search does not finish within the budget it is killed and the
     # ground-truth metrics are recorded as NA.
     gt = solve_ground_truth(kb_text, problem.goal, max_depth=30, timeout_s=GROUND_TRUTH_TIMEOUT_S)
+    return problem, kb_text, kb_full, kb_missing, goal_formula, gt
+
+
+def compute_metrics(
+    config_name: str,
+    model: str,
+    problem: ProblemConfig,
+    kb_full: KnowledgeBase,
+    kb_missing: KnowledgeBase,
+    result: Dict[str, Any],
+    tracked_llm: Optional[TrackedLLMInterface],
+    policy: Optional[Any],
+    gt: Optional[tuple],
+    wall_time_s: float,
+) -> RunMetrics:
+    """Compute the full, comparable RunMetrics for ONE run of ANY method.
+
+    ``result`` is a plain dict shaped like ``DFSMetaSolver.solve`` output
+    (keys ``success, proof, confidence, soft_kb, max_depth, min_confidence,
+    attempts``); non-PLLM baselines synthesise it. ``tracked_llm`` and
+    ``policy`` may be ``None`` (non-LLM / non-policy methods).
+
+    This is the block that used to live inline in ``run_tracked``; the only
+    change is that the soft-KB precision/recall/hallucination comparison now
+    canonicalises atoms through ``AtomicFormula.__str__`` on BOTH sides
+    (matching the soundness block just above it), instead of comparing the raw
+    ``Fact.atom`` text. Every KB in this repo writes facts with a single
+    ``", "`` between arguments, so the two are numerically identical for the
+    PLLM run; canonicalising just makes precision/recall robust to spacing so
+    the fact-proposing baselines (which emit canonical atoms) are scored on the
+    same footing rather than reading 0.
+    """
+    metrics = RunMetrics(
+        config_name=config_name,
+        goal=problem.goal,
+        omit_fact_ids=str(problem.omit_fact_ids),
+        model=model,
+        omitted_facts_total=len(problem.omit_fact_ids),
+    )
+
     ground_truth_timed_out = gt is None
     gt_success = False
     gt_leaves: List[str] = []
     if ground_truth_timed_out:
-        print(f"  ground-truth search exceeded {GROUND_TRUTH_TIMEOUT_S}s -> recording NA")
         metrics.ground_truth_success = NA
         metrics.ground_truth_proof_depth = NA
         metrics.ground_truth_proof = NA
@@ -224,19 +271,6 @@ def run_tracked(config_name: str, model: Optional[str] = None) -> RunMetrics:
         if gt_success:
             metrics.ground_truth_proof_depth = gt_depth
             metrics.ground_truth_proof = gt_proof
-
-    # --- LLM-guided run with instrumented components ---
-    tracked_llm = TrackedLLMInterface(model=_cfg_mod.MODEL)
-    prompt_builder = PrologPromptBuilder(problem.propose_facts, problem.solver,
-                                         allow_new_constants=problem.allow_new_constants)
-    policy = TrackedLLMSearchGuidancePolicy(
-        prompt_builder, tracked_llm=tracked_llm, solver_cfg=problem.solver
-    )
-    meta_solver = DFSMetaSolver(kb_missing, policy, solver_cfg=problem.solver)
-
-    t0 = time.perf_counter()
-    result = meta_solver.solve(goal_formula)
-    metrics.wall_time_s = time.perf_counter() - t0
 
     # Outcome
     metrics.success = int(result["success"])
@@ -248,7 +282,7 @@ def run_tracked(config_name: str, model: Optional[str] = None) -> RunMetrics:
     metrics.max_depth_reached = result.get("max_depth", 0)
     metrics.min_confidence_final = result.get("min_confidence", 0.0)
     metrics.attempts_total = len(result.get("attempts", []))
-    metrics.depth_start_estimate = policy.depth_estimate
+    metrics.depth_start_estimate = getattr(policy, "depth_estimate", 0) if policy is not None else 0
 
     # Soundness: is every leaf of the returned proof a real fact in the full model?
     if result["success"] and result.get("proof") is not None:
@@ -261,19 +295,24 @@ def run_tracked(config_name: str, model: Optional[str] = None) -> RunMetrics:
         metrics.proof_is_sound = int(metrics.proof_hallucinated_leaves == 0)
         metrics.valid_success = int(bool(result["success"]) and bool(metrics.proof_is_sound))
 
-    # LLM query counts
-    metrics.llm_queries_total = tracked_llm.total_queries
-    metrics.llm_queries_order = tracked_llm._counts.get("order", 0)
-    metrics.llm_queries_backtrack = tracked_llm._counts.get("backtrack", 0)
-    metrics.llm_queries_extend_on_init = tracked_llm._counts.get("extend_on_init", 0)
-    metrics.llm_queries_estimate_depth = tracked_llm._counts.get("estimate_depth", 0)
-    metrics.llm_queries_verify = tracked_llm._counts.get("verify", 0)
+    # LLM query counts (guarded: non-LLM baselines pass tracked_llm=None)
+    if tracked_llm is not None:
+        counts = tracked_llm._counts
+        metrics.llm_queries_total = tracked_llm.total_queries
+        metrics.llm_queries_order = counts.get("order", 0)
+        metrics.llm_queries_backtrack = counts.get("backtrack", 0)
+        metrics.llm_queries_extend_on_init = counts.get("extend_on_init", 0)
+        metrics.llm_queries_estimate_depth = counts.get("estimate_depth", 0)
+        metrics.llm_queries_verify = counts.get("verify", 0)
+        metrics.llm_queries_formalize = counts.get("formalize", 0)
+        metrics.llm_queries_refine = counts.get("refine", 0)
 
     # Soft KB analysis
     final_soft_kb: Optional[SoftKnowledgeBase] = result.get("soft_kb")
     if final_soft_kb is not None:
-        full_fact_atoms = {f.atom for f in kb_full.facts}
-        omitted_atoms = {f.atom for f in kb_full.facts if f.num in set(problem.omit_fact_ids)}
+        omit_ids = set(problem.omit_fact_ids)
+        full_fact_strs = {str(f.formula) for f in kb_full.facts}
+        omitted_strs = {str(f.formula) for f in kb_full.facts if f.num in omit_ids}
 
         soft_facts = [f for f in final_soft_kb.facts if f.confidence < 1.0]
         soft_rules = [r for r in final_soft_kb.rules if r.confidence < 1.0]
@@ -281,11 +320,12 @@ def run_tracked(config_name: str, model: Optional[str] = None) -> RunMetrics:
         metrics.soft_rules_proposed = len(soft_rules)
 
         for sf in soft_facts:
-            if sf.atom in full_fact_atoms:
+            sf_str = str(sf.formula)
+            if sf_str in full_fact_strs:
                 metrics.soft_facts_in_true_model += 1
             else:
                 metrics.soft_facts_outside_true_model += 1
-            if sf.atom in omitted_atoms:
+            if sf_str in omitted_strs:
                 metrics.omitted_facts_recovered += 1
 
         if metrics.soft_facts_proposed > 0:
@@ -310,4 +350,38 @@ def run_tracked(config_name: str, model: Optional[str] = None) -> RunMetrics:
         else:
             metrics.proof_matches_gt = 0
 
+    metrics.wall_time_s = wall_time_s
     return metrics
+
+
+def run_tracked(config_name: str, model: Optional[str] = None) -> RunMetrics:
+    """Run one experiment problem (PLLM) with full metrics collection.
+
+    Equivalent to run.run() but returns a populated RunMetrics instead of
+    printing results.  The original run.py is untouched and remains usable
+    for quick debugging.
+
+    If ``model`` is given it overrides the configured LLM model for this run,
+    so the same problem can be evaluated across several models.
+    """
+    problem, kb_text, kb_full, kb_missing, goal_formula, gt = build_problem(config_name, model)
+    if gt is None:
+        print(f"  ground-truth search exceeded {GROUND_TRUTH_TIMEOUT_S}s -> recording NA")
+
+    # --- LLM-guided run with instrumented components ---
+    tracked_llm = TrackedLLMInterface(model=_cfg_mod.MODEL)
+    prompt_builder = PrologPromptBuilder(problem.propose_facts, problem.solver,
+                                         allow_new_constants=problem.allow_new_constants)
+    policy = TrackedLLMSearchGuidancePolicy(
+        prompt_builder, tracked_llm=tracked_llm, solver_cfg=problem.solver
+    )
+    meta_solver = DFSMetaSolver(kb_missing, policy, solver_cfg=problem.solver)
+
+    t0 = time.perf_counter()
+    result = meta_solver.solve(goal_formula)
+    wall_time_s = time.perf_counter() - t0
+
+    return compute_metrics(
+        config_name, _cfg_mod.MODEL, problem, kb_full, kb_missing,
+        result, tracked_llm, policy, gt, wall_time_s,
+    )

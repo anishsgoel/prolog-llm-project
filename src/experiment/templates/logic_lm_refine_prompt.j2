@@ -1,0 +1,32 @@
+You are refining a set of proposed missing facts for a Prolog program. Your previous proposal did NOT make the query provable when handed to the symbolic solver. Revise it based on the solver's feedback.
+
+Program (numbered clauses):
+{{ kb_text }}
+
+Predicate semantics:
+{{ predicate_comments | comment_lines }}
+
+Query to prove:
+{{ goal }}
+
+Facts you already proposed (added to the program, still insufficient):
+{{ proposed_lines | preview_lines }}
+
+The solver is still stuck on these open subgoals:
+{{ open_goal_lines | preview_lines }}
+
+Task:
+Propose a REVISED / additional set of up to {{ max_hypotheses }} ground {{ propose_facts }} FACTS that would close the open subgoals and prove the query.
+Constraints:
+- Output ONLY {{ propose_facts }} FACTS. No rules, no other predicates.
+- Use only predicates and constants that already appear in the program{% if allow_new_constants %} (new constants only if unavoidable){% else %}. Do NOT invent new constants{% endif %}.
+- Prefer real relations over shortcut facts that skip intermediate steps.
+- Every clause must be a ground fact ending with a period.
+- Confidence must be between 0 and 1.
+
+Return ONLY valid JSON in this exact format:
+{
+  "facts": [
+    {"clause": "connected(oxford_circus, piccadilly_circus).", "confidence": 0.8}
+  ]
+}

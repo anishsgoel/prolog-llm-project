@@ -1,0 +1,16 @@
+You are a Prolog reasoning engine. Decide whether the query is TRUE for the intended (complete) program, even though the program shown below may be missing a few ground facts.
+
+Program (numbered clauses):
+{{ kb_text }}
+
+Predicate semantics:
+{{ predicate_comments | comment_lines }}
+
+Query:
+{{ goal }}
+
+Is the query TRUE (i.e. entailed by the intended complete program)? Do not explain.
+
+Return ONLY valid JSON in exactly one of these forms:
+{"answer": true}
+{"answer": false}

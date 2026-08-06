@@ -62,7 +62,8 @@ for _p in (str(_SRC_DIR), str(_PROJECT_ROOT)):
 import mlflow
 
 import config as _cfg_mod
-from experiment.tracking import ALL_CONFIGS, RunMetrics, run_tracked
+from experiment.tracking import ALL_CONFIGS, RunMetrics
+from experiment.methods import ABLATIONS, METHODS, run_method
 from experiment.timed_run import run_tracked_timed
 from log_setup import ERROR_LOGGER, get_logger
 
@@ -72,7 +73,7 @@ _err_log = get_logger(ERROR_LOGGER)
 # strings are long free text, so they go to params too (the full text is always
 # preserved in the CSV/xlsx; only the MLflow copy is length-capped).
 _PARAM_KEYS = {"config_name", "goal", "omit_fact_ids", "model", "run_index",
-               "proof", "ground_truth_proof"}
+               "proof", "ground_truth_proof", "method", "ablation"}
 _MLFLOW_PARAM_MAXLEN = 480  # MLflow caps param value length; truncate to stay safe
 
 
@@ -96,8 +97,9 @@ def _log_to_mlflow(metrics: RunMetrics, run_index: int) -> None:
             mlflow.log_param(k, str(v)[:_MLFLOW_PARAM_MAXLEN])
 
 
-def _evaluate(config_name: str, model: Optional[str], eval_timeout: float):
-    """Run one evaluation, optionally under a wall-clock limit.
+def _evaluate(config_name: str, model: Optional[str], eval_timeout: float,
+              method: str = "pllm", ablation: Optional[str] = None, run_index: int = 0):
+    """Run one evaluation (method/ablation), optionally under a wall-clock limit.
 
     Returns ``(RunMetrics, None)`` on success, or ``(None, message)`` if the run
     timed out or failed. When ``eval_timeout`` is 0/negative the evaluation runs
@@ -105,15 +107,18 @@ def _evaluate(config_name: str, model: Optional[str], eval_timeout: float):
     """
     try:
         if eval_timeout and eval_timeout > 0:
-            res = run_tracked_timed(config_name, model, eval_timeout)
+            res = run_tracked_timed(config_name, model, eval_timeout,
+                                    method=method, ablation=ablation, run_index=run_index)
             if res["status"] == "ok":
                 return RunMetrics(**res["metrics"]), None
             if res["status"] == "timeout":
                 return None, f"timed out after {eval_timeout:g}s"
             return None, res.get("message", "evaluation worker error")
-        return run_tracked(config_name, model=model), None
+        return run_method(config_name, model=model, method=method,
+                          ablation=ablation, run_index=run_index), None
     except Exception as exc:
-        _err_log.exception("_evaluate: evaluation failed: config=%s model=%s", config_name, model)
+        _err_log.exception("_evaluate: evaluation failed: config=%s model=%s method=%s ablation=%s",
+                           config_name, model, method, ablation)
         return None, f"{exc.__class__.__name__}: {exc}"
 
 
@@ -126,6 +131,8 @@ def _result_fieldnames() -> List[str]:
     complete, instead of buffering every row to discover the columns.
     """
     names = [f.name for f in dataclasses.fields(RunMetrics)]
+    names.append("method")
+    names.append("ablation")
     names.append("run_index")
     names.append("error")
     return names
@@ -137,7 +144,7 @@ def _numeric_metric_fields() -> List[str]:
 
 
 def _summary_fieldnames() -> List[str]:
-    return ["config_name", "model", "n_runs", "n_errors"] + \
+    return ["config_name", "model", "method", "ablation", "n_runs", "n_errors"] + \
            ["mean_" + f for f in _numeric_metric_fields()]
 
 
@@ -152,7 +159,8 @@ def _summary_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     groups: Dict[tuple, List[Dict[str, Any]]] = {}
     order: List[tuple] = []
     for row in rows:
-        key = (row.get("config_name", ""), row.get("model", ""))
+        key = (row.get("config_name", ""), row.get("model", ""),
+               row.get("method", ""), row.get("ablation", ""))
         if key not in groups:
             groups[key] = []
             order.append(key)
@@ -160,11 +168,13 @@ def _summary_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
     summary: List[Dict[str, Any]] = []
     for key in order:
-        cfg_name, model = key
+        cfg_name, model, method, ablation = key
         grp = groups[key]
         out: Dict[str, Any] = {
             "config_name": cfg_name,
             "model": model,
+            "method": method,
+            "ablation": ablation,
             "n_runs": len(grp),
             "n_errors": sum(1 for r in grp if r.get("error")),
         }
@@ -264,6 +274,16 @@ def main() -> None:
              "Useful for estimating variance over stochastic LLM responses.",
     )
     parser.add_argument(
+        "--method", default="pllm", choices=sorted(METHODS),
+        help="Which method/baseline to run (default: pllm). "
+             f"Choices: {', '.join(sorted(METHODS))}.",
+    )
+    parser.add_argument(
+        "--ablation", default=None, choices=sorted(ABLATIONS),
+        help="Optional PLLM ablation (overrides --method). "
+             f"Choices: {', '.join(sorted(ABLATIONS))}.",
+    )
+    parser.add_argument(
         "--eval-timeout", type=float, default=7200, metavar="SECONDS",
         help="Per-evaluation wall-clock limit in seconds (default: 7200 = 2 hours). "
              "If a single config x model run exceeds it, the run is killed and "
@@ -311,6 +331,11 @@ def main() -> None:
             mlflow.set_tracking_uri(args.tracking_uri)
         mlflow.set_experiment(args.mlflow_experiment)
 
+    method = args.method
+    ablation = args.ablation
+    ablation_label = ablation or ""
+    method_tag = f"{method}[{ablation}]" if ablation else method
+
     output_path = Path(args.output)
     xlsx_path = Path(args.xlsx) if args.xlsx else None
     total = len(models) * len(args.configs) * args.runs
@@ -324,12 +349,16 @@ def main() -> None:
             for cfg_name in args.configs:
                 for run_idx in range(args.runs):
                     label = f"[{written + 1}/{total}]"
-                    print(f"\n{label} model={model}  config={cfg_name}  run={run_idx + 1}/{args.runs}")
+                    print(f"\n{label} method={method_tag}  model={model}  "
+                          f"config={cfg_name}  run={run_idx + 1}/{args.runs}")
 
-                    metrics, err = _evaluate(cfg_name, model, args.eval_timeout)
+                    metrics, err = _evaluate(cfg_name, model, args.eval_timeout,
+                                             method=method, ablation=ablation, run_index=run_idx)
 
                     if use_mlflow:
-                        with mlflow.start_run(run_name=f"{model}_{cfg_name}_{run_idx}"):
+                        with mlflow.start_run(run_name=f"{method_tag}_{model}_{cfg_name}_{run_idx}"):
+                            mlflow.log_param("method", method)
+                            mlflow.log_param("ablation", ablation_label)
                             if metrics is not None:
                                 _log_to_mlflow(metrics, run_idx)
                             else:
@@ -341,6 +370,8 @@ def main() -> None:
                     if metrics is not None:
                         row = metrics.to_dict()
                         row["run_index"] = run_idx
+                        row["method"] = method
+                        row["ablation"] = ablation_label
                         print(
                             f"  success={metrics.success}"
                             f"  conf={metrics.proof_confidence:.3f}"
@@ -356,6 +387,8 @@ def main() -> None:
                         row = {
                             "config_name": cfg_name,
                             "model": model,
+                            "method": method,
+                            "ablation": ablation_label,
                             "run_index": run_idx,
                             "error": err,
                         }

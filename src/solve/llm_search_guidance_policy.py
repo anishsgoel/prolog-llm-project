@@ -20,6 +20,61 @@ from solve.search_guidance_policy import SearchGuidancePolicy
 _err_log = get_logger(ERROR_LOGGER)
 
 
+def apply_clauses(clauses: list, soft_kb: SoftKnowledgeBase,
+                  allow_soft_rules: bool = False) -> Tuple[SoftKnowledgeBase, List[SoftFact], bool]:
+    """Add LLM-/baseline-proposed clauses to a copy of ``soft_kb``.
+
+    Each ``item`` is a dict ``{"clause": "<prolog clause>", "confidence": <float>}``.
+    Facts are added via ``SoftKnowledgeBase.add_soft_fact`` (matching by exact
+    atom string); rules are added only when ``allow_soft_rules`` is True. Returns
+    ``(new_kb, new_soft_facts, extended)``.
+
+    Shared by ``LLMSearchGuidancePolicy`` (PLLM) and the experiment baselines so
+    hypotheses are parsed and inserted identically everywhere.
+    """
+    new_kb = soft_kb.copy()
+    next_num = max([0] + [fact.num for fact in new_kb.facts] + [rule.num for rule in new_kb.rules]) + 1
+    new_soft_facts: List[SoftFact] = []
+
+    for item in clauses:
+        if not isinstance(item, dict):
+            continue
+        try:
+            confidence = float(item.get("confidence", 0.0))
+        except Exception:
+            _err_log.exception("apply_clauses: non-numeric confidence in proposed clause %r; skipping", item)
+            continue
+        confidence = max(0.0, min(1.0, confidence))
+
+        head_or_atom, maybe_body = split_head_and_body(item.get("clause", ""))
+        if head_or_atom is None and maybe_body is None:
+            continue
+
+        if maybe_body is None:
+            before_fact_count = len(new_kb.facts)
+            changed = new_kb.add_soft_fact(next_num, head_or_atom, confidence)
+            if changed:
+                matching_fact = None
+                for fact in new_kb.facts:
+                    if fact.atom == head_or_atom and abs(fact.confidence - confidence) < 1e-9:
+                        matching_fact = fact
+                        break
+                if matching_fact is None and len(new_kb.facts) > before_fact_count:
+                    matching_fact = new_kb.facts[-1]
+                if matching_fact is not None:
+                    new_soft_facts.append(matching_fact)
+                if len(new_kb.facts) > before_fact_count:
+                    next_num += 1
+            continue
+
+        if not allow_soft_rules:
+            continue
+        new_kb.rules.append(SoftRule(next_num, head_or_atom, maybe_body, confidence))
+        next_num += 1
+
+    return new_kb, new_soft_facts, len(new_soft_facts) != 0
+
+
 class LLMSearchGuidancePolicy(SearchGuidancePolicy):
     """Guide DFS ordering and backtracking by querying an LLM."""
 
@@ -160,47 +215,7 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
         return [item for item in clauses if item.get("clause", "") in kept]
 
     def _apply_clauses(self, clauses: list, soft_kb: SoftKnowledgeBase) -> Tuple[SoftKnowledgeBase, List[SoftFact], bool]:
-        new_kb = soft_kb.copy()
-        next_num = max([0] + [fact.num for fact in new_kb.facts] + [rule.num for rule in new_kb.rules]) + 1
-        new_soft_facts: List[SoftFact] = []
-
-        for item in clauses:
-            if not isinstance(item, dict):
-                continue
-            try:
-                confidence = float(item.get("confidence", 0.0))
-            except Exception:
-                _err_log.exception("_apply_clauses: non-numeric confidence in proposed clause %r; skipping", item)
-                continue
-            confidence = max(0.0, min(1.0, confidence))
-
-            head_or_atom, maybe_body = split_head_and_body(item.get("clause", ""))
-            if head_or_atom is None and maybe_body is None:
-                continue
-
-            if maybe_body is None:
-                before_fact_count = len(new_kb.facts)
-                changed = new_kb.add_soft_fact(next_num, head_or_atom, confidence)
-                if changed:
-                    matching_fact = None
-                    for fact in new_kb.facts:
-                        if fact.atom == head_or_atom and abs(fact.confidence - confidence) < 1e-9:
-                            matching_fact = fact
-                            break
-                    if matching_fact is None and len(new_kb.facts) > before_fact_count:
-                        matching_fact = new_kb.facts[-1]
-                    if matching_fact is not None:
-                        new_soft_facts.append(matching_fact)
-                    if len(new_kb.facts) > before_fact_count:
-                        next_num += 1
-                continue
-
-            if not self.allow_soft_rules:
-                continue
-            new_kb.rules.append(SoftRule(next_num, head_or_atom, maybe_body, confidence))
-            next_num += 1
-
-        return new_kb, new_soft_facts, len(new_soft_facts) != 0
+        return apply_clauses(clauses, soft_kb, allow_soft_rules=self.allow_soft_rules)
 
     def extend_on_backtrack(self, goal: AtomicFormula, goal_node: GoalNode, min_confidence: float,
                             soft_kb: SoftKnowledgeBase) -> Tuple[SoftKnowledgeBase, List[SoftFact], bool]:

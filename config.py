@@ -55,7 +55,8 @@ def apply_global_config(cfg: GlobalConfig) -> None:
     VERIFY_HYPOTHESES = cfg.verify_hypotheses
 
 
-def init_config(config_file: str = _CONFIG_PATH) -> GlobalConfig:
+def init_config(config_file: str = _CONFIG_PATH
+                ) -> GlobalConfig:
     """Load a GlobalConfig from YAML (if it exists), apply it, and set up logging."""
     global _logged
 
