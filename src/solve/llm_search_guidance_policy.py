@@ -20,57 +20,74 @@ from solve.search_guidance_policy import SearchGuidancePolicy
 _err_log = get_logger(ERROR_LOGGER)
 
 
+def coerce_confidence(item) -> Optional[float]:
+    """Confidence of one proposed-clause dict, clamped to [0, 1].
+
+    ``None`` means the item is unusable (not a dict, or a non-numeric
+    confidence) and should be skipped.
+    """
+    if not isinstance(item, dict):
+        return None
+    try:
+        confidence = float(item.get("confidence", 0.0))
+    except Exception:
+        _err_log.exception("coerce_confidence: non-numeric confidence in proposed clause %r; skipping", item)
+        return None
+    return max(0.0, min(1.0, confidence))
+
+
+def parse_clause_item(item) -> Optional[Tuple[str, Optional[str], float]]:
+    """One proposed clause as ``(head_or_atom, body_or_None, confidence)``.
+
+    ``None`` means the item could not be used at all. A ``body_or_None`` of
+    ``None`` marks a fact; anything else is a rule body.
+    """
+    confidence = coerce_confidence(item)
+    if confidence is None:
+        return None
+    head_or_atom, maybe_body = split_head_and_body(item.get("clause", ""))
+    if head_or_atom is None and maybe_body is None:
+        return None
+    return head_or_atom, maybe_body, confidence
+
+
 def apply_clauses(clauses: list, soft_kb: SoftKnowledgeBase,
                   allow_soft_rules: bool = False) -> Tuple[SoftKnowledgeBase, List[SoftFact], bool]:
     """Add LLM-/baseline-proposed clauses to a copy of ``soft_kb``.
 
     Each ``item`` is a dict ``{"clause": "<prolog clause>", "confidence": <float>}``.
-    Facts are added via ``SoftKnowledgeBase.add_soft_fact`` (matching by exact
-    atom string); rules are added only when ``allow_soft_rules`` is True. Returns
+    Facts go through ``SoftKnowledgeBase.upsert_soft_fact`` (canonical-atom
+    matching); rules are added only when ``allow_soft_rules`` is True. Returns
     ``(new_kb, new_soft_facts, extended)``.
 
-    Shared by ``LLMSearchGuidancePolicy`` (PLLM) and the experiment baselines so
-    hypotheses are parsed and inserted identically everywhere.
+    Note ``extended`` reflects the FACTS only — with ``allow_soft_rules=True`` a
+    proposal consisting solely of rules returns ``extended=False``. Harmless
+    today (``SolverConfig.allow_soft_rules`` is False), but a caller that turns
+    rules on should test the rule list itself.
+
+    Shared by ``LLMSearchGuidancePolicy`` (PLLM), the experiment baselines, and
+    the legacy ``solve_bfs.LLMExtensionStrategy``, so hypotheses are parsed and
+    inserted identically everywhere.
     """
     new_kb = soft_kb.copy()
     next_num = max([0] + [fact.num for fact in new_kb.facts] + [rule.num for rule in new_kb.rules]) + 1
     new_soft_facts: List[SoftFact] = []
 
     for item in clauses:
-        if not isinstance(item, dict):
+        parsed = parse_clause_item(item)
+        if parsed is None:
             continue
-        try:
-            confidence = float(item.get("confidence", 0.0))
-        except Exception:
-            _err_log.exception("apply_clauses: non-numeric confidence in proposed clause %r; skipping", item)
-            continue
-        confidence = max(0.0, min(1.0, confidence))
-
-        head_or_atom, maybe_body = split_head_and_body(item.get("clause", ""))
-        if head_or_atom is None and maybe_body is None:
-            continue
+        head_or_atom, maybe_body, confidence = parsed
 
         if maybe_body is None:
-            before_fact_count = len(new_kb.facts)
-            changed = new_kb.add_soft_fact(next_num, head_or_atom, confidence)
-            if changed:
-                matching_fact = None
-                for fact in new_kb.facts:
-                    if fact.atom == head_or_atom and abs(fact.confidence - confidence) < 1e-9:
-                        matching_fact = fact
-                        break
-                if matching_fact is None and len(new_kb.facts) > before_fact_count:
-                    matching_fact = new_kb.facts[-1]
-                if matching_fact is not None:
-                    new_soft_facts.append(matching_fact)
-                if len(new_kb.facts) > before_fact_count:
-                    next_num += 1
-            continue
-
-        if not allow_soft_rules:
-            continue
-        new_kb.rules.append(SoftRule(next_num, head_or_atom, maybe_body, confidence))
-        next_num += 1
+            fact, appended = new_kb.upsert_soft_fact(next_num, head_or_atom, confidence)
+            if fact is not None:
+                new_soft_facts.append(fact)
+            if appended:
+                next_num += 1
+        elif allow_soft_rules:
+            new_kb.rules.append(SoftRule(next_num, head_or_atom, maybe_body, confidence))
+            next_num += 1
 
     return new_kb, new_soft_facts, len(new_soft_facts) != 0
 

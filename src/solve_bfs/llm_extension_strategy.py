@@ -10,13 +10,12 @@ from typing import Callable, Dict, List, Optional, Set, Tuple
 import config
 from log_setup import ERROR_LOGGER, get_logger
 from logic.logic import AtomicFormula, Term, Var
-from prolog.formula_parsing import split_head_and_body
 from prolog.knowledge_base import SoftKnowledgeBase
-from prolog.prolog_command import SoftRule
 from prolog.prolog_utils import is_mixed_atom
 from prolog_llm.llm import LLMInterface
 from prolog_llm.prolog_utils import extract_first_json
-from solve.extension_strategy import ExtensionStrategy
+from solve.llm_search_guidance_policy import apply_clauses, coerce_confidence
+from solve_bfs.extension_strategy import ExtensionStrategy
 
 _err_log = get_logger(ERROR_LOGGER)
 
@@ -176,40 +175,27 @@ class LLMExtensionStrategy(ExtensionStrategy):
             next_depth = max_depth + 1 if self.increase_depth_on_empty else max_depth
             return soft_kb, next_depth, min_confidence
 
-        new_kb = soft_kb.copy()
-        next_num = max([0] + [fact.num for fact in new_kb.facts] + [rule.num for rule in new_kb.rules]) + 1
-        added = False
-        max_confidence_added = 0.0
+        items = clauses[: self.max_hypotheses]
 
-        for item in clauses[: self.max_hypotheses]:
-            if not isinstance(item, dict):
-                continue
+        # Highest confidence the LLM OFFERED (before insertion), including
+        # proposals that turn out to be duplicates -- this drives the depth /
+        # confidence-floor decision below, so it must not be narrowed to the
+        # proposals that happened to land.
+        offered = [c for c in (coerce_confidence(item) for item in items) if c is not None]
+        max_confidence_added = max([0.0] + offered)
 
-            try:
-                confidence = float(item.get("confidence", 0.0))
-            except Exception:
-                _err_log.exception("LLMExtensionStrategy.extend: non-numeric confidence in clause %r; skipping", item)
-                continue
-            confidence = max(0.0, min(1.0, confidence))
-            max_confidence_added = max(confidence, max_confidence_added)
-            #if confidence < min_confidence:
-            #    continue
-
-            head_or_atom, maybe_body = split_head_and_body(item.get("clause", ""))
-            if head_or_atom is None and maybe_body is None:
-                continue
-
-            if maybe_body is not None and not self.allow_soft_rules:
-                continue
-
-            if maybe_body is None:
-                if new_kb.add_soft_fact(next_num, head_or_atom, confidence):
-                    next_num += 1
-            else:
-                new_kb.rules.append(SoftRule(next_num, head_or_atom, maybe_body, confidence))
-                next_num += 1
-
-            added = True
+        # Insertion is the SHARED helper, not a second copy of it. The previous
+        # inline loop here differed from apply_clauses in two ways, both bugs:
+        # it set `added = True` unconditionally (so a batch of rejected duplicates
+        # still reported an extension), and it advanced `next_num` whenever
+        # add_soft_fact returned True -- including on a confidence raise, where
+        # nothing was appended, which drifted the clause numbering.
+        new_kb, _new_soft_facts, facts_added = apply_clauses(
+            items, soft_kb, allow_soft_rules=self.allow_soft_rules
+        )
+        # apply_clauses' third value covers facts only; rules count as an
+        # extension here too (see its docstring).
+        added = facts_added or len(new_kb.rules) > len(soft_kb.rules)
 
         if not added:
             print("not added!")

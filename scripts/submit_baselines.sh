@@ -4,7 +4,7 @@
 # ONE array task = ONE (method|ablation) x ONE model, so:
 #   * ollama loads a model exactly once (no evict/reload thrash between models),
 #   * a model that cannot load fails only its own tasks,
-#   * resources are sized PER MODEL (gpt-oss:120b needs 2 GPUs; llama3:8b needs 1),
+#   * resources are sized PER MODEL (gpt-oss:120b needs an 80 GiB card; 8b needs 1 small one),
 #   * each cell writes its own CSV, so resubmitting one cell cannot clobber others.
 #
 # This is the ENTRY POINT — run it on the cluster login node:
@@ -48,19 +48,26 @@ THROTTLE="${THROTTLE:-4}"
 # --- per-model resource profiles --------------------------------------------
 # echoes: <partition> <gres> <mem> <cpus> <time>
 #
-# WHY gpu:2 for gpt-oss:120b — its weights are 59.8 GiB, which fits in NEITHER a
-# 32 GiB V100 NOR a 40 GiB A100. On one GPU ollama commits a split plan (18/37
-# layers on GPU, 31.5 GiB of weights on the host with mmap disabled) and the
-# runner is then SIGKILLed by the memory cgroup during load — every /api/chat
-# returns HTTP 500 and the whole model's results come out as silent zeros.
-# 2 x A100 = 80 GiB holds the model entirely in VRAM.
+# WHY an 80 GiB card for gpt-oss:120b — its weights are 59.8 GiB, which fits in
+# NEITHER a 32 GiB V100 NOR a 40 GiB A100. When it does not fit, ollama commits a
+# split plan (18/37 layers on GPU, 31.5 GiB of weights on the host with mmap
+# disabled) and the runner is then SIGKILLed by the memory cgroup during load —
+# every /api/chat returns HTTP 500 and the whole model's results come out as
+# silent zeros. One 80 GiB card holds it entirely in VRAM with ~20 GiB spare;
+# 2 x A100 40 GiB also works but splits the model across devices.
 #
-# WHY --cpus-per-task at all — ollama sized its runner at NumThreads:36 while
-# SLURM's default allocation is ONE cpu, i.e. ~36x oversubscription on any layer
-# that stays on the host. Ask for the cores you intend ollama to use.
+# WHY --cpus-per-task at all — ollama sizes its runner from the host core count
+# (NumThreads:36 in the 20260723 log) regardless of the cgroup quota, while
+# SLURM's default allocation is ONE cpu. With the model fully in VRAM the CPU is
+# out of the token path and 2 is enough (ollama + batch_run parent + the spawned
+# eval worker in timed_run.py). RAISE IT to 8-16 if the ollama log shows CPU
+# still in the hot path:
+#     grep -E "offloaded .*layers to GPU|offloading output layer" slurm_logs/ollama_*.log
+# anything below "offloaded 37/37" or an output layer on CPU means every token
+# pays for a host matmul, and then 2 cores throttle generation.
 model_profile() {
   case "$1" in
-    gpt-oss:120b) echo "$GPU_PARTITION_BIG gpu:80gb:1 128G 2 48:00:00" ;;
+    gpt-oss:120b) echo "$GPU_PARTITION_BIG gpu:2 128G 2 48:00:00" ;;
     gpt-oss:20b)  echo "$GPU_PARTITION     gpu:1 64G  2 24:00:00" ;;
     *)            echo "$GPU_PARTITION     gpu:1 64G  2 12:00:00" ;;
   esac
@@ -115,8 +122,10 @@ for MODEL in $MODELS; do
 
   if [ "$MODEL" = "gpt-oss:120b" ] && [ "$GPU_PARTITION_BIG" = "$GPU_PARTITION" ]; then
     echo "  !! WARNING: gpt-oss:120b is being sent to '$GPU_PARTITION' with $GRES."
-    echo "     Its 59.8 GiB of weights need >= 2 GPUs (2xA100=80GiB). Set"
-    echo "     GPU_PARTITION_BIG=<a100 partition> or it will be killed at load."
+    echo "     Its 59.8 GiB of weights need one >=64 GiB GPU (or 2 smaller ones);"
+    echo "     the V100/A100-40GB partition has neither. Set GPU_PARTITION_BIG=<80GB"
+    echo "     partition>, or the runner will be SIGKILLed at load and every row"
+    echo "     for this model will come out as silent zeros."
   fi
 
   JID=$(sbatch --parsable --array="0-$((N-1))%${THROTTLE}" \

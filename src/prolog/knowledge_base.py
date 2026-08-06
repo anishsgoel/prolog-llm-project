@@ -1,9 +1,9 @@
 """Knowledge base representation for Prolog."""
 
-from typing import Dict, List, Set
+from typing import Dict, List, Optional, Set, Tuple
 
 from prolog.program_parsing import parse
-from prolog.prolog_command import Fact, Rule, SoftFact, SoftRule
+from prolog.prolog_command import Fact, Rule, SoftFact, SoftRule, canonical_atom_str
 
 
 class KnowledgeBase:
@@ -86,15 +86,52 @@ class SoftKnowledgeBase(KnowledgeBase):
         new_kb.predicate_comments = self.predicate_comments.copy()
         return new_kb
 
-    def add_soft_fact(self, num: int, atom: str, confidence: float) -> bool:
-        """Add a soft fact or raise the confidence of an existing matching fact."""
+    def upsert_soft_fact(self, num: int, atom: str,
+                         confidence: float) -> Tuple[Optional[SoftFact], bool]:
+        """Insert a soft fact, or raise the confidence of the matching one.
+
+        Returns ``(fact, appended)``:
+
+        ``(None, False)``   nothing changed — already present at >= confidence
+        ``(fact, False)``   an existing fact's confidence was raised to this one
+        ``(fact, True)``    a new fact was appended
+
+        Returning the fact, rather than only a bool, is what lets a caller know
+        *which* fact it affected. ``apply_clauses`` used to reconstruct that by
+        snapshotting ``len(self.facts)``, rescanning for a fact with a matching
+        atom and confidence, and falling back to ``self.facts[-1]`` — a guess for
+        a question this method can simply answer.
+
+        Matching is by CANONICAL atom, not by raw text: an LLM that proposes
+        ``connected(a,b)`` after ``connected(a, b)`` must update the fact it
+        already put there rather than append a second copy. The raw text is
+        still what gets stored and rendered (see :class:`Fact`), so prompts and
+        ``to_text()`` are unaffected.
+        """
+        try:
+            key = canonical_atom_str(atom)
+        except Exception:
+            # Unparseable atom: keep the old raw behaviour. SoftFact() below
+            # parses the same string and will surface the real error.
+            key = atom
+
         for fact in self.facts:
-            if fact.atom != atom:
+            if fact.canonical_atom != key:
                 continue
             if confidence > fact.confidence:
                 fact._confidence = confidence
-                return True
-            return False
+                return fact, False
+            return None, False
 
-        self.facts.append(SoftFact(num, atom, confidence))
-        return True
+        new_fact = SoftFact(num, atom, confidence)
+        self.facts.append(new_fact)
+        return new_fact, True
+
+    def add_soft_fact(self, num: int, atom: str, confidence: float) -> bool:
+        """Did-anything-change wrapper around :meth:`upsert_soft_fact`.
+
+        Kept because it is the historical public entry point; new code should
+        prefer ``upsert_soft_fact``, which also says which fact changed.
+        """
+        fact, _ = self.upsert_soft_fact(num, atom, confidence)
+        return fact is not None

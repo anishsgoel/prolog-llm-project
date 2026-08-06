@@ -9,9 +9,33 @@ from prolog.formula_parsing import (
 )
 
 
+def canonical_atom_str(atom: str) -> str:
+    """Spacing-independent form of a Prolog atom string.
+
+    ``AtomicFormula.__str__`` writes no space after the argument separator
+    (``p(a,b)``), whereas the KB ``.pl`` files in this repo write one
+    (``p(a, b)``). Both parse to the same formula, so only this normalised form
+    may be used to decide whether two atoms are THE SAME atom.
+    """
+    return str(parse_prolog_to_formula(atom))
+
+
 class Fact:
-    """A Prolog fact."""
-    
+    """A Prolog fact.
+
+    Two string views, deliberately distinct:
+
+    ``atom``            – the text as written (KB file / LLM output). This is what
+                          gets rendered back by ``KnowledgeBase.to_text()`` and
+                          into the LLM prompts, so it must preserve the author's
+                          formatting.
+    ``canonical_atom``  – ``str(self.formula)``; the identity key. Comparing raw
+                          ``atom`` text instead let ``connected(a,b)`` and
+                          ``connected(a, b)`` coexist as two separate soft facts,
+                          which inflated ``soft_facts_proposed`` and pushed
+                          ``recall_omitted`` above 1.0 in the 20260804 run.
+    """
+
     def __init__(self, num: int, atom: str | AtomicFormula):
         self.num = num
         if isinstance(atom, str):
@@ -22,10 +46,18 @@ class Fact:
             self.formula = parse_prolog_to_formula(self._atom_str)
         else:
             raise TypeError("Atom can be only atomic formula or string.")
+        # Computed once: every identity check goes through this, and re-parsing
+        # per comparison would make add_soft_fact quadratic in parse calls.
+        self._canonical_atom = str(self.formula)
 
     @property
     def atom(self) -> str:
         return self._atom_str
+
+    @property
+    def canonical_atom(self) -> str:
+        """Identity key: spacing-independent rendering of this fact's atom."""
+        return self._canonical_atom
 
     @property
     def predicate_name(self) -> str:

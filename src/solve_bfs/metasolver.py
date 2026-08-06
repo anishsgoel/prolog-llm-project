@@ -7,8 +7,8 @@ from typing import Any, Dict, List, Optional
 import config
 from logic.logic import AtomicFormula
 from prolog.knowledge_base import KnowledgeBase, SoftKnowledgeBase
-from solve.extension_strategy import ExtensionStrategy
-from solve.solver import Solver
+from solve.solver import Solver          # still lives in `solve`: used by groundtruth
+from solve_bfs.extension_strategy import ExtensionStrategy
 
 
 class MetaSolver:
