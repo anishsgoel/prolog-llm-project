@@ -1,0 +1,20 @@
+# T5 - Complete network, all 11 lines
+#
+# Goal: Grange Hill -> Woodford  (3 hops, short path)
+# Shortest route: Grange Hill -> Chigwell -> Roding Valley -> Woodford
+# Omitted edges (2), both directions each:
+#   Chigwell -- Roding Valley (facts 191, 192)
+#   Gants Hill -- Redbridge (facts 319, 320)
+# Placement: spread  |  crosses junction: no
+# Plausible direct-shortcut temptation: no
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t5_2edge_spread_09
+goal: "reachable(grange_hill, woodford)"
+kb_file: kb/london_t5_full.pl
+propose_facts: connected/2
+omit_fact_ids: [191, 192, 319, 320]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 10

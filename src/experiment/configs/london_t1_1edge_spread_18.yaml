@@ -1,0 +1,19 @@
+# T1 - Bakerloo line only
+#
+# Goal: Maida Vale -> Marylebone  (4 hops, short path)
+# Shortest route: Maida Vale -> Warwick Avenue -> Paddington -> Edgware Road (Bakerloo) -> Marylebone
+# Omitted edges (1), both directions each:
+#   Edgware Road (Bakerloo) -- Paddington (facts 11, 12)
+# Placement: spread  |  crosses junction: no
+# Plausible direct-shortcut temptation: no
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t1_1edge_spread_18
+goal: "reachable(maida_vale, marylebone)"
+kb_file: kb/london_t1_bakerloo.pl
+propose_facts: connected/2
+omit_fact_ids: [11, 12]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 12

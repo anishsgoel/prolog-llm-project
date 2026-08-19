@@ -1,0 +1,21 @@
+# T2 - Central London core - Inner Circle, Central trunk, Victoria, Northern central
+#
+# Goal: Baker Street -> Notting Hill Gate  (4 hops, short path)
+# Shortest route: Baker Street -> Edgware Road -> Paddington -> Bayswater -> Notting Hill Gate
+# Omitted edges (3), both directions each:
+#   Bayswater -- Paddington (facts 31, 32)
+#   Lancaster Gate -- Marble Arch (facts 129, 130)
+#   Sloane Square -- South Kensington (facts 161, 162)
+# Placement: spread  |  crosses junction: no
+# Plausible direct-shortcut temptation: yes - both endpoints are Zone 1 interchanges
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t2_3edge_spread_11
+goal: "reachable(baker_street, notting_hill_gate)"
+kb_file: kb/london_t2_zone1.pl
+propose_facts: connected/2
+omit_fact_ids: [31, 32, 129, 130, 161, 162]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 12

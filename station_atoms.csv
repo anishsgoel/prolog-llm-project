@@ -1,0 +1,271 @@
+official_name,prolog_atom,lines,degree
+Acton Town,acton_town,District; Piccadilly,3
+Aldgate,aldgate,Circle; Metropolitan,2
+Aldgate East,aldgate_east,District; Hammersmith & City,3
+Alperton,alperton,Piccadilly,2
+Amersham,amersham,Metropolitan,1
+Angel,angel,Northern,2
+Archway,archway,Northern,2
+Arnos Grove,arnos_grove,Piccadilly,2
+Arsenal,arsenal,Piccadilly,2
+Baker Street,baker_street,Bakerloo; Circle; Hammersmith & City; Jubilee; Metropolitan,6
+Balham,balham,Northern,2
+Bank,bank,Central; Northern; Waterloo & City,5
+Barbican,barbican,Circle; Hammersmith & City; Metropolitan,2
+Barking,barking,District; Hammersmith & City,2
+Barkingside,barkingside,Central,2
+Barons Court,barons_court,District; Piccadilly,2
+Battersea Power Station,battersea_power_station,Northern,1
+Bayswater,bayswater,Circle; District,2
+Becontree,becontree,District,2
+Belsize Park,belsize_park,Northern,2
+Bermondsey,bermondsey,Jubilee,2
+Bethnal Green,bethnal_green,Central,2
+Blackfriars,blackfriars,Circle; District,2
+Blackhorse Road,blackhorse_road,Victoria,2
+Bond Street,bond_street,Central; Jubilee,4
+Borough,borough,Northern,2
+Boston Manor,boston_manor,Piccadilly,2
+Bounds Green,bounds_green,Piccadilly,2
+Bow Road,bow_road,District; Hammersmith & City,2
+Brent Cross,brent_cross,Northern,2
+Brixton,brixton,Victoria,1
+Bromley-by-Bow,bromley_by_bow,District; Hammersmith & City,2
+Buckhurst Hill,buckhurst_hill,Central,2
+Burnt Oak,burnt_oak,Northern,2
+Caledonian Road,caledonian_road,Piccadilly,2
+Camden Town,camden_town,Northern,4
+Canada Water,canada_water,Jubilee,2
+Canary Wharf,canary_wharf,Jubilee,2
+Canning Town,canning_town,Jubilee,2
+Cannon Street,cannon_street,Circle; District,2
+Canons Park,canons_park,Jubilee,2
+Chalfont & Latimer,chalfont_and_latimer,Metropolitan,3
+Chalk Farm,chalk_farm,Northern,2
+Chancery Lane,chancery_lane,Central,2
+Charing Cross,charing_cross,Bakerloo; Northern,3
+Chesham,chesham,Metropolitan,1
+Chigwell,chigwell,Central,2
+Chiswick Park,chiswick_park,District,2
+Chorleywood,chorleywood,Metropolitan,2
+Clapham Common,clapham_common,Northern,2
+Clapham North,clapham_north,Northern,2
+Clapham South,clapham_south,Northern,2
+Cockfosters,cockfosters,Piccadilly,1
+Colindale,colindale,Northern,2
+Colliers Wood,colliers_wood,Northern,2
+Covent Garden,covent_garden,Piccadilly,2
+Croxley,croxley,Metropolitan,2
+Dagenham East,dagenham_east,District,2
+Dagenham Heathway,dagenham_heathway,District,2
+Debden,debden,Central,2
+Dollis Hill,dollis_hill,Jubilee,2
+Ealing Broadway,ealing_broadway,Central; District,2
+Ealing Common,ealing_common,District; Piccadilly,3
+Earl's Court,earls_court,District; Piccadilly,5
+East Acton,east_acton,Central,2
+East Finchley,east_finchley,Northern,2
+East Ham,east_ham,District; Hammersmith & City,2
+East Putney,east_putney,District,2
+Eastcote,eastcote,Metropolitan; Piccadilly,2
+Edgware,edgware,Northern,1
+Edgware Road,edgware_road,Circle; District; Hammersmith & City,2
+Edgware Road (Bakerloo),edgware_road_bakerloo,Bakerloo,2
+Elephant & Castle,elephant_and_castle,Bakerloo; Northern,3
+Elm Park,elm_park,District,2
+Embankment,embankment,Bakerloo; Circle; District; Northern,4
+Epping,epping,Central,1
+Euston,euston,Northern; Victoria,4
+Euston Square,euston_square,Circle; Hammersmith & City; Metropolitan,2
+Fairlop,fairlop,Central,2
+Farringdon,farringdon,Circle; Hammersmith & City; Metropolitan,2
+Finchley Central,finchley_central,Northern,3
+Finchley Road,finchley_road,Jubilee; Metropolitan,2
+Finsbury Park,finsbury_park,Piccadilly; Victoria,4
+Fulham Broadway,fulham_broadway,District,2
+Gants Hill,gants_hill,Central,2
+Gloucester Road,gloucester_road,Circle; District; Piccadilly,3
+Golders Green,golders_green,Northern,2
+Goldhawk Road,goldhawk_road,Circle; Hammersmith & City,2
+Goodge Street,goodge_street,Northern,2
+Grange Hill,grange_hill,Central,2
+Great Portland Street,great_portland_street,Circle; Hammersmith & City; Metropolitan,2
+Green Park,green_park,Jubilee; Piccadilly; Victoria,6
+Greenford,greenford,Central,2
+Gunnersbury,gunnersbury,District,2
+Hainault,hainault,Central,2
+Hammersmith,hammersmith,Circle; District; Hammersmith & City; Piccadilly,3
+Hampstead,hampstead,Northern,2
+Hanger Lane,hanger_lane,Central,2
+Harlesden,harlesden,Bakerloo,2
+Harrow & Wealdstone,harrow_and_wealdstone,Bakerloo,1
+Harrow-on-the-Hill,harrow_on_the_hill,Metropolitan,3
+Hatton Cross,hatton_cross,Piccadilly,3
+Heathrow Terminal 4,heathrow_terminal_4,Piccadilly,2
+Heathrow Terminal 5,heathrow_terminal_5,Piccadilly,1
+Heathrow Terminals 2 & 3,heathrow_terminals_2_and_3,Piccadilly,3
+Hendon Central,hendon_central,Northern,2
+High Barnet,high_barnet,Northern,1
+High Street Kensington,high_street_kensington,Circle; District,3
+Highbury & Islington,highbury_and_islington,Victoria,2
+Highgate,highgate,Northern,2
+Hillingdon,hillingdon,Metropolitan; Piccadilly,2
+Holborn,holborn,Central; Piccadilly,4
+Holland Park,holland_park,Central,2
+Holloway Road,holloway_road,Piccadilly,2
+Hornchurch,hornchurch,District,2
+Hounslow Central,hounslow_central,Piccadilly,2
+Hounslow East,hounslow_east,Piccadilly,2
+Hounslow West,hounslow_west,Piccadilly,2
+Hyde Park Corner,hyde_park_corner,Piccadilly,2
+Ickenham,ickenham,Metropolitan; Piccadilly,2
+Kennington,kennington,Northern,4
+Kensal Green,kensal_green,Bakerloo,2
+Kensington (Olympia),kensington_olympia,District,1
+Kentish Town,kentish_town,Northern,2
+Kenton,kenton,Bakerloo,2
+Kew Gardens,kew_gardens,District,2
+Kilburn,kilburn,Jubilee,2
+Kilburn Park,kilburn_park,Bakerloo,2
+King's Cross St Pancras,kings_cross_st_pancras,Circle; Hammersmith & City; Metropolitan; Northern; Piccadilly; Victoria,7
+Kingsbury,kingsbury,Jubilee,2
+Knightsbridge,knightsbridge,Piccadilly,2
+Ladbroke Grove,ladbroke_grove,Circle; Hammersmith & City,2
+Lambeth North,lambeth_north,Bakerloo,2
+Lancaster Gate,lancaster_gate,Central,2
+Latimer Road,latimer_road,Circle; Hammersmith & City,2
+Leicester Square,leicester_square,Northern; Piccadilly,4
+Leyton,leyton,Central,2
+Leytonstone,leytonstone,Central,3
+Liverpool Street,liverpool_street,Central; Circle; Hammersmith & City; Metropolitan,5
+London Bridge,london_bridge,Jubilee; Northern,4
+Loughton,loughton,Central,2
+Maida Vale,maida_vale,Bakerloo,2
+Manor House,manor_house,Piccadilly,2
+Mansion House,mansion_house,Circle; District,2
+Marble Arch,marble_arch,Central,2
+Marylebone,marylebone,Bakerloo,2
+Mile End,mile_end,Central; District; Hammersmith & City,4
+Mill Hill East,mill_hill_east,Northern,1
+Monument,monument,Circle; District,2
+Moor Park,moor_park,Metropolitan,3
+Moorgate,moorgate,Circle; Hammersmith & City; Metropolitan; Northern,4
+Morden,morden,Northern,1
+Mornington Crescent,mornington_crescent,Northern,2
+Neasden,neasden,Jubilee,2
+Newbury Park,newbury_park,Central,2
+Nine Elms,nine_elms,Northern,2
+North Acton,north_acton,Central,3
+North Ealing,north_ealing,Piccadilly,2
+North Greenwich,north_greenwich,Jubilee,2
+North Harrow,north_harrow,Metropolitan,2
+North Wembley,north_wembley,Bakerloo,2
+Northfields,northfields,Piccadilly,2
+Northolt,northolt,Central,2
+Northwick Park,northwick_park,Metropolitan,2
+Northwood,northwood,Metropolitan,2
+Northwood Hills,northwood_hills,Metropolitan,2
+Notting Hill Gate,notting_hill_gate,Central; Circle; District,4
+Oakwood,oakwood,Piccadilly,2
+Old Street,old_street,Northern,2
+Osterley,osterley,Piccadilly,2
+Oval,oval,Northern,2
+Oxford Circus,oxford_circus,Bakerloo; Central; Victoria,6
+Paddington,paddington,Bakerloo; Circle; District; Hammersmith & City,5
+Park Royal,park_royal,Piccadilly,2
+Parsons Green,parsons_green,District,2
+Perivale,perivale,Central,2
+Piccadilly Circus,piccadilly_circus,Bakerloo; Piccadilly,4
+Pimlico,pimlico,Victoria,2
+Pinner,pinner,Metropolitan,2
+Plaistow,plaistow,District; Hammersmith & City,2
+Preston Road,preston_road,Metropolitan,2
+Putney Bridge,putney_bridge,District,2
+Queen's Park,queens_park,Bakerloo,2
+Queensbury,queensbury,Jubilee,2
+Queensway,queensway,Central,2
+Ravenscourt Park,ravenscourt_park,District,2
+Rayners Lane,rayners_lane,Metropolitan; Piccadilly,3
+Redbridge,redbridge,Central,2
+Regent's Park,regents_park,Bakerloo,2
+Richmond,richmond,District,1
+Rickmansworth,rickmansworth,Metropolitan,2
+Roding Valley,roding_valley,Central,2
+Royal Oak,royal_oak,Circle; Hammersmith & City,2
+Ruislip,ruislip,Metropolitan; Piccadilly,2
+Ruislip Gardens,ruislip_gardens,Central,2
+Ruislip Manor,ruislip_manor,Metropolitan; Piccadilly,2
+Russell Square,russell_square,Piccadilly,2
+Seven Sisters,seven_sisters,Victoria,2
+Shepherd's Bush,shepherds_bush,Central,2
+Shepherd's Bush Market,shepherds_bush_market,Circle; Hammersmith & City,2
+Sloane Square,sloane_square,Circle; District,2
+Snaresbrook,snaresbrook,Central,2
+South Ealing,south_ealing,Piccadilly,2
+South Harrow,south_harrow,Piccadilly,2
+South Kensington,south_kensington,Circle; District; Piccadilly,3
+South Kenton,south_kenton,Bakerloo,2
+South Ruislip,south_ruislip,Central,2
+South Wimbledon,south_wimbledon,Northern,2
+South Woodford,south_woodford,Central,2
+Southfields,southfields,District,2
+Southgate,southgate,Piccadilly,2
+Southwark,southwark,Jubilee,2
+St James's Park,st_jamess_park,Circle; District,2
+St John's Wood,st_johns_wood,Jubilee,2
+St Paul's,st_pauls,Central,2
+Stamford Brook,stamford_brook,District,2
+Stanmore,stanmore,Jubilee,1
+Stepney Green,stepney_green,District; Hammersmith & City,2
+Stockwell,stockwell,Northern; Victoria,4
+Stonebridge Park,stonebridge_park,Bakerloo,2
+Stratford,stratford,Central; Jubilee,3
+Sudbury Hill,sudbury_hill,Piccadilly,2
+Sudbury Town,sudbury_town,Piccadilly,2
+Swiss Cottage,swiss_cottage,Jubilee,2
+Temple,temple,Circle; District,2
+Theydon Bois,theydon_bois,Central,2
+Tooting Bec,tooting_bec,Northern,2
+Tooting Broadway,tooting_broadway,Northern,2
+Tottenham Court Road,tottenham_court_road,Central; Northern,4
+Tottenham Hale,tottenham_hale,Victoria,2
+Totteridge & Whetstone,totteridge_and_whetstone,Northern,2
+Tower Hill,tower_hill,Circle; District,3
+Tufnell Park,tufnell_park,Northern,2
+Turnham Green,turnham_green,District; Piccadilly,3
+Turnpike Lane,turnpike_lane,Piccadilly,2
+Upminster,upminster,District,1
+Upminster Bridge,upminster_bridge,District,2
+Upney,upney,District,2
+Upton Park,upton_park,District; Hammersmith & City,2
+Uxbridge,uxbridge,Metropolitan; Piccadilly,1
+Vauxhall,vauxhall,Victoria,2
+Victoria,victoria,Circle; District; Victoria,4
+Walthamstow Central,walthamstow_central,Victoria,1
+Wanstead,wanstead,Central,2
+Warren Street,warren_street,Northern; Victoria,3
+Warwick Avenue,warwick_avenue,Bakerloo,2
+Waterloo,waterloo,Bakerloo; Jubilee; Northern; Waterloo & City,6
+Watford,watford,Metropolitan,1
+Wembley Central,wembley_central,Bakerloo,2
+Wembley Park,wembley_park,Jubilee; Metropolitan,3
+West Acton,west_acton,Central,2
+West Brompton,west_brompton,District,2
+West Finchley,west_finchley,Northern,2
+West Ham,west_ham,District; Hammersmith & City; Jubilee,4
+West Hampstead,west_hampstead,Jubilee,2
+West Harrow,west_harrow,Metropolitan,2
+West Kensington,west_kensington,District,2
+West Ruislip,west_ruislip,Central,1
+Westbourne Park,westbourne_park,Circle; Hammersmith & City,2
+Westminster,westminster,Circle; District; Jubilee,4
+White City,white_city,Central,2
+Whitechapel,whitechapel,District; Hammersmith & City,2
+Willesden Green,willesden_green,Jubilee,2
+Willesden Junction,willesden_junction,Bakerloo,2
+Wimbledon,wimbledon,District,1
+Wimbledon Park,wimbledon_park,District,2
+Wood Green,wood_green,Piccadilly,2
+Wood Lane,wood_lane,Circle; Hammersmith & City,2
+Woodford,woodford,Central,3
+Woodside Park,woodside_park,Northern,2

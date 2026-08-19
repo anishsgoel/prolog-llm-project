@@ -1,0 +1,19 @@
+# T2 - Central London core - Inner Circle, Central trunk, Victoria, Northern central
+#
+# Goal: Holland Park -> North Acton  (4 hops, short path)
+# Shortest route: Holland Park -> Shepherd's Bush -> White City -> East Acton -> North Acton
+# Omitted edges (1), both directions each:
+#   Holland Park -- Shepherd's Bush (facts 125, 126)
+# Placement: onpath  |  crosses junction: no
+# Plausible direct-shortcut temptation: no
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t2_1edge_onpath_18
+goal: "reachable(holland_park, north_acton)"
+kb_file: kb/london_t2_zone1.pl
+propose_facts: connected/2
+omit_fact_ids: [125, 126]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 12

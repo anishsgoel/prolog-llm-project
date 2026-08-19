@@ -1,0 +1,20 @@
+# T3 - West London - District and Piccadilly in full, plus the Circle's Hammersmith branch
+#
+# Goal: Gloucester Road -> Victoria  (3 hops, short path)
+# Shortest route: Gloucester Road -> South Kensington -> Sloane Square -> Victoria
+# Omitted edges (2), both directions each:
+#   Gloucester Road -- South Kensington (facts 115, 116)
+#   Sloane Square -- Victoria (facts 211, 212)
+# Placement: onpath  |  crosses junction: yes (South Kensington)
+# Plausible direct-shortcut temptation: yes - both endpoints are Zone 1 interchanges
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t3_2edge_onpath_14
+goal: "reachable(gloucester_road, victoria)"
+kb_file: kb/london_t3_west.pl
+propose_facts: connected/2
+omit_fact_ids: [115, 116, 211, 212]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 10

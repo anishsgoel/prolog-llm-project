@@ -1,0 +1,20 @@
+# T2 - Central London core - Inner Circle, Central trunk, Victoria, Northern central
+#
+# Goal: Aldgate -> Borough  (4 hops, short path)
+# Shortest route: Aldgate -> Liverpool Street -> Bank -> London Bridge -> Borough
+# Omitted edges (2), both directions each:
+#   Bank -- London Bridge (facts 17, 18)
+#   Kennington -- Waterloo (facts 127, 128)
+# Placement: spread  |  crosses junction: yes (Liverpool Street, Bank)
+# Plausible direct-shortcut temptation: no
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t2_2edge_spread_08
+goal: "reachable(aldgate, borough)"
+kb_file: kb/london_t2_zone1.pl
+propose_facts: connected/2
+omit_fact_ids: [17, 18, 127, 128]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 12

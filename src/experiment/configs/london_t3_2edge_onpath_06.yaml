@@ -1,0 +1,20 @@
+# T3 - West London - District and Piccadilly in full, plus the Circle's Hammersmith branch
+#
+# Goal: Acton Town -> Gunnersbury  (3 hops, short path)
+# Shortest route: Acton Town -> Chiswick Park -> Turnham Green -> Gunnersbury
+# Omitted edges (2), both directions each:
+#   Acton Town -- Chiswick Park (facts 1, 2)
+#   Gunnersbury -- Turnham Green (facts 131, 132)
+# Placement: onpath  |  crosses junction: yes (Turnham Green)
+# Plausible direct-shortcut temptation: no
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t3_2edge_onpath_06
+goal: "reachable(acton_town, gunnersbury)"
+kb_file: kb/london_t3_west.pl
+propose_facts: connected/2
+omit_fact_ids: [1, 2, 131, 132]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 10

@@ -1,0 +1,21 @@
+# T2 - Central London core - Inner Circle, Central trunk, Victoria, Northern central
+#
+# Goal: Cannon Street -> Temple  (3 hops, short path)
+# Shortest route: Cannon Street -> Mansion House -> Blackfriars -> Temple
+# Omitted edges (3), both directions each:
+#   Bank -- Liverpool Street (facts 15, 16)
+#   Blackfriars -- Mansion House (facts 37, 38)
+#   Liverpool Street -- Moorgate (facts 139, 140)
+# Placement: spread  |  crosses junction: no
+# Plausible direct-shortcut temptation: no
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t2_3edge_spread_04
+goal: "reachable(cannon_street, temple)"
+kb_file: kb/london_t2_zone1.pl
+propose_facts: connected/2
+omit_fact_ids: [15, 16, 37, 38, 139, 140]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 10

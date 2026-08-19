@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import json
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 import config
-from log_setup import ERROR_LOGGER, get_logger
-from logic.logic import AtomicFormula
+from log_setup import APP_LOGGER, ERROR_LOGGER, get_logger
+from logic.logic import AtomicFormula, Const
 from prolog.formula_parsing import split_head_and_body
 from prolog.knowledge_base import SoftKnowledgeBase
 from prolog.prolog_command import SoftFact, SoftRule
@@ -18,6 +18,7 @@ from solve.prompt_buidler import PromptBuilder, LLMSearchGuidancePromptContext
 from solve.search_guidance_policy import SearchGuidancePolicy
 
 _err_log = get_logger(ERROR_LOGGER)
+_prompt_log = get_logger(APP_LOGGER)
 
 
 def coerce_confidence(item) -> Optional[float]:
@@ -92,6 +93,75 @@ def apply_clauses(clauses: list, soft_kb: SoftKnowledgeBase,
     return new_kb, new_soft_facts, len(new_soft_facts) != 0
 
 
+def _fact_constants(formula: AtomicFormula) -> List[str]:
+    return [arg.name for arg in formula.args if isinstance(arg, Const)]
+
+
+def select_hard_facts(hard_facts: List[SoftFact], seed_constants: Set[str],
+                      limit: int, hops: int) -> Tuple[List[SoftFact], int]:
+    """Pick the hard facts worth putting in a prompt, nearest to the goal first.
+
+    Every hard fact used to go into every prompt in full.  That is fine for a
+    20-fact KB, but the London benchmark's largest tier has 612 of them, which
+    would be repeated in every single LLM call - slow, expensive, and over the
+    context window of a local model.
+
+    Selection is a goal-relevant subgraph: constants are treated as nodes, two
+    constants are adjacent when they co-occur in a hard fact, and facts are kept
+    nearest-first from the constants in the goal and in the open subgoals.
+
+    ``hops`` and ``limit`` are independent caps: the radius bounds relevance,
+    the limit bounds size, and whichever bites first wins.  The radius is
+    deliberately tight (default 3).  At ``extend_on_init`` the only seeds are
+    the goal's own constants, so the window is small; as DFS descends, the open
+    subgoals become the seeds and the window SLIDES to wherever the search
+    actually is - which is where a missing edge has to be proposed.
+
+    Returns ``(kept, n_withheld)``.  A KB at or under ``limit`` is returned
+    untouched, so existing small-KB results stay bit-for-bit reproducible.
+    """
+    if len(hard_facts) <= limit:
+        return hard_facts, 0
+
+    adjacency: Dict[str, Set[str]] = {}
+    fact_constants: List[List[str]] = []
+    for fact in hard_facts:
+        constants = _fact_constants(fact.formula)
+        fact_constants.append(constants)
+        for c in constants:
+            adjacency.setdefault(c, set()).update(x for x in constants if x != c)
+
+    # BFS out from the seeds over the constant co-occurrence graph, to `hops`.
+    distance: Dict[str, int] = {c: 0 for c in seed_constants if c in adjacency}
+    frontier = list(distance)
+    for step in range(1, hops + 1):
+        nxt: List[str] = []
+        for c in frontier:
+            for n in adjacency.get(c, ()):
+                if n not in distance:
+                    distance[n] = step
+                    nxt.append(n)
+        frontier = nxt
+        if not frontier:
+            break
+
+    scored: List[Tuple[int, int, SoftFact]] = []
+    for i, (fact, constants) in enumerate(zip(hard_facts, fact_constants)):
+        if not constants:
+            scored.append((0, i, fact))
+            continue
+        distances = [distance.get(c) for c in constants]
+        if any(d is None for d in distances):
+            continue  # outside the goal-relevant subgraph
+        scored.append((max(distances), i, fact))
+
+    # Nearest first, so if `limit` bites it is the far edge of the ball that
+    # goes, never the neighbourhood the search is working in.
+    scored.sort(key=lambda t: (t[0], t[1]))
+    kept = [fact for _, _, fact in scored[:limit]]
+    return kept, len(hard_facts) - len(kept)
+
+
 class LLMSearchGuidancePolicy(SearchGuidancePolicy):
     """Guide DFS ordering and backtracking by querying an LLM."""
 
@@ -107,8 +177,30 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
         self._backtrack_called_signatures: set = set()
         self._order_cache: Dict[tuple, List[tuple]] = {}
 
-    def _hard_fact_lines(self, soft_kb: SoftKnowledgeBase) -> List[str]:
-        return [f"- {fact.atom}." for fact in soft_kb.facts if fact.confidence == 1.0]
+    def _hard_fact_lines(self, soft_kb: SoftKnowledgeBase,
+                         goal: Optional[AtomicFormula] = None,
+                         goal_node: Optional[GoalNode] = None) -> List[str]:
+        hard = [fact for fact in soft_kb.facts if fact.confidence == 1.0]
+
+        seeds: Set[str] = set()
+        if goal is not None:
+            seeds.update(_fact_constants(goal))
+        if goal_node is not None:
+            for formula in goal_node.unresolved_formulas():
+                seeds.update(_fact_constants(formula))
+
+        kept, withheld = select_hard_facts(
+            hard, seeds, config.HARD_PROMPT_FACT_LIMIT, config.HARD_PROMPT_FACT_HOPS)
+        if withheld:
+            # Never truncate silently: a prompt that quietly lost half the KB
+            # would look like a model failure rather than a harness decision.
+            _prompt_log.info(
+                "hard facts in prompt: %d of %d (%d withheld; goal-relevant subgraph "
+                "within %d hops of %s, limit %d)",
+                len(kept), len(hard), withheld, config.HARD_PROMPT_FACT_HOPS,
+                sorted(seeds) or "(no seed constants)", config.HARD_PROMPT_FACT_LIMIT,
+            )
+        return [f"- {fact.atom}." for fact in kept]
 
     def _hard_rule_lines(self, soft_kb: SoftKnowledgeBase) -> List[str]:
         return [f"- {rule.head} :- {rule.body}." for rule in soft_kb.rules if rule.confidence == 1.0]
@@ -134,7 +226,7 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
         return LLMSearchGuidancePromptContext(
             goal=str(goal),
             current_goal_lines=current_goal_lines,
-            hard_fact_lines=self._hard_fact_lines(soft_kb),
+            hard_fact_lines=self._hard_fact_lines(soft_kb, goal, goal_node),
             hard_rule_lines=self._hard_rule_lines(soft_kb),
             soft_fact_lines=self._soft_fact_lines(soft_kb, min_confidence)[: config.HYP_PROMPT_FACT_LIMIT],
             soft_rule_lines=self._soft_rule_lines(soft_kb, min_confidence)[: config.HYP_PROMPT_FACT_LIMIT],

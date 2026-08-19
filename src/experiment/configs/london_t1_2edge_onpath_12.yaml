@@ -1,0 +1,20 @@
+# T1 - Bakerloo line only
+#
+# Goal: Wembley Central -> Willesden Junction  (3 hops, short path)
+# Shortest route: Wembley Central -> Stonebridge Park -> Harlesden -> Willesden Junction
+# Omitted edges (2), both directions each:
+#   Stonebridge Park -- Wembley Central (facts 47, 48)
+#   Harlesden -- Willesden Junction (facts 19, 20)
+# Placement: onpath  |  crosses junction: no
+# Plausible direct-shortcut temptation: no
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t1_2edge_onpath_12
+goal: "reachable(wembley_central, willesden_junction)"
+kb_file: kb/london_t1_bakerloo.pl
+propose_facts: connected/2
+omit_fact_ids: [19, 20, 47, 48]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 10

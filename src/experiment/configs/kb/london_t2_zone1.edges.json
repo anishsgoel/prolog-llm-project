@@ -1,0 +1,1085 @@
+{
+ "kb": "london_t2_zone1.pl",
+ "tier": "t2",
+ "title": "Central London core - Inner Circle, Central trunk, Victoria, Northern central",
+ "n_stations": 72,
+ "n_edges": 86,
+ "n_facts": 172,
+ "rule_fact_ids": [
+  173,
+  174
+ ],
+ "stranded_by_cut": [],
+ "edges": [
+  {
+   "index": 0,
+   "a_name": "Aldgate",
+   "b_name": "Liverpool Street",
+   "a": "aldgate",
+   "b": "liverpool_street",
+   "fact_ab": 1,
+   "fact_ba": 2,
+   "lines": [
+    "Circle",
+    "Metropolitan"
+   ]
+  },
+  {
+   "index": 1,
+   "a_name": "Aldgate",
+   "b_name": "Tower Hill",
+   "a": "aldgate",
+   "b": "tower_hill",
+   "fact_ab": 3,
+   "fact_ba": 4,
+   "lines": [
+    "Circle"
+   ]
+  },
+  {
+   "index": 2,
+   "a_name": "Angel",
+   "b_name": "King's Cross St Pancras",
+   "a": "angel",
+   "b": "kings_cross_st_pancras",
+   "fact_ab": 5,
+   "fact_ba": 6,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 3,
+   "a_name": "Angel",
+   "b_name": "Old Street",
+   "a": "angel",
+   "b": "old_street",
+   "fact_ab": 7,
+   "fact_ba": 8,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 4,
+   "a_name": "Baker Street",
+   "b_name": "Bond Street",
+   "a": "baker_street",
+   "b": "bond_street",
+   "fact_ab": 9,
+   "fact_ba": 10,
+   "lines": [
+    "Jubilee"
+   ]
+  },
+  {
+   "index": 5,
+   "a_name": "Baker Street",
+   "b_name": "Edgware Road",
+   "a": "baker_street",
+   "b": "edgware_road",
+   "fact_ab": 11,
+   "fact_ba": 12,
+   "lines": [
+    "Circle",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 6,
+   "a_name": "Baker Street",
+   "b_name": "Great Portland Street",
+   "a": "baker_street",
+   "b": "great_portland_street",
+   "fact_ab": 13,
+   "fact_ba": 14,
+   "lines": [
+    "Circle",
+    "Hammersmith & City",
+    "Metropolitan"
+   ]
+  },
+  {
+   "index": 7,
+   "a_name": "Bank",
+   "b_name": "Liverpool Street",
+   "a": "bank",
+   "b": "liverpool_street",
+   "fact_ab": 15,
+   "fact_ba": 16,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 8,
+   "a_name": "Bank",
+   "b_name": "London Bridge",
+   "a": "bank",
+   "b": "london_bridge",
+   "fact_ab": 17,
+   "fact_ba": 18,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 9,
+   "a_name": "Bank",
+   "b_name": "Moorgate",
+   "a": "bank",
+   "b": "moorgate",
+   "fact_ab": 19,
+   "fact_ba": 20,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 10,
+   "a_name": "Bank",
+   "b_name": "St Paul's",
+   "a": "bank",
+   "b": "st_pauls",
+   "fact_ab": 21,
+   "fact_ba": 22,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 11,
+   "a_name": "Bank",
+   "b_name": "Waterloo",
+   "a": "bank",
+   "b": "waterloo",
+   "fact_ab": 23,
+   "fact_ba": 24,
+   "lines": [
+    "Waterloo & City"
+   ]
+  },
+  {
+   "index": 12,
+   "a_name": "Barbican",
+   "b_name": "Farringdon",
+   "a": "barbican",
+   "b": "farringdon",
+   "fact_ab": 25,
+   "fact_ba": 26,
+   "lines": [
+    "Circle",
+    "Hammersmith & City",
+    "Metropolitan"
+   ]
+  },
+  {
+   "index": 13,
+   "a_name": "Barbican",
+   "b_name": "Moorgate",
+   "a": "barbican",
+   "b": "moorgate",
+   "fact_ab": 27,
+   "fact_ba": 28,
+   "lines": [
+    "Circle",
+    "Hammersmith & City",
+    "Metropolitan"
+   ]
+  },
+  {
+   "index": 14,
+   "a_name": "Bayswater",
+   "b_name": "Notting Hill Gate",
+   "a": "bayswater",
+   "b": "notting_hill_gate",
+   "fact_ab": 29,
+   "fact_ba": 30,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 15,
+   "a_name": "Bayswater",
+   "b_name": "Paddington",
+   "a": "bayswater",
+   "b": "paddington",
+   "fact_ab": 31,
+   "fact_ba": 32,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 16,
+   "a_name": "Bethnal Green",
+   "b_name": "Liverpool Street",
+   "a": "bethnal_green",
+   "b": "liverpool_street",
+   "fact_ab": 33,
+   "fact_ba": 34,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 17,
+   "a_name": "Bethnal Green",
+   "b_name": "Mile End",
+   "a": "bethnal_green",
+   "b": "mile_end",
+   "fact_ab": 35,
+   "fact_ba": 36,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 18,
+   "a_name": "Blackfriars",
+   "b_name": "Mansion House",
+   "a": "blackfriars",
+   "b": "mansion_house",
+   "fact_ab": 37,
+   "fact_ba": 38,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 19,
+   "a_name": "Blackfriars",
+   "b_name": "Temple",
+   "a": "blackfriars",
+   "b": "temple",
+   "fact_ab": 39,
+   "fact_ba": 40,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 20,
+   "a_name": "Blackhorse Road",
+   "b_name": "Tottenham Hale",
+   "a": "blackhorse_road",
+   "b": "tottenham_hale",
+   "fact_ab": 41,
+   "fact_ba": 42,
+   "lines": [
+    "Victoria"
+   ]
+  },
+  {
+   "index": 21,
+   "a_name": "Blackhorse Road",
+   "b_name": "Walthamstow Central",
+   "a": "blackhorse_road",
+   "b": "walthamstow_central",
+   "fact_ab": 43,
+   "fact_ba": 44,
+   "lines": [
+    "Victoria"
+   ]
+  },
+  {
+   "index": 22,
+   "a_name": "Bond Street",
+   "b_name": "Green Park",
+   "a": "bond_street",
+   "b": "green_park",
+   "fact_ab": 45,
+   "fact_ba": 46,
+   "lines": [
+    "Jubilee"
+   ]
+  },
+  {
+   "index": 23,
+   "a_name": "Bond Street",
+   "b_name": "Marble Arch",
+   "a": "bond_street",
+   "b": "marble_arch",
+   "fact_ab": 47,
+   "fact_ba": 48,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 24,
+   "a_name": "Bond Street",
+   "b_name": "Oxford Circus",
+   "a": "bond_street",
+   "b": "oxford_circus",
+   "fact_ab": 49,
+   "fact_ba": 50,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 25,
+   "a_name": "Borough",
+   "b_name": "Elephant & Castle",
+   "a": "borough",
+   "b": "elephant_and_castle",
+   "fact_ab": 51,
+   "fact_ba": 52,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 26,
+   "a_name": "Borough",
+   "b_name": "London Bridge",
+   "a": "borough",
+   "b": "london_bridge",
+   "fact_ab": 53,
+   "fact_ba": 54,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 27,
+   "a_name": "Brixton",
+   "b_name": "Stockwell",
+   "a": "brixton",
+   "b": "stockwell",
+   "fact_ab": 55,
+   "fact_ba": 56,
+   "lines": [
+    "Victoria"
+   ]
+  },
+  {
+   "index": 28,
+   "a_name": "Camden Town",
+   "b_name": "Euston",
+   "a": "camden_town",
+   "b": "euston",
+   "fact_ab": 57,
+   "fact_ba": 58,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 29,
+   "a_name": "Camden Town",
+   "b_name": "Mornington Crescent",
+   "a": "camden_town",
+   "b": "mornington_crescent",
+   "fact_ab": 59,
+   "fact_ba": 60,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 30,
+   "a_name": "Cannon Street",
+   "b_name": "Mansion House",
+   "a": "cannon_street",
+   "b": "mansion_house",
+   "fact_ab": 61,
+   "fact_ba": 62,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 31,
+   "a_name": "Cannon Street",
+   "b_name": "Monument",
+   "a": "cannon_street",
+   "b": "monument",
+   "fact_ab": 63,
+   "fact_ba": 64,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 32,
+   "a_name": "Chancery Lane",
+   "b_name": "Holborn",
+   "a": "chancery_lane",
+   "b": "holborn",
+   "fact_ab": 65,
+   "fact_ba": 66,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 33,
+   "a_name": "Chancery Lane",
+   "b_name": "St Paul's",
+   "a": "chancery_lane",
+   "b": "st_pauls",
+   "fact_ab": 67,
+   "fact_ba": 68,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 34,
+   "a_name": "Charing Cross",
+   "b_name": "Embankment",
+   "a": "charing_cross",
+   "b": "embankment",
+   "fact_ab": 69,
+   "fact_ba": 70,
+   "lines": [
+    "Bakerloo",
+    "Northern"
+   ]
+  },
+  {
+   "index": 35,
+   "a_name": "Charing Cross",
+   "b_name": "Leicester Square",
+   "a": "charing_cross",
+   "b": "leicester_square",
+   "fact_ab": 71,
+   "fact_ba": 72,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 36,
+   "a_name": "East Acton",
+   "b_name": "North Acton",
+   "a": "east_acton",
+   "b": "north_acton",
+   "fact_ab": 73,
+   "fact_ba": 74,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 37,
+   "a_name": "East Acton",
+   "b_name": "White City",
+   "a": "east_acton",
+   "b": "white_city",
+   "fact_ab": 75,
+   "fact_ba": 76,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 38,
+   "a_name": "Edgware Road",
+   "b_name": "Paddington",
+   "a": "edgware_road",
+   "b": "paddington",
+   "fact_ab": 77,
+   "fact_ba": 78,
+   "lines": [
+    "Circle",
+    "District",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 39,
+   "a_name": "Elephant & Castle",
+   "b_name": "Kennington",
+   "a": "elephant_and_castle",
+   "b": "kennington",
+   "fact_ab": 79,
+   "fact_ba": 80,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 40,
+   "a_name": "Embankment",
+   "b_name": "Temple",
+   "a": "embankment",
+   "b": "temple",
+   "fact_ab": 81,
+   "fact_ba": 82,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 41,
+   "a_name": "Embankment",
+   "b_name": "Waterloo",
+   "a": "embankment",
+   "b": "waterloo",
+   "fact_ab": 83,
+   "fact_ba": 84,
+   "lines": [
+    "Bakerloo",
+    "Northern"
+   ]
+  },
+  {
+   "index": 42,
+   "a_name": "Embankment",
+   "b_name": "Westminster",
+   "a": "embankment",
+   "b": "westminster",
+   "fact_ab": 85,
+   "fact_ba": 86,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 43,
+   "a_name": "Euston",
+   "b_name": "King's Cross St Pancras",
+   "a": "euston",
+   "b": "kings_cross_st_pancras",
+   "fact_ab": 87,
+   "fact_ba": 88,
+   "lines": [
+    "Northern",
+    "Victoria"
+   ]
+  },
+  {
+   "index": 44,
+   "a_name": "Euston",
+   "b_name": "Mornington Crescent",
+   "a": "euston",
+   "b": "mornington_crescent",
+   "fact_ab": 89,
+   "fact_ba": 90,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 45,
+   "a_name": "Euston",
+   "b_name": "Warren Street",
+   "a": "euston",
+   "b": "warren_street",
+   "fact_ab": 91,
+   "fact_ba": 92,
+   "lines": [
+    "Northern",
+    "Victoria"
+   ]
+  },
+  {
+   "index": 46,
+   "a_name": "Euston Square",
+   "b_name": "Great Portland Street",
+   "a": "euston_square",
+   "b": "great_portland_street",
+   "fact_ab": 93,
+   "fact_ba": 94,
+   "lines": [
+    "Circle",
+    "Hammersmith & City",
+    "Metropolitan"
+   ]
+  },
+  {
+   "index": 47,
+   "a_name": "Euston Square",
+   "b_name": "King's Cross St Pancras",
+   "a": "euston_square",
+   "b": "kings_cross_st_pancras",
+   "fact_ab": 95,
+   "fact_ba": 96,
+   "lines": [
+    "Circle",
+    "Hammersmith & City",
+    "Metropolitan"
+   ]
+  },
+  {
+   "index": 48,
+   "a_name": "Farringdon",
+   "b_name": "King's Cross St Pancras",
+   "a": "farringdon",
+   "b": "kings_cross_st_pancras",
+   "fact_ab": 97,
+   "fact_ba": 98,
+   "lines": [
+    "Circle",
+    "Hammersmith & City",
+    "Metropolitan"
+   ]
+  },
+  {
+   "index": 49,
+   "a_name": "Finsbury Park",
+   "b_name": "Highbury & Islington",
+   "a": "finsbury_park",
+   "b": "highbury_and_islington",
+   "fact_ab": 99,
+   "fact_ba": 100,
+   "lines": [
+    "Victoria"
+   ]
+  },
+  {
+   "index": 50,
+   "a_name": "Finsbury Park",
+   "b_name": "Seven Sisters",
+   "a": "finsbury_park",
+   "b": "seven_sisters",
+   "fact_ab": 101,
+   "fact_ba": 102,
+   "lines": [
+    "Victoria"
+   ]
+  },
+  {
+   "index": 51,
+   "a_name": "Gloucester Road",
+   "b_name": "High Street Kensington",
+   "a": "gloucester_road",
+   "b": "high_street_kensington",
+   "fact_ab": 103,
+   "fact_ba": 104,
+   "lines": [
+    "Circle"
+   ]
+  },
+  {
+   "index": 52,
+   "a_name": "Gloucester Road",
+   "b_name": "South Kensington",
+   "a": "gloucester_road",
+   "b": "south_kensington",
+   "fact_ab": 105,
+   "fact_ba": 106,
+   "lines": [
+    "Circle",
+    "District",
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 53,
+   "a_name": "Goodge Street",
+   "b_name": "Tottenham Court Road",
+   "a": "goodge_street",
+   "b": "tottenham_court_road",
+   "fact_ab": 107,
+   "fact_ba": 108,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 54,
+   "a_name": "Goodge Street",
+   "b_name": "Warren Street",
+   "a": "goodge_street",
+   "b": "warren_street",
+   "fact_ab": 109,
+   "fact_ba": 110,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 55,
+   "a_name": "Green Park",
+   "b_name": "Oxford Circus",
+   "a": "green_park",
+   "b": "oxford_circus",
+   "fact_ab": 111,
+   "fact_ba": 112,
+   "lines": [
+    "Victoria"
+   ]
+  },
+  {
+   "index": 56,
+   "a_name": "Green Park",
+   "b_name": "Victoria",
+   "a": "green_park",
+   "b": "victoria",
+   "fact_ab": 113,
+   "fact_ba": 114,
+   "lines": [
+    "Victoria"
+   ]
+  },
+  {
+   "index": 57,
+   "a_name": "Green Park",
+   "b_name": "Westminster",
+   "a": "green_park",
+   "b": "westminster",
+   "fact_ab": 115,
+   "fact_ba": 116,
+   "lines": [
+    "Jubilee"
+   ]
+  },
+  {
+   "index": 58,
+   "a_name": "High Street Kensington",
+   "b_name": "Notting Hill Gate",
+   "a": "high_street_kensington",
+   "b": "notting_hill_gate",
+   "fact_ab": 117,
+   "fact_ba": 118,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 59,
+   "a_name": "Highbury & Islington",
+   "b_name": "King's Cross St Pancras",
+   "a": "highbury_and_islington",
+   "b": "kings_cross_st_pancras",
+   "fact_ab": 119,
+   "fact_ba": 120,
+   "lines": [
+    "Victoria"
+   ]
+  },
+  {
+   "index": 60,
+   "a_name": "Holborn",
+   "b_name": "Tottenham Court Road",
+   "a": "holborn",
+   "b": "tottenham_court_road",
+   "fact_ab": 121,
+   "fact_ba": 122,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 61,
+   "a_name": "Holland Park",
+   "b_name": "Notting Hill Gate",
+   "a": "holland_park",
+   "b": "notting_hill_gate",
+   "fact_ab": 123,
+   "fact_ba": 124,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 62,
+   "a_name": "Holland Park",
+   "b_name": "Shepherd's Bush",
+   "a": "holland_park",
+   "b": "shepherds_bush",
+   "fact_ab": 125,
+   "fact_ba": 126,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 63,
+   "a_name": "Kennington",
+   "b_name": "Waterloo",
+   "a": "kennington",
+   "b": "waterloo",
+   "fact_ab": 127,
+   "fact_ba": 128,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 64,
+   "a_name": "Lancaster Gate",
+   "b_name": "Marble Arch",
+   "a": "lancaster_gate",
+   "b": "marble_arch",
+   "fact_ab": 129,
+   "fact_ba": 130,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 65,
+   "a_name": "Lancaster Gate",
+   "b_name": "Queensway",
+   "a": "lancaster_gate",
+   "b": "queensway",
+   "fact_ab": 131,
+   "fact_ba": 132,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 66,
+   "a_name": "Leicester Square",
+   "b_name": "Tottenham Court Road",
+   "a": "leicester_square",
+   "b": "tottenham_court_road",
+   "fact_ab": 133,
+   "fact_ba": 134,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 67,
+   "a_name": "Leyton",
+   "b_name": "Leytonstone",
+   "a": "leyton",
+   "b": "leytonstone",
+   "fact_ab": 135,
+   "fact_ba": 136,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 68,
+   "a_name": "Leyton",
+   "b_name": "Stratford",
+   "a": "leyton",
+   "b": "stratford",
+   "fact_ab": 137,
+   "fact_ba": 138,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 69,
+   "a_name": "Liverpool Street",
+   "b_name": "Moorgate",
+   "a": "liverpool_street",
+   "b": "moorgate",
+   "fact_ab": 139,
+   "fact_ba": 140,
+   "lines": [
+    "Circle",
+    "Hammersmith & City",
+    "Metropolitan"
+   ]
+  },
+  {
+   "index": 70,
+   "a_name": "Mile End",
+   "b_name": "Stratford",
+   "a": "mile_end",
+   "b": "stratford",
+   "fact_ab": 141,
+   "fact_ba": 142,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 71,
+   "a_name": "Monument",
+   "b_name": "Tower Hill",
+   "a": "monument",
+   "b": "tower_hill",
+   "fact_ab": 143,
+   "fact_ba": 144,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 72,
+   "a_name": "Moorgate",
+   "b_name": "Old Street",
+   "a": "moorgate",
+   "b": "old_street",
+   "fact_ab": 145,
+   "fact_ba": 146,
+   "lines": [
+    "Northern"
+   ]
+  },
+  {
+   "index": 73,
+   "a_name": "Notting Hill Gate",
+   "b_name": "Queensway",
+   "a": "notting_hill_gate",
+   "b": "queensway",
+   "fact_ab": 147,
+   "fact_ba": 148,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 74,
+   "a_name": "Oxford Circus",
+   "b_name": "Tottenham Court Road",
+   "a": "oxford_circus",
+   "b": "tottenham_court_road",
+   "fact_ab": 149,
+   "fact_ba": 150,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 75,
+   "a_name": "Oxford Circus",
+   "b_name": "Warren Street",
+   "a": "oxford_circus",
+   "b": "warren_street",
+   "fact_ab": 151,
+   "fact_ba": 152,
+   "lines": [
+    "Victoria"
+   ]
+  },
+  {
+   "index": 76,
+   "a_name": "Pimlico",
+   "b_name": "Vauxhall",
+   "a": "pimlico",
+   "b": "vauxhall",
+   "fact_ab": 153,
+   "fact_ba": 154,
+   "lines": [
+    "Victoria"
+   ]
+  },
+  {
+   "index": 77,
+   "a_name": "Pimlico",
+   "b_name": "Victoria",
+   "a": "pimlico",
+   "b": "victoria",
+   "fact_ab": 155,
+   "fact_ba": 156,
+   "lines": [
+    "Victoria"
+   ]
+  },
+  {
+   "index": 78,
+   "a_name": "Seven Sisters",
+   "b_name": "Tottenham Hale",
+   "a": "seven_sisters",
+   "b": "tottenham_hale",
+   "fact_ab": 157,
+   "fact_ba": 158,
+   "lines": [
+    "Victoria"
+   ]
+  },
+  {
+   "index": 79,
+   "a_name": "Shepherd's Bush",
+   "b_name": "White City",
+   "a": "shepherds_bush",
+   "b": "white_city",
+   "fact_ab": 159,
+   "fact_ba": 160,
+   "lines": [
+    "Central"
+   ]
+  },
+  {
+   "index": 80,
+   "a_name": "Sloane Square",
+   "b_name": "South Kensington",
+   "a": "sloane_square",
+   "b": "south_kensington",
+   "fact_ab": 161,
+   "fact_ba": 162,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 81,
+   "a_name": "Sloane Square",
+   "b_name": "Victoria",
+   "a": "sloane_square",
+   "b": "victoria",
+   "fact_ab": 163,
+   "fact_ba": 164,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 82,
+   "a_name": "St James's Park",
+   "b_name": "Victoria",
+   "a": "st_jamess_park",
+   "b": "victoria",
+   "fact_ab": 165,
+   "fact_ba": 166,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 83,
+   "a_name": "St James's Park",
+   "b_name": "Westminster",
+   "a": "st_jamess_park",
+   "b": "westminster",
+   "fact_ab": 167,
+   "fact_ba": 168,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 84,
+   "a_name": "Stockwell",
+   "b_name": "Vauxhall",
+   "a": "stockwell",
+   "b": "vauxhall",
+   "fact_ab": 169,
+   "fact_ba": 170,
+   "lines": [
+    "Victoria"
+   ]
+  },
+  {
+   "index": 85,
+   "a_name": "Waterloo",
+   "b_name": "Westminster",
+   "a": "waterloo",
+   "b": "westminster",
+   "fact_ab": 171,
+   "fact_ba": 172,
+   "lines": [
+    "Jubilee"
+   ]
+  }
+ ]
+}

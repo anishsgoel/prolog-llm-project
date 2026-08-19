@@ -1,0 +1,19 @@
+# T3 - West London - District and Piccadilly in full, plus the Circle's Hammersmith branch
+#
+# Goal: Fulham Broadway -> Gloucester Road  (3 hops, short path)
+# Shortest route: Fulham Broadway -> West Brompton -> Earl's Court -> Gloucester Road
+# Omitted edges (1), both directions each:
+#   Earl's Court -- West Brompton (facts 85, 86)
+# Placement: spread  |  crosses junction: yes (Earl's Court)
+# Plausible direct-shortcut temptation: no
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t3_1edge_spread_11
+goal: "reachable(fulham_broadway, gloucester_road)"
+kb_file: kb/london_t3_west.pl
+propose_facts: connected/2
+omit_fact_ids: [85, 86]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 10

@@ -1,0 +1,1012 @@
+# London Underground network — the single source of truth for the abduction benchmark.
+#
+# HOW TO READ / EDIT THIS FILE
+# ---------------------------------------------------------------------------
+# Each line is a list of ordered *branch sequences*.  An edge exists between
+# every pair of CONSECUTIVE stations within a sequence, and nowhere else.  That
+# is what structurally guarantees rule R2 (no shortcut edges): you cannot write
+# down a long-hop edge without also writing down the stations it skips.
+#
+# Junction stations are repeated at the ends of branches so the branches stitch
+# into one graph.  Duplicate edges across lines are expected and deduplicated by
+# tools/build_london_benchmark.py.
+#
+# Station names are the official (Wikipedia/TfL) names.  They are converted to
+# Prolog atoms by `canonical_atom()` in the builder; see station_atoms.csv for
+# the full mapping.
+#
+# STATION-IDENTITY CONVENTIONS (see docs/LONDON_BENCHMARK.md §"Data verification")
+#   * "Edgware Road (Bakerloo)" and "Edgware Road" are TWO DIFFERENT STATIONS.
+#     They sit on opposite sides of Marylebone Road, share no track, and the
+#     tube map draws them as two separate dots.  Merging them would invent an
+#     interchange that does not exist.
+#   * "Hammersmith" and "Paddington" are each modelled as ONE station even
+#     though Wikipedia's 272-station count lists two entries for each (the
+#     District/Piccadilly vs Circle/H&C buildings at Hammersmith; the Praed St
+#     vs Bishop's Bridge Rd platforms at Paddington).  The tube map draws one
+#     interchange dot for each, and an LLM asked about "Hammersmith" means the
+#     interchange.  Consequently this file has 270 stations, not 272.
+#   * "Shepherd's Bush" (Central) and "Shepherd's Bush Market" (Circle/H&C) are
+#     different stations and must never be conflated.
+#   * The operational "Wood Lane" (Circle/H&C, opened 2008) is included.  The
+#     Central line's Wood Lane (closed 1947) is not.
+
+version: 1
+
+# ---------------------------------------------------------------------------
+# Express skips: pairs of consecutive *stops* on a line that are NOT physically
+# adjacent.  The sequences below already avoid them; the builder re-asserts that
+# none of these pairs made it into the final edge set (R2).
+# ---------------------------------------------------------------------------
+# `between` is ordered FROM `from` TO `to`, so the builder can assert the
+# corridor exists as an unbroken chain from -> b1 -> ... -> bk -> to.
+express_skips:
+  - line: Metropolitan
+    from: Baker Street
+    to: Finchley Road
+    between: [St John's Wood, Swiss Cottage]
+    covered_by: Jubilee
+  - line: Metropolitan
+    from: Finchley Road
+    to: Wembley Park
+    between: [West Hampstead, Kilburn, Willesden Green, Dollis Hill, Neasden]
+    covered_by: Jubilee
+  - line: Piccadilly
+    from: Earl's Court
+    to: Barons Court
+    between: [West Kensington]
+    covered_by: District
+  - line: Piccadilly
+    from: Hammersmith
+    to: Turnham Green
+    between: [Ravenscourt Park, Stamford Brook]
+    covered_by: District
+  - line: Piccadilly
+    from: Turnham Green
+    to: Acton Town
+    between: [Chiswick Park]
+    covered_by: District
+  # Turnham Green has Piccadilly platforms only early morning / late evening.
+  # For most of the day Piccadilly trains run Acton Town <-> Hammersmith
+  # non-stop, which is the longest express skip on the network.  No branch
+  # sequence emits this pair; the entry exists so the assertion covers it.
+  - line: Piccadilly
+    from: Acton Town
+    to: Hammersmith
+    between: [Chiswick Park, Turnham Green, Stamford Brook, Ravenscourt Park]
+    covered_by: District
+
+# ---------------------------------------------------------------------------
+# Places where the network genuinely contains a short cycle, so the generic
+# "is this a shortcut?" detector fires on every edge of the cycle even though
+# all of them are real physical adjacencies (separate tunnels, not one tunnel
+# calling at an intermediate station).  Each entry lists the stations of the
+# cycle; the builder marks any flagged edge lying inside a declared cycle as
+# "known" and any other hit as NEW, for manual review.
+# ---------------------------------------------------------------------------
+known_parallel_structures:
+  - name: Northern line Camden Town - Euston
+    cycle: [Camden Town, Mornington Crescent, Euston]
+    why: >-
+      The Bank-branch tunnels run Camden Town - Euston directly.  Mornington
+      Crescent is on the Charing Cross branch only; the Bank branch tunnels do
+      not pass through it, so all three edges are real.
+  - name: Cromwell Curve (Gloucester Road - High Street Kensington)
+    cycle: [Gloucester Road, Earl's Court, High Street Kensington]
+    why: >-
+      Circle and District (Edgware Road) trains run Gloucester Road - High
+      Street Kensington over the Cromwell Curve without calling at Earl's
+      Court, while District/Piccadilly trains run via Earl's Court.  Separate
+      tracks, so all three edges are real.
+  - name: Heathrow Terminal 4 loop
+    cycle: [Hatton Cross, Heathrow Terminal 4, Heathrow Terminals 2 & 3]
+    why: >-
+      The original 1977 tunnel runs Hatton Cross - Heathrow Central directly and
+      still carries all Terminal 5 trains; the Terminal 4 loop is a separate
+      pair of tunnels.  All three edges are real.
+
+# Edges that are NOT flagged by the detector but are worth recording, because a
+# reader of the tube map might assume they skip a station.
+documented_non_shortcuts:
+  - from: Liverpool Street
+    to: Aldgate East
+    why: >-
+      District/H&C tracks diverge from the Circle/Metropolitan tracks east of
+      Liverpool Street and reach Aldgate East without passing through Aldgate.
+
+# ---------------------------------------------------------------------------
+# The network.  `zone_hint` is only used to cut the T4 (Zones 1-3) tier.
+# ---------------------------------------------------------------------------
+lines:
+
+  bakerloo:
+    name: Bakerloo
+    note: Single route, no branches, no express running.
+    branches:
+      - name: main
+        stations:
+          - Harrow & Wealdstone
+          - Kenton
+          - South Kenton
+          - North Wembley
+          - Wembley Central
+          - Stonebridge Park
+          - Harlesden
+          - Willesden Junction
+          - Kensal Green
+          - Queen's Park
+          - Kilburn Park
+          - Maida Vale
+          - Warwick Avenue
+          - Paddington
+          # The tunnel doubles back here: Edgware Road (Bakerloo) genuinely
+          # sits between Paddington and Marylebone on this line.
+          - Edgware Road (Bakerloo)
+          - Marylebone
+          - Baker Street
+          - Regent's Park
+          - Oxford Circus
+          - Piccadilly Circus
+          - Charing Cross
+          - Embankment
+          - Waterloo
+          - Lambeth North
+          - Elephant & Castle
+
+  central:
+    name: Central
+    note: No express running.
+    branches:
+      - name: west_ruislip
+        stations:
+          - West Ruislip
+          - Ruislip Gardens
+          - South Ruislip
+          - Northolt
+          - Greenford
+          - Perivale
+          - Hanger Lane
+          - North Acton
+      - name: ealing_broadway
+        stations:
+          - Ealing Broadway
+          - West Acton
+          - North Acton
+      - name: trunk
+        stations:
+          - North Acton
+          - East Acton
+          - White City
+          - Shepherd's Bush
+          - Holland Park
+          - Notting Hill Gate
+          - Queensway
+          - Lancaster Gate
+          - Marble Arch
+          - Bond Street
+          - Oxford Circus
+          - Tottenham Court Road
+          - Holborn
+          - Chancery Lane
+          - St Paul's
+          - Bank
+          - Liverpool Street
+          - Bethnal Green
+          - Mile End
+          - Stratford
+          - Leyton
+          - Leytonstone
+      - name: epping
+        stations:
+          - Leytonstone
+          - Snaresbrook
+          - South Woodford
+          - Woodford
+          - Buckhurst Hill
+          - Loughton
+          - Debden
+          - Theydon Bois
+          - Epping
+      - name: hainault_loop
+        stations:
+          - Leytonstone
+          - Wanstead
+          - Redbridge
+          - Gants Hill
+          - Newbury Park
+          - Barkingside
+          - Fairlop
+          - Hainault
+          - Grange Hill
+          - Chigwell
+          - Roding Valley
+          - Woodford
+
+  circle:
+    name: Circle
+    note: >-
+      A spiral, not a closed loop, since 2009.  Almost all track is shared with
+      the H&C (Hammersmith - Edgware Road), Metropolitan (Aldgate - Baker
+      Street) and District (Tower Hill - Gloucester Road, and the Edgware Road
+      branch).  Paddington is passed twice, on two different platform pairs;
+      both are modelled as the single station "Paddington".
+    branches:
+      - name: hammersmith
+        stations:
+          - Hammersmith
+          - Goldhawk Road
+          - Shepherd's Bush Market
+          - Wood Lane
+          - Latimer Road
+          - Ladbroke Grove
+          - Westbourne Park
+          - Royal Oak
+          - Paddington
+          - Edgware Road
+      - name: inner_circle
+        stations:
+          - Edgware Road
+          - Baker Street
+          - Great Portland Street
+          - Euston Square
+          - King's Cross St Pancras
+          - Farringdon
+          - Barbican
+          - Moorgate
+          - Liverpool Street
+          - Aldgate
+          - Tower Hill
+          - Monument
+          - Cannon Street
+          - Mansion House
+          - Blackfriars
+          - Temple
+          - Embankment
+          - Westminster
+          - St James's Park
+          - Victoria
+          - Sloane Square
+          - South Kensington
+          - Gloucester Road
+          - High Street Kensington
+          - Notting Hill Gate
+          - Bayswater
+          - Paddington
+          - Edgware Road
+
+  district:
+    name: District
+    note: The most branched line.
+    branches:
+      - name: eastern_trunk
+        stations:
+          - Upminster
+          - Upminster Bridge
+          - Hornchurch
+          - Elm Park
+          - Dagenham East
+          - Dagenham Heathway
+          - Becontree
+          - Upney
+          - Barking
+          - East Ham
+          - Upton Park
+          - Plaistow
+          - West Ham
+          - Bromley-by-Bow
+          - Bow Road
+          - Mile End
+          - Stepney Green
+          - Whitechapel
+          - Aldgate East
+          - Tower Hill
+          - Monument
+          - Cannon Street
+          - Mansion House
+          - Blackfriars
+          - Temple
+          - Embankment
+          - Westminster
+          - St James's Park
+          - Victoria
+          - Sloane Square
+          - South Kensington
+          - Gloucester Road
+          - Earl's Court
+      - name: earls_court_turnham_green
+        stations:
+          - Earl's Court
+          - West Kensington
+          - Barons Court
+          - Hammersmith
+          - Ravenscourt Park
+          - Stamford Brook
+          - Turnham Green
+      - name: richmond
+        stations:
+          - Turnham Green
+          - Gunnersbury
+          - Kew Gardens
+          - Richmond
+      - name: ealing_broadway
+        stations:
+          - Turnham Green
+          - Chiswick Park
+          - Acton Town
+          - Ealing Common
+          - Ealing Broadway
+      - name: wimbledon
+        stations:
+          - Earl's Court
+          - West Brompton
+          - Fulham Broadway
+          - Parsons Green
+          - Putney Bridge
+          - East Putney
+          - Southfields
+          - Wimbledon Park
+          - Wimbledon
+      - name: edgware_road
+        stations:
+          - Earl's Court
+          - High Street Kensington
+          - Notting Hill Gate
+          - Bayswater
+          - Paddington
+          - Edgware Road
+      - name: olympia
+        stations:
+          - Earl's Court
+          - Kensington (Olympia)
+
+  hammersmith_city:
+    name: Hammersmith & City
+    note: Single route, no branches.
+    branches:
+      - name: main
+        stations:
+          - Hammersmith
+          - Goldhawk Road
+          - Shepherd's Bush Market
+          - Wood Lane
+          - Latimer Road
+          - Ladbroke Grove
+          - Westbourne Park
+          - Royal Oak
+          - Paddington
+          - Edgware Road
+          - Baker Street
+          - Great Portland Street
+          - Euston Square
+          - King's Cross St Pancras
+          - Farringdon
+          - Barbican
+          - Moorgate
+          - Liverpool Street
+          - Aldgate East
+          - Whitechapel
+          - Stepney Green
+          - Mile End
+          - Bow Road
+          - Bromley-by-Bow
+          - West Ham
+          - Plaistow
+          - Upton Park
+          - East Ham
+          - Barking
+
+  jubilee:
+    name: Jubilee
+    note: Single route, no branches.
+    branches:
+      - name: main
+        stations:
+          - Stanmore
+          - Canons Park
+          - Queensbury
+          - Kingsbury
+          - Wembley Park
+          - Neasden
+          - Dollis Hill
+          - Willesden Green
+          - Kilburn
+          - West Hampstead
+          - Finchley Road
+          - Swiss Cottage
+          - St John's Wood
+          - Baker Street
+          - Bond Street
+          - Green Park
+          - Westminster
+          - Waterloo
+          - Southwark
+          - London Bridge
+          - Bermondsey
+          - Canada Water
+          - Canary Wharf
+          - North Greenwich
+          - Canning Town
+          - West Ham
+          - Stratford
+
+  metropolitan:
+    name: Metropolitan
+    note: >-
+      Fast services skip North Harrow / Pinner / Northwood Hills / Northwood,
+      but all-stations services call there, so those ARE physical adjacencies.
+      The Baker Street - Finchley Road - Wembley Park section, by contrast, has
+      no Metropolitan platforms at the intervening stations at all: see
+      express_skips.
+    branches:
+      - name: city_trunk
+        stations:
+          - Aldgate
+          - Liverpool Street
+          - Moorgate
+          - Barbican
+          - Farringdon
+          - King's Cross St Pancras
+          - Euston Square
+          - Great Portland Street
+          - Baker Street
+      - name: baker_street_north
+        stations:
+          # EXPRESS: Baker Street -> Finchley Road -> Wembley Park skip stations
+          # served by the Jubilee.  Those adjacencies come from the Jubilee
+          # sequence, so this branch contributes NO edge for them.
+          - Baker Street
+          - Finchley Road
+          - Wembley Park
+          - Preston Road
+          - Northwick Park
+          - Harrow-on-the-Hill
+      - name: uxbridge
+        stations:
+          - Harrow-on-the-Hill
+          - West Harrow
+          - Rayners Lane
+          - Eastcote
+          - Ruislip Manor
+          - Ruislip
+          - Ickenham
+          - Hillingdon
+          - Uxbridge
+      - name: moor_park
+        stations:
+          - Harrow-on-the-Hill
+          - North Harrow
+          - Pinner
+          - Northwood Hills
+          - Northwood
+          - Moor Park
+      - name: watford
+        stations:
+          - Moor Park
+          - Croxley
+          - Watford
+      - name: amersham
+        stations:
+          - Moor Park
+          - Rickmansworth
+          - Chorleywood
+          - Chalfont & Latimer
+          - Amersham
+      - name: chesham
+        stations:
+          - Chalfont & Latimer
+          - Chesham
+
+  northern:
+    name: Northern
+    note: >-
+      Does NOT serve Monument or Wimbledon.  Both central branches pass through
+      Euston, but on separate tunnels: the Bank branch runs Camden Town - Euston
+      directly, bypassing Mornington Crescent (Charing Cross branch only).
+    branches:
+      - name: high_barnet
+        stations:
+          - High Barnet
+          - Totteridge & Whetstone
+          - Woodside Park
+          - West Finchley
+          - Finchley Central
+          - East Finchley
+          - Highgate
+          - Archway
+          - Tufnell Park
+          - Kentish Town
+          - Camden Town
+      - name: mill_hill_east
+        stations:
+          - Finchley Central
+          - Mill Hill East
+      - name: edgware
+        stations:
+          - Edgware
+          - Burnt Oak
+          - Colindale
+          - Hendon Central
+          - Brent Cross
+          - Golders Green
+          - Hampstead
+          - Belsize Park
+          - Chalk Farm
+          - Camden Town
+      - name: charing_cross_central
+        stations:
+          - Camden Town
+          - Mornington Crescent
+          - Euston
+          - Warren Street
+          - Goodge Street
+          - Tottenham Court Road
+          - Leicester Square
+          - Charing Cross
+          - Embankment
+          - Waterloo
+          - Kennington
+      - name: bank_central
+        stations:
+          - Camden Town
+          - Euston
+          - King's Cross St Pancras
+          - Angel
+          - Old Street
+          - Moorgate
+          - Bank
+          - London Bridge
+          - Borough
+          - Elephant & Castle
+          - Kennington
+      - name: morden
+        stations:
+          - Kennington
+          - Oval
+          - Stockwell
+          - Clapham North
+          - Clapham Common
+          - Clapham South
+          - Balham
+          - Tooting Bec
+          - Tooting Broadway
+          - Colliers Wood
+          - South Wimbledon
+          - Morden
+      - name: battersea
+        stations:
+          - Kennington
+          - Nine Elms
+          - Battersea Power Station
+
+  piccadilly:
+    name: Piccadilly
+    note: >-
+      Runs non-stop past several District stations in the west: see
+      express_skips.  Turnham Green has Piccadilly platforms served only early
+      morning and late evening, but it is physically on the line, so the
+      Hammersmith - Turnham Green - Acton Town adjacencies are supplied by the
+      District's sequence.  Heathrow Terminal 4 is served by a ONE-WAY loop in
+      reality (Hatton Cross -> T4 -> T2&3); it is modelled here as undirected
+      edges, alongside the direct Hatton Cross - T2&3 tunnel that T5 trains use.
+    branches:
+      - name: main
+        stations:
+          - Cockfosters
+          - Oakwood
+          - Southgate
+          - Arnos Grove
+          - Bounds Green
+          - Wood Green
+          - Turnpike Lane
+          - Manor House
+          - Finsbury Park
+          - Arsenal
+          - Holloway Road
+          - Caledonian Road
+          - King's Cross St Pancras
+          - Russell Square
+          - Holborn
+          - Covent Garden
+          - Leicester Square
+          - Piccadilly Circus
+          - Green Park
+          - Hyde Park Corner
+          - Knightsbridge
+          - South Kensington
+          - Gloucester Road
+          - Earl's Court
+          # EXPRESS from here west: Earl's Court -> Barons Court skips West
+          # Kensington; Hammersmith -> Turnham Green skips Ravenscourt Park and
+          # Stamford Brook; Turnham Green -> Acton Town skips Chiswick Park.
+          # All of those adjacencies come from the District sequence, so this
+          # branch is split to avoid emitting the long hops.
+          - Barons Court
+          - Hammersmith
+          - Turnham Green
+          - Acton Town
+      - name: heathrow
+        stations:
+          - Acton Town
+          - South Ealing
+          - Northfields
+          - Boston Manor
+          - Osterley
+          - Hounslow East
+          - Hounslow Central
+          - Hounslow West
+          - Hatton Cross
+          - Heathrow Terminals 2 & 3
+          - Heathrow Terminal 5
+      - name: heathrow_t4_loop
+        stations:
+          - Hatton Cross
+          - Heathrow Terminal 4
+          - Heathrow Terminals 2 & 3
+      - name: uxbridge
+        stations:
+          - Acton Town
+          - Ealing Common
+          - North Ealing
+          - Park Royal
+          - Alperton
+          - Sudbury Town
+          - Sudbury Hill
+          - South Harrow
+          - Rayners Lane
+          - Eastcote
+          - Ruislip Manor
+          - Ruislip
+          - Ickenham
+          - Hillingdon
+          - Uxbridge
+
+  victoria:
+    name: Victoria
+    note: Single route, no branches.
+    branches:
+      - name: main
+        stations:
+          - Walthamstow Central
+          - Blackhorse Road
+          - Tottenham Hale
+          - Seven Sisters
+          - Finsbury Park
+          - Highbury & Islington
+          - King's Cross St Pancras
+          - Euston
+          - Warren Street
+          - Oxford Circus
+          - Green Park
+          - Victoria
+          - Pimlico
+          - Vauxhall
+          - Stockwell
+          - Brixton
+
+  waterloo_city:
+    name: Waterloo & City
+    note: Two stations, one edge.
+    branches:
+      - name: main
+        stations:
+          - Waterloo
+          - Bank
+
+# ---------------------------------------------------------------------------
+# Fare zone per station (minimum zone where a station is assigned several).
+# Source: the Zone column of the Wikipedia 'List of London Underground
+# stations' table.  Used only to cut the T4 (Zones 1-3) tier.
+# ---------------------------------------------------------------------------
+zones:
+  Acton Town: 3
+  Aldgate: 1
+  Aldgate East: 1
+  Alperton: 4
+  Amersham: 9
+  Angel: 1
+  Archway: 2
+  Arnos Grove: 4
+  Arsenal: 2
+  Baker Street: 1
+  Balham: 3
+  Bank: 1
+  Barbican: 1
+  Barking: 4
+  Barkingside: 4
+  Barons Court: 2
+  Battersea Power Station: 1
+  Bayswater: 1
+  Becontree: 5
+  Belsize Park: 2
+  Bermondsey: 2
+  Bethnal Green: 2
+  Blackfriars: 1
+  Blackhorse Road: 3
+  Bond Street: 1
+  Borough: 1
+  Boston Manor: 4
+  Bounds Green: 3
+  Bow Road: 2
+  Brent Cross: 3
+  Brixton: 2
+  Bromley-by-Bow: 2
+  Buckhurst Hill: 5
+  Burnt Oak: 4
+  Caledonian Road: 2
+  Camden Town: 2
+  Canada Water: 2
+  Canary Wharf: 2
+  Canning Town: 2
+  Cannon Street: 1
+  Canons Park: 5
+  "Chalfont & Latimer": 8
+  Chalk Farm: 2
+  Chancery Lane: 1
+  Charing Cross: 1
+  Chesham: 9
+  Chigwell: 4
+  Chiswick Park: 3
+  Chorleywood: 7
+  Clapham Common: 2
+  Clapham North: 2
+  Clapham South: 2
+  Cockfosters: 5
+  Colindale: 4
+  Colliers Wood: 3
+  Covent Garden: 1
+  Croxley: 7
+  Dagenham East: 5
+  Dagenham Heathway: 5
+  Debden: 6
+  Dollis Hill: 3
+  Ealing Broadway: 3
+  Ealing Common: 3
+  "Earl's Court": 1
+  East Acton: 2
+  East Finchley: 3
+  East Ham: 3
+  East Putney: 2
+  Eastcote: 5
+  Edgware: 5
+  Edgware Road: 1
+  "Edgware Road (Bakerloo)": 1
+  "Elephant & Castle": 1
+  Elm Park: 6
+  Embankment: 1
+  Epping: 6
+  Euston: 1
+  Euston Square: 1
+  Fairlop: 4
+  Farringdon: 1
+  Finchley Central: 4
+  Finchley Road: 2
+  Finsbury Park: 2
+  Fulham Broadway: 2
+  Gants Hill: 4
+  Gloucester Road: 1
+  Golders Green: 3
+  Goldhawk Road: 2
+  Goodge Street: 1
+  Grange Hill: 4
+  Great Portland Street: 1
+  Green Park: 1
+  Greenford: 4
+  Gunnersbury: 3
+  Hainault: 4
+  Hammersmith: 2
+  Hampstead: 2
+  Hanger Lane: 3
+  Harlesden: 3
+  "Harrow & Wealdstone": 5
+  Harrow-on-the-Hill: 5
+  Hatton Cross: 5
+  Heathrow Terminal 4: 6
+  Heathrow Terminal 5: 6
+  "Heathrow Terminals 2 & 3": 6
+  Hendon Central: 3
+  High Barnet: 5
+  High Street Kensington: 1
+  "Highbury & Islington": 2
+  Highgate: 3
+  Hillingdon: 6
+  Holborn: 1
+  Holland Park: 2
+  Holloway Road: 2
+  Hornchurch: 6
+  Hounslow Central: 4
+  Hounslow East: 4
+  Hounslow West: 5
+  Hyde Park Corner: 1
+  Ickenham: 6
+  Kennington: 1
+  Kensal Green: 2
+  "Kensington (Olympia)": 2
+  Kentish Town: 2
+  Kenton: 4
+  Kew Gardens: 3
+  Kilburn: 2
+  Kilburn Park: 2
+  "King's Cross St Pancras": 1
+  Kingsbury: 4
+  Knightsbridge: 1
+  Ladbroke Grove: 2
+  Lambeth North: 1
+  Lancaster Gate: 1
+  Latimer Road: 2
+  Leicester Square: 1
+  Leyton: 3
+  Leytonstone: 3
+  Liverpool Street: 1
+  London Bridge: 1
+  Loughton: 6
+  Maida Vale: 2
+  Manor House: 2
+  Mansion House: 1
+  Marble Arch: 1
+  Marylebone: 1
+  Mile End: 2
+  Mill Hill East: 4
+  Monument: 1
+  Moor Park: 6
+  Moorgate: 1
+  Morden: 4
+  Mornington Crescent: 2
+  Neasden: 3
+  Newbury Park: 4
+  Nine Elms: 1
+  North Acton: 2
+  North Ealing: 3
+  North Greenwich: 2
+  North Harrow: 5
+  North Wembley: 4
+  Northfields: 3
+  Northolt: 5
+  Northwick Park: 4
+  Northwood: 6
+  Northwood Hills: 6
+  Notting Hill Gate: 1
+  Oakwood: 5
+  Old Street: 1
+  Osterley: 4
+  Oval: 2
+  Oxford Circus: 1
+  Paddington: 1
+  Park Royal: 3
+  Parsons Green: 2
+  Perivale: 4
+  Piccadilly Circus: 1
+  Pimlico: 1
+  Pinner: 5
+  Plaistow: 3
+  Preston Road: 4
+  Putney Bridge: 2
+  "Queen's Park": 2
+  Queensbury: 4
+  Queensway: 1
+  Ravenscourt Park: 2
+  Rayners Lane: 5
+  Redbridge: 4
+  "Regent's Park": 1
+  Richmond: 4
+  Rickmansworth: 7
+  Roding Valley: 4
+  Royal Oak: 2
+  Ruislip: 6
+  Ruislip Gardens: 5
+  Ruislip Manor: 6
+  Russell Square: 1
+  Seven Sisters: 3
+  "Shepherd's Bush": 2
+  "Shepherd's Bush Market": 2
+  Sloane Square: 1
+  Snaresbrook: 4
+  South Ealing: 3
+  South Harrow: 5
+  South Kensington: 1
+  South Kenton: 4
+  South Ruislip: 5
+  South Wimbledon: 3
+  South Woodford: 4
+  Southfields: 3
+  Southgate: 4
+  Southwark: 1
+  "St James's Park": 1
+  "St John's Wood": 2
+  "St Paul's": 1
+  Stamford Brook: 2
+  Stanmore: 5
+  Stepney Green: 2
+  Stockwell: 2
+  Stonebridge Park: 3
+  Stratford: 2
+  Sudbury Hill: 4
+  Sudbury Town: 4
+  Swiss Cottage: 2
+  Temple: 1
+  Theydon Bois: 6
+  Tooting Bec: 3
+  Tooting Broadway: 3
+  Tottenham Court Road: 1
+  Tottenham Hale: 3
+  "Totteridge & Whetstone": 4
+  Tower Hill: 1
+  Tufnell Park: 2
+  Turnham Green: 2
+  Turnpike Lane: 3
+  Upminster: 6
+  Upminster Bridge: 6
+  Upney: 4
+  Upton Park: 3
+  Uxbridge: 6
+  Vauxhall: 1
+  Victoria: 1
+  Walthamstow Central: 3
+  Wanstead: 4
+  Warren Street: 1
+  Warwick Avenue: 2
+  Waterloo: 1
+  Watford: 7
+  Wembley Central: 4
+  Wembley Park: 4
+  West Acton: 3
+  West Brompton: 2
+  West Finchley: 4
+  West Ham: 2
+  West Hampstead: 2
+  West Harrow: 5
+  West Kensington: 2
+  West Ruislip: 6
+  Westbourne Park: 2
+  Westminster: 1
+  White City: 2
+  Whitechapel: 2
+  Willesden Green: 2
+  Willesden Junction: 2
+  Wimbledon: 3
+  Wimbledon Park: 3
+  Wood Green: 3
+  Wood Lane: 2
+  Woodford: 4
+  Woodside Park: 4
+
+# ---------------------------------------------------------------------------
+# Difficulty tiers.  Every tier is an INDUCED SUBGRAPH of the full network:
+# same canonical atoms, same edges restricted to the included stations, so
+# results are comparable across tiers.  A tier must be connected; the builder
+# reports (and drops) any station stranded by the cut.
+#
+# Selection is by whole line (`lines`) and/or by individual branch
+# (`branches`, written "<line key>/<branch name>"), optionally intersected
+# with a maximum fare zone (`max_zone`).
+# ---------------------------------------------------------------------------
+tiers:
+  t1:
+    file: london_t1_bakerloo.pl
+    title: Bakerloo line only
+    lines: [bakerloo]
+  t2:
+    file: london_t2_zone1.pl
+    title: Central London core - Inner Circle, Central trunk, Victoria, Northern central
+    branches:
+      - circle/inner_circle
+      - central/trunk
+      - victoria/main
+      - northern/charing_cross_central
+      - northern/bank_central
+  t3:
+    file: london_t3_west.pl
+    title: West London - District and Piccadilly in full, plus the Circle's Hammersmith branch
+    lines: [district, piccadilly]
+    branches:
+      - circle/hammersmith
+  t4:
+    file: london_t4_core.pl
+    title: All 11 lines, Zones 1-3
+    lines: [bakerloo, central, circle, district, hammersmith_city, jubilee,
+            metropolitan, northern, piccadilly, victoria, waterloo_city]
+    max_zone: 3
+  t5:
+    file: london_t5_full.pl
+    title: Complete network, all 11 lines
+    lines: [bakerloo, central, circle, district, hammersmith_city, jubilee,
+            metropolitan, northern, piccadilly, victoria, waterloo_city]

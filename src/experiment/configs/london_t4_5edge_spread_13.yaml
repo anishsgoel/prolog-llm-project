@@ -1,0 +1,23 @@
+# T4 - All 11 lines, Zones 1-3
+#
+# Goal: Bond Street -> Notting Hill Gate  (4 hops, short path)
+# Shortest route: Bond Street -> Marble Arch -> Lancaster Gate -> Queensway -> Notting Hill Gate
+# Omitted edges (5), both directions each:
+#   Edgware Road -- Paddington (facts 195, 196)
+#   Edgware Road (Bakerloo) -- Paddington (facts 199, 200)
+#   Knightsbridge -- South Kensington (facts 309, 310)
+#   Lancaster Gate -- Queensway (facts 319, 320)
+#   Sloane Square -- South Kensington (facts 389, 390)
+# Placement: spread  |  crosses junction: no
+# Plausible direct-shortcut temptation: yes - both endpoints are Zone 1 interchanges
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t4_5edge_spread_13
+goal: "reachable(bond_street, notting_hill_gate)"
+kb_file: kb/london_t4_core.pl
+propose_facts: connected/2
+omit_fact_ids: [195, 196, 199, 200, 309, 310, 319, 320, 389, 390]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 12

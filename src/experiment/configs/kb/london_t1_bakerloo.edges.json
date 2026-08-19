@@ -1,0 +1,305 @@
+{
+ "kb": "london_t1_bakerloo.pl",
+ "tier": "t1",
+ "title": "Bakerloo line only",
+ "n_stations": 25,
+ "n_edges": 24,
+ "n_facts": 48,
+ "rule_fact_ids": [
+  49,
+  50
+ ],
+ "stranded_by_cut": [],
+ "edges": [
+  {
+   "index": 0,
+   "a_name": "Baker Street",
+   "b_name": "Marylebone",
+   "a": "baker_street",
+   "b": "marylebone",
+   "fact_ab": 1,
+   "fact_ba": 2,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 1,
+   "a_name": "Baker Street",
+   "b_name": "Regent's Park",
+   "a": "baker_street",
+   "b": "regents_park",
+   "fact_ab": 3,
+   "fact_ba": 4,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 2,
+   "a_name": "Charing Cross",
+   "b_name": "Embankment",
+   "a": "charing_cross",
+   "b": "embankment",
+   "fact_ab": 5,
+   "fact_ba": 6,
+   "lines": [
+    "Bakerloo",
+    "Northern"
+   ]
+  },
+  {
+   "index": 3,
+   "a_name": "Charing Cross",
+   "b_name": "Piccadilly Circus",
+   "a": "charing_cross",
+   "b": "piccadilly_circus",
+   "fact_ab": 7,
+   "fact_ba": 8,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 4,
+   "a_name": "Edgware Road (Bakerloo)",
+   "b_name": "Marylebone",
+   "a": "edgware_road_bakerloo",
+   "b": "marylebone",
+   "fact_ab": 9,
+   "fact_ba": 10,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 5,
+   "a_name": "Edgware Road (Bakerloo)",
+   "b_name": "Paddington",
+   "a": "edgware_road_bakerloo",
+   "b": "paddington",
+   "fact_ab": 11,
+   "fact_ba": 12,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 6,
+   "a_name": "Elephant & Castle",
+   "b_name": "Lambeth North",
+   "a": "elephant_and_castle",
+   "b": "lambeth_north",
+   "fact_ab": 13,
+   "fact_ba": 14,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 7,
+   "a_name": "Embankment",
+   "b_name": "Waterloo",
+   "a": "embankment",
+   "b": "waterloo",
+   "fact_ab": 15,
+   "fact_ba": 16,
+   "lines": [
+    "Bakerloo",
+    "Northern"
+   ]
+  },
+  {
+   "index": 8,
+   "a_name": "Harlesden",
+   "b_name": "Stonebridge Park",
+   "a": "harlesden",
+   "b": "stonebridge_park",
+   "fact_ab": 17,
+   "fact_ba": 18,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 9,
+   "a_name": "Harlesden",
+   "b_name": "Willesden Junction",
+   "a": "harlesden",
+   "b": "willesden_junction",
+   "fact_ab": 19,
+   "fact_ba": 20,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 10,
+   "a_name": "Harrow & Wealdstone",
+   "b_name": "Kenton",
+   "a": "harrow_and_wealdstone",
+   "b": "kenton",
+   "fact_ab": 21,
+   "fact_ba": 22,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 11,
+   "a_name": "Kensal Green",
+   "b_name": "Queen's Park",
+   "a": "kensal_green",
+   "b": "queens_park",
+   "fact_ab": 23,
+   "fact_ba": 24,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 12,
+   "a_name": "Kensal Green",
+   "b_name": "Willesden Junction",
+   "a": "kensal_green",
+   "b": "willesden_junction",
+   "fact_ab": 25,
+   "fact_ba": 26,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 13,
+   "a_name": "Kenton",
+   "b_name": "South Kenton",
+   "a": "kenton",
+   "b": "south_kenton",
+   "fact_ab": 27,
+   "fact_ba": 28,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 14,
+   "a_name": "Kilburn Park",
+   "b_name": "Maida Vale",
+   "a": "kilburn_park",
+   "b": "maida_vale",
+   "fact_ab": 29,
+   "fact_ba": 30,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 15,
+   "a_name": "Kilburn Park",
+   "b_name": "Queen's Park",
+   "a": "kilburn_park",
+   "b": "queens_park",
+   "fact_ab": 31,
+   "fact_ba": 32,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 16,
+   "a_name": "Lambeth North",
+   "b_name": "Waterloo",
+   "a": "lambeth_north",
+   "b": "waterloo",
+   "fact_ab": 33,
+   "fact_ba": 34,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 17,
+   "a_name": "Maida Vale",
+   "b_name": "Warwick Avenue",
+   "a": "maida_vale",
+   "b": "warwick_avenue",
+   "fact_ab": 35,
+   "fact_ba": 36,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 18,
+   "a_name": "North Wembley",
+   "b_name": "South Kenton",
+   "a": "north_wembley",
+   "b": "south_kenton",
+   "fact_ab": 37,
+   "fact_ba": 38,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 19,
+   "a_name": "North Wembley",
+   "b_name": "Wembley Central",
+   "a": "north_wembley",
+   "b": "wembley_central",
+   "fact_ab": 39,
+   "fact_ba": 40,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 20,
+   "a_name": "Oxford Circus",
+   "b_name": "Piccadilly Circus",
+   "a": "oxford_circus",
+   "b": "piccadilly_circus",
+   "fact_ab": 41,
+   "fact_ba": 42,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 21,
+   "a_name": "Oxford Circus",
+   "b_name": "Regent's Park",
+   "a": "oxford_circus",
+   "b": "regents_park",
+   "fact_ab": 43,
+   "fact_ba": 44,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 22,
+   "a_name": "Paddington",
+   "b_name": "Warwick Avenue",
+   "a": "paddington",
+   "b": "warwick_avenue",
+   "fact_ab": 45,
+   "fact_ba": 46,
+   "lines": [
+    "Bakerloo"
+   ]
+  },
+  {
+   "index": 23,
+   "a_name": "Stonebridge Park",
+   "b_name": "Wembley Central",
+   "a": "stonebridge_park",
+   "b": "wembley_central",
+   "fact_ab": 47,
+   "fact_ba": 48,
+   "lines": [
+    "Bakerloo"
+   ]
+  }
+ ]
+}

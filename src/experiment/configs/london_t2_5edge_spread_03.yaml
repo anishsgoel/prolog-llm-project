@@ -1,0 +1,23 @@
+# T2 - Central London core - Inner Circle, Central trunk, Victoria, Northern central
+#
+# Goal: Bond Street -> Euston  (3 hops, short path)
+# Shortest route: Bond Street -> Oxford Circus -> Warren Street -> Euston
+# Omitted edges (5), both directions each:
+#   Bank -- Moorgate (facts 19, 20)
+#   Euston Square -- Great Portland Street (facts 93, 94)
+#   Goodge Street -- Tottenham Court Road (facts 107, 108)
+#   Liverpool Street -- Moorgate (facts 139, 140)
+#   Oxford Circus -- Warren Street (facts 151, 152)
+# Placement: spread  |  crosses junction: yes (Oxford Circus, Warren Street)
+# Plausible direct-shortcut temptation: yes - both endpoints are Zone 1 interchanges
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t2_5edge_spread_03
+goal: "reachable(bond_street, euston)"
+kb_file: kb/london_t2_zone1.pl
+propose_facts: connected/2
+omit_fact_ids: [19, 20, 93, 94, 107, 108, 139, 140, 151, 152]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 10

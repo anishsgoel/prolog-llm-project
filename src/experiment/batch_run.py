@@ -122,6 +122,38 @@ def _evaluate(config_name: str, model: Optional[str], eval_timeout: float,
         return None, f"{exc.__class__.__name__}: {exc}"
 
 
+def _expand_config_patterns(tokens: List[str]) -> List[str]:
+    """Resolve --configs tokens against the available config stems.
+
+    A token containing a glob metacharacter (``*?[``) is expanded with fnmatch,
+    which is what makes ``--configs 'london_t2_*'`` select one benchmark tier out
+    of the many configs in the directory. A token with no metacharacter is passed
+    through untouched, so a mistyped name still produces the same per-config
+    error row it always did rather than aborting the batch.
+
+    Order is preserved and duplicates removed, so overlapping patterns
+    (``'london_t1_*' 'london_*_spread_*'``) do not run a config twice.
+    """
+    import fnmatch
+
+    out: List[str] = []
+    for token in tokens:
+        if not any(ch in token for ch in "*?["):
+            if token not in out:
+                out.append(token)
+            continue
+        matches = [name for name in ALL_CONFIGS if fnmatch.fnmatchcase(name, token)]
+        if not matches:
+            raise SystemExit(
+                f"--configs: pattern {token!r} matched none of the {len(ALL_CONFIGS)} "
+                f"available configs. Run --list-configs to see them."
+            )
+        for name in matches:
+            if name not in out:
+                out.append(name)
+    return out
+
+
 def _result_fieldnames() -> List[str]:
     """Stable, complete column set known up front.
 
@@ -259,8 +291,13 @@ def main() -> None:
     )
     parser.add_argument(
         "--configs", nargs="+", default=["*"], metavar="NAME",
-        help="Config YAML stems to run. Use '*' (or omit) to run all. "
-             f"Available: {', '.join(ALL_CONFIGS)}",
+        help="Config YAML stems to run. Accepts exact stems and shell-style "
+             "patterns, e.g. 'london_t2_*' or 'bio_*'. Use '*' (or omit) to run "
+             f"all {len(ALL_CONFIGS)} configs. Run --list-configs to see them.",
+    )
+    parser.add_argument(
+        "--list-configs", action="store_true",
+        help="Print every available config stem and exit.",
     )
     parser.add_argument(
         "--models", nargs="+", default=None, metavar="MODEL",
@@ -313,9 +350,12 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    # Expand '*' (or a shell-escaped '*') to the full config list.
-    if args.configs == ["*"] or "*" in args.configs:
-        args.configs = ALL_CONFIGS
+    if args.list_configs:
+        for name in ALL_CONFIGS:
+            print(name)
+        return
+
+    args.configs = _expand_config_patterns(args.configs)
 
     # Resolve the model list. With no --models, use the configured default so
     # rows (and the summary) are still labelled with a concrete model name.

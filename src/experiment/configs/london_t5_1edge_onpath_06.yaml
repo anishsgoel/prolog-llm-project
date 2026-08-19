@@ -1,0 +1,19 @@
+# T5 - Complete network, all 11 lines
+#
+# Goal: Canons Park -> Wembley Park  (3 hops, short path)
+# Shortest route: Canons Park -> Queensbury -> Kingsbury -> Wembley Park
+# Omitted edges (1), both directions each:
+#   Canons Park -- Queensbury (facts 171, 172)
+# Placement: onpath  |  crosses junction: no
+# Plausible direct-shortcut temptation: no
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t5_1edge_onpath_06
+goal: "reachable(canons_park, wembley_park)"
+kb_file: kb/london_t5_full.pl
+propose_facts: connected/2
+omit_fact_ids: [171, 172]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 10

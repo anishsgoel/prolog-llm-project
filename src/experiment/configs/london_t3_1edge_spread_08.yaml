@@ -1,0 +1,19 @@
+# T3 - West London - District and Piccadilly in full, plus the Circle's Hammersmith branch
+#
+# Goal: Bromley-by-Bow -> Upton Park  (3 hops, short path)
+# Shortest route: Bromley-by-Bow -> West Ham -> Plaistow -> Upton Park
+# Omitted edges (1), both directions each:
+#   Plaistow -- West Ham (facts 197, 198)
+# Placement: spread  |  crosses junction: no
+# Plausible direct-shortcut temptation: no
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t3_1edge_spread_08
+goal: "reachable(bromley_by_bow, upton_park)"
+kb_file: kb/london_t3_west.pl
+propose_facts: connected/2
+omit_fact_ids: [197, 198]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 10

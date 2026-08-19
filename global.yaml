@@ -15,6 +15,11 @@ verbose: true
 
 # --- system-wide search limits ---
 hyp_prompt_fact_limit: 25      # max soft facts/rules shown to the LLM in a prompt
+hard_prompt_fact_limit: 400    # max HARD facts shown in a prompt; KBs at or under
+                               # this size are passed through untouched, so small
+                               # configs keep their exact previous prompts
+hard_prompt_fact_hops: 3       # radius of the goal-relevant subgraph used when the
+                               # limit bites (hops over constant co-occurrence)
 soft_bfs_max_solutions: 25
 path_aggregation: min          # how path confidence is aggregated: "min" or "max"
 default_max_depth: 10

@@ -1,0 +1,1452 @@
+{
+ "kb": "london_t3_west.pl",
+ "tier": "t3",
+ "title": "West London - District and Piccadilly in full, plus the Circle's Hammersmith branch",
+ "n_stations": 112,
+ "n_edges": 116,
+ "n_facts": 232,
+ "rule_fact_ids": [
+  233,
+  234
+ ],
+ "stranded_by_cut": [],
+ "edges": [
+  {
+   "index": 0,
+   "a_name": "Acton Town",
+   "b_name": "Chiswick Park",
+   "a": "acton_town",
+   "b": "chiswick_park",
+   "fact_ab": 1,
+   "fact_ba": 2,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 1,
+   "a_name": "Acton Town",
+   "b_name": "Ealing Common",
+   "a": "acton_town",
+   "b": "ealing_common",
+   "fact_ab": 3,
+   "fact_ba": 4,
+   "lines": [
+    "District",
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 2,
+   "a_name": "Acton Town",
+   "b_name": "South Ealing",
+   "a": "acton_town",
+   "b": "south_ealing",
+   "fact_ab": 5,
+   "fact_ba": 6,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 3,
+   "a_name": "Aldgate East",
+   "b_name": "Tower Hill",
+   "a": "aldgate_east",
+   "b": "tower_hill",
+   "fact_ab": 7,
+   "fact_ba": 8,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 4,
+   "a_name": "Aldgate East",
+   "b_name": "Whitechapel",
+   "a": "aldgate_east",
+   "b": "whitechapel",
+   "fact_ab": 9,
+   "fact_ba": 10,
+   "lines": [
+    "District",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 5,
+   "a_name": "Alperton",
+   "b_name": "Park Royal",
+   "a": "alperton",
+   "b": "park_royal",
+   "fact_ab": 11,
+   "fact_ba": 12,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 6,
+   "a_name": "Alperton",
+   "b_name": "Sudbury Town",
+   "a": "alperton",
+   "b": "sudbury_town",
+   "fact_ab": 13,
+   "fact_ba": 14,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 7,
+   "a_name": "Arnos Grove",
+   "b_name": "Bounds Green",
+   "a": "arnos_grove",
+   "b": "bounds_green",
+   "fact_ab": 15,
+   "fact_ba": 16,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 8,
+   "a_name": "Arnos Grove",
+   "b_name": "Southgate",
+   "a": "arnos_grove",
+   "b": "southgate",
+   "fact_ab": 17,
+   "fact_ba": 18,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 9,
+   "a_name": "Arsenal",
+   "b_name": "Finsbury Park",
+   "a": "arsenal",
+   "b": "finsbury_park",
+   "fact_ab": 19,
+   "fact_ba": 20,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 10,
+   "a_name": "Arsenal",
+   "b_name": "Holloway Road",
+   "a": "arsenal",
+   "b": "holloway_road",
+   "fact_ab": 21,
+   "fact_ba": 22,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 11,
+   "a_name": "Barking",
+   "b_name": "East Ham",
+   "a": "barking",
+   "b": "east_ham",
+   "fact_ab": 23,
+   "fact_ba": 24,
+   "lines": [
+    "District",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 12,
+   "a_name": "Barking",
+   "b_name": "Upney",
+   "a": "barking",
+   "b": "upney",
+   "fact_ab": 25,
+   "fact_ba": 26,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 13,
+   "a_name": "Barons Court",
+   "b_name": "Hammersmith",
+   "a": "barons_court",
+   "b": "hammersmith",
+   "fact_ab": 27,
+   "fact_ba": 28,
+   "lines": [
+    "District",
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 14,
+   "a_name": "Barons Court",
+   "b_name": "West Kensington",
+   "a": "barons_court",
+   "b": "west_kensington",
+   "fact_ab": 29,
+   "fact_ba": 30,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 15,
+   "a_name": "Bayswater",
+   "b_name": "Notting Hill Gate",
+   "a": "bayswater",
+   "b": "notting_hill_gate",
+   "fact_ab": 31,
+   "fact_ba": 32,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 16,
+   "a_name": "Bayswater",
+   "b_name": "Paddington",
+   "a": "bayswater",
+   "b": "paddington",
+   "fact_ab": 33,
+   "fact_ba": 34,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 17,
+   "a_name": "Becontree",
+   "b_name": "Dagenham Heathway",
+   "a": "becontree",
+   "b": "dagenham_heathway",
+   "fact_ab": 35,
+   "fact_ba": 36,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 18,
+   "a_name": "Becontree",
+   "b_name": "Upney",
+   "a": "becontree",
+   "b": "upney",
+   "fact_ab": 37,
+   "fact_ba": 38,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 19,
+   "a_name": "Blackfriars",
+   "b_name": "Mansion House",
+   "a": "blackfriars",
+   "b": "mansion_house",
+   "fact_ab": 39,
+   "fact_ba": 40,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 20,
+   "a_name": "Blackfriars",
+   "b_name": "Temple",
+   "a": "blackfriars",
+   "b": "temple",
+   "fact_ab": 41,
+   "fact_ba": 42,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 21,
+   "a_name": "Boston Manor",
+   "b_name": "Northfields",
+   "a": "boston_manor",
+   "b": "northfields",
+   "fact_ab": 43,
+   "fact_ba": 44,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 22,
+   "a_name": "Boston Manor",
+   "b_name": "Osterley",
+   "a": "boston_manor",
+   "b": "osterley",
+   "fact_ab": 45,
+   "fact_ba": 46,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 23,
+   "a_name": "Bounds Green",
+   "b_name": "Wood Green",
+   "a": "bounds_green",
+   "b": "wood_green",
+   "fact_ab": 47,
+   "fact_ba": 48,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 24,
+   "a_name": "Bow Road",
+   "b_name": "Bromley-by-Bow",
+   "a": "bow_road",
+   "b": "bromley_by_bow",
+   "fact_ab": 49,
+   "fact_ba": 50,
+   "lines": [
+    "District",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 25,
+   "a_name": "Bow Road",
+   "b_name": "Mile End",
+   "a": "bow_road",
+   "b": "mile_end",
+   "fact_ab": 51,
+   "fact_ba": 52,
+   "lines": [
+    "District",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 26,
+   "a_name": "Bromley-by-Bow",
+   "b_name": "West Ham",
+   "a": "bromley_by_bow",
+   "b": "west_ham",
+   "fact_ab": 53,
+   "fact_ba": 54,
+   "lines": [
+    "District",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 27,
+   "a_name": "Caledonian Road",
+   "b_name": "Holloway Road",
+   "a": "caledonian_road",
+   "b": "holloway_road",
+   "fact_ab": 55,
+   "fact_ba": 56,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 28,
+   "a_name": "Caledonian Road",
+   "b_name": "King's Cross St Pancras",
+   "a": "caledonian_road",
+   "b": "kings_cross_st_pancras",
+   "fact_ab": 57,
+   "fact_ba": 58,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 29,
+   "a_name": "Cannon Street",
+   "b_name": "Mansion House",
+   "a": "cannon_street",
+   "b": "mansion_house",
+   "fact_ab": 59,
+   "fact_ba": 60,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 30,
+   "a_name": "Cannon Street",
+   "b_name": "Monument",
+   "a": "cannon_street",
+   "b": "monument",
+   "fact_ab": 61,
+   "fact_ba": 62,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 31,
+   "a_name": "Chiswick Park",
+   "b_name": "Turnham Green",
+   "a": "chiswick_park",
+   "b": "turnham_green",
+   "fact_ab": 63,
+   "fact_ba": 64,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 32,
+   "a_name": "Cockfosters",
+   "b_name": "Oakwood",
+   "a": "cockfosters",
+   "b": "oakwood",
+   "fact_ab": 65,
+   "fact_ba": 66,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 33,
+   "a_name": "Covent Garden",
+   "b_name": "Holborn",
+   "a": "covent_garden",
+   "b": "holborn",
+   "fact_ab": 67,
+   "fact_ba": 68,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 34,
+   "a_name": "Covent Garden",
+   "b_name": "Leicester Square",
+   "a": "covent_garden",
+   "b": "leicester_square",
+   "fact_ab": 69,
+   "fact_ba": 70,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 35,
+   "a_name": "Dagenham East",
+   "b_name": "Dagenham Heathway",
+   "a": "dagenham_east",
+   "b": "dagenham_heathway",
+   "fact_ab": 71,
+   "fact_ba": 72,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 36,
+   "a_name": "Dagenham East",
+   "b_name": "Elm Park",
+   "a": "dagenham_east",
+   "b": "elm_park",
+   "fact_ab": 73,
+   "fact_ba": 74,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 37,
+   "a_name": "Ealing Broadway",
+   "b_name": "Ealing Common",
+   "a": "ealing_broadway",
+   "b": "ealing_common",
+   "fact_ab": 75,
+   "fact_ba": 76,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 38,
+   "a_name": "Ealing Common",
+   "b_name": "North Ealing",
+   "a": "ealing_common",
+   "b": "north_ealing",
+   "fact_ab": 77,
+   "fact_ba": 78,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 39,
+   "a_name": "Earl's Court",
+   "b_name": "Gloucester Road",
+   "a": "earls_court",
+   "b": "gloucester_road",
+   "fact_ab": 79,
+   "fact_ba": 80,
+   "lines": [
+    "District",
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 40,
+   "a_name": "Earl's Court",
+   "b_name": "High Street Kensington",
+   "a": "earls_court",
+   "b": "high_street_kensington",
+   "fact_ab": 81,
+   "fact_ba": 82,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 41,
+   "a_name": "Earl's Court",
+   "b_name": "Kensington (Olympia)",
+   "a": "earls_court",
+   "b": "kensington_olympia",
+   "fact_ab": 83,
+   "fact_ba": 84,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 42,
+   "a_name": "Earl's Court",
+   "b_name": "West Brompton",
+   "a": "earls_court",
+   "b": "west_brompton",
+   "fact_ab": 85,
+   "fact_ba": 86,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 43,
+   "a_name": "Earl's Court",
+   "b_name": "West Kensington",
+   "a": "earls_court",
+   "b": "west_kensington",
+   "fact_ab": 87,
+   "fact_ba": 88,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 44,
+   "a_name": "East Ham",
+   "b_name": "Upton Park",
+   "a": "east_ham",
+   "b": "upton_park",
+   "fact_ab": 89,
+   "fact_ba": 90,
+   "lines": [
+    "District",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 45,
+   "a_name": "East Putney",
+   "b_name": "Putney Bridge",
+   "a": "east_putney",
+   "b": "putney_bridge",
+   "fact_ab": 91,
+   "fact_ba": 92,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 46,
+   "a_name": "East Putney",
+   "b_name": "Southfields",
+   "a": "east_putney",
+   "b": "southfields",
+   "fact_ab": 93,
+   "fact_ba": 94,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 47,
+   "a_name": "Eastcote",
+   "b_name": "Rayners Lane",
+   "a": "eastcote",
+   "b": "rayners_lane",
+   "fact_ab": 95,
+   "fact_ba": 96,
+   "lines": [
+    "Metropolitan",
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 48,
+   "a_name": "Eastcote",
+   "b_name": "Ruislip Manor",
+   "a": "eastcote",
+   "b": "ruislip_manor",
+   "fact_ab": 97,
+   "fact_ba": 98,
+   "lines": [
+    "Metropolitan",
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 49,
+   "a_name": "Edgware Road",
+   "b_name": "Paddington",
+   "a": "edgware_road",
+   "b": "paddington",
+   "fact_ab": 99,
+   "fact_ba": 100,
+   "lines": [
+    "Circle",
+    "District",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 50,
+   "a_name": "Elm Park",
+   "b_name": "Hornchurch",
+   "a": "elm_park",
+   "b": "hornchurch",
+   "fact_ab": 101,
+   "fact_ba": 102,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 51,
+   "a_name": "Embankment",
+   "b_name": "Temple",
+   "a": "embankment",
+   "b": "temple",
+   "fact_ab": 103,
+   "fact_ba": 104,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 52,
+   "a_name": "Embankment",
+   "b_name": "Westminster",
+   "a": "embankment",
+   "b": "westminster",
+   "fact_ab": 105,
+   "fact_ba": 106,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 53,
+   "a_name": "Finsbury Park",
+   "b_name": "Manor House",
+   "a": "finsbury_park",
+   "b": "manor_house",
+   "fact_ab": 107,
+   "fact_ba": 108,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 54,
+   "a_name": "Fulham Broadway",
+   "b_name": "Parsons Green",
+   "a": "fulham_broadway",
+   "b": "parsons_green",
+   "fact_ab": 109,
+   "fact_ba": 110,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 55,
+   "a_name": "Fulham Broadway",
+   "b_name": "West Brompton",
+   "a": "fulham_broadway",
+   "b": "west_brompton",
+   "fact_ab": 111,
+   "fact_ba": 112,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 56,
+   "a_name": "Gloucester Road",
+   "b_name": "High Street Kensington",
+   "a": "gloucester_road",
+   "b": "high_street_kensington",
+   "fact_ab": 113,
+   "fact_ba": 114,
+   "lines": [
+    "Circle"
+   ]
+  },
+  {
+   "index": 57,
+   "a_name": "Gloucester Road",
+   "b_name": "South Kensington",
+   "a": "gloucester_road",
+   "b": "south_kensington",
+   "fact_ab": 115,
+   "fact_ba": 116,
+   "lines": [
+    "Circle",
+    "District",
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 58,
+   "a_name": "Goldhawk Road",
+   "b_name": "Hammersmith",
+   "a": "goldhawk_road",
+   "b": "hammersmith",
+   "fact_ab": 117,
+   "fact_ba": 118,
+   "lines": [
+    "Circle",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 59,
+   "a_name": "Goldhawk Road",
+   "b_name": "Shepherd's Bush Market",
+   "a": "goldhawk_road",
+   "b": "shepherds_bush_market",
+   "fact_ab": 119,
+   "fact_ba": 120,
+   "lines": [
+    "Circle",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 60,
+   "a_name": "Green Park",
+   "b_name": "Hyde Park Corner",
+   "a": "green_park",
+   "b": "hyde_park_corner",
+   "fact_ab": 121,
+   "fact_ba": 122,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 61,
+   "a_name": "Green Park",
+   "b_name": "Piccadilly Circus",
+   "a": "green_park",
+   "b": "piccadilly_circus",
+   "fact_ab": 123,
+   "fact_ba": 124,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 62,
+   "a_name": "Green Park",
+   "b_name": "Victoria",
+   "a": "green_park",
+   "b": "victoria",
+   "fact_ab": 125,
+   "fact_ba": 126,
+   "lines": [
+    "Victoria"
+   ]
+  },
+  {
+   "index": 63,
+   "a_name": "Green Park",
+   "b_name": "Westminster",
+   "a": "green_park",
+   "b": "westminster",
+   "fact_ab": 127,
+   "fact_ba": 128,
+   "lines": [
+    "Jubilee"
+   ]
+  },
+  {
+   "index": 64,
+   "a_name": "Gunnersbury",
+   "b_name": "Kew Gardens",
+   "a": "gunnersbury",
+   "b": "kew_gardens",
+   "fact_ab": 129,
+   "fact_ba": 130,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 65,
+   "a_name": "Gunnersbury",
+   "b_name": "Turnham Green",
+   "a": "gunnersbury",
+   "b": "turnham_green",
+   "fact_ab": 131,
+   "fact_ba": 132,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 66,
+   "a_name": "Hammersmith",
+   "b_name": "Ravenscourt Park",
+   "a": "hammersmith",
+   "b": "ravenscourt_park",
+   "fact_ab": 133,
+   "fact_ba": 134,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 67,
+   "a_name": "Hatton Cross",
+   "b_name": "Heathrow Terminal 4",
+   "a": "hatton_cross",
+   "b": "heathrow_terminal_4",
+   "fact_ab": 135,
+   "fact_ba": 136,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 68,
+   "a_name": "Hatton Cross",
+   "b_name": "Heathrow Terminals 2 & 3",
+   "a": "hatton_cross",
+   "b": "heathrow_terminals_2_and_3",
+   "fact_ab": 137,
+   "fact_ba": 138,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 69,
+   "a_name": "Hatton Cross",
+   "b_name": "Hounslow West",
+   "a": "hatton_cross",
+   "b": "hounslow_west",
+   "fact_ab": 139,
+   "fact_ba": 140,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 70,
+   "a_name": "Heathrow Terminal 4",
+   "b_name": "Heathrow Terminals 2 & 3",
+   "a": "heathrow_terminal_4",
+   "b": "heathrow_terminals_2_and_3",
+   "fact_ab": 141,
+   "fact_ba": 142,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 71,
+   "a_name": "Heathrow Terminal 5",
+   "b_name": "Heathrow Terminals 2 & 3",
+   "a": "heathrow_terminal_5",
+   "b": "heathrow_terminals_2_and_3",
+   "fact_ab": 143,
+   "fact_ba": 144,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 72,
+   "a_name": "High Street Kensington",
+   "b_name": "Notting Hill Gate",
+   "a": "high_street_kensington",
+   "b": "notting_hill_gate",
+   "fact_ab": 145,
+   "fact_ba": 146,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 73,
+   "a_name": "Hillingdon",
+   "b_name": "Ickenham",
+   "a": "hillingdon",
+   "b": "ickenham",
+   "fact_ab": 147,
+   "fact_ba": 148,
+   "lines": [
+    "Metropolitan",
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 74,
+   "a_name": "Hillingdon",
+   "b_name": "Uxbridge",
+   "a": "hillingdon",
+   "b": "uxbridge",
+   "fact_ab": 149,
+   "fact_ba": 150,
+   "lines": [
+    "Metropolitan",
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 75,
+   "a_name": "Holborn",
+   "b_name": "Russell Square",
+   "a": "holborn",
+   "b": "russell_square",
+   "fact_ab": 151,
+   "fact_ba": 152,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 76,
+   "a_name": "Hornchurch",
+   "b_name": "Upminster Bridge",
+   "a": "hornchurch",
+   "b": "upminster_bridge",
+   "fact_ab": 153,
+   "fact_ba": 154,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 77,
+   "a_name": "Hounslow Central",
+   "b_name": "Hounslow East",
+   "a": "hounslow_central",
+   "b": "hounslow_east",
+   "fact_ab": 155,
+   "fact_ba": 156,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 78,
+   "a_name": "Hounslow Central",
+   "b_name": "Hounslow West",
+   "a": "hounslow_central",
+   "b": "hounslow_west",
+   "fact_ab": 157,
+   "fact_ba": 158,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 79,
+   "a_name": "Hounslow East",
+   "b_name": "Osterley",
+   "a": "hounslow_east",
+   "b": "osterley",
+   "fact_ab": 159,
+   "fact_ba": 160,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 80,
+   "a_name": "Hyde Park Corner",
+   "b_name": "Knightsbridge",
+   "a": "hyde_park_corner",
+   "b": "knightsbridge",
+   "fact_ab": 161,
+   "fact_ba": 162,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 81,
+   "a_name": "Ickenham",
+   "b_name": "Ruislip",
+   "a": "ickenham",
+   "b": "ruislip",
+   "fact_ab": 163,
+   "fact_ba": 164,
+   "lines": [
+    "Metropolitan",
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 82,
+   "a_name": "Kew Gardens",
+   "b_name": "Richmond",
+   "a": "kew_gardens",
+   "b": "richmond",
+   "fact_ab": 165,
+   "fact_ba": 166,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 83,
+   "a_name": "King's Cross St Pancras",
+   "b_name": "Russell Square",
+   "a": "kings_cross_st_pancras",
+   "b": "russell_square",
+   "fact_ab": 167,
+   "fact_ba": 168,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 84,
+   "a_name": "Knightsbridge",
+   "b_name": "South Kensington",
+   "a": "knightsbridge",
+   "b": "south_kensington",
+   "fact_ab": 169,
+   "fact_ba": 170,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 85,
+   "a_name": "Ladbroke Grove",
+   "b_name": "Latimer Road",
+   "a": "ladbroke_grove",
+   "b": "latimer_road",
+   "fact_ab": 171,
+   "fact_ba": 172,
+   "lines": [
+    "Circle",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 86,
+   "a_name": "Ladbroke Grove",
+   "b_name": "Westbourne Park",
+   "a": "ladbroke_grove",
+   "b": "westbourne_park",
+   "fact_ab": 173,
+   "fact_ba": 174,
+   "lines": [
+    "Circle",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 87,
+   "a_name": "Latimer Road",
+   "b_name": "Wood Lane",
+   "a": "latimer_road",
+   "b": "wood_lane",
+   "fact_ab": 175,
+   "fact_ba": 176,
+   "lines": [
+    "Circle",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 88,
+   "a_name": "Leicester Square",
+   "b_name": "Piccadilly Circus",
+   "a": "leicester_square",
+   "b": "piccadilly_circus",
+   "fact_ab": 177,
+   "fact_ba": 178,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 89,
+   "a_name": "Manor House",
+   "b_name": "Turnpike Lane",
+   "a": "manor_house",
+   "b": "turnpike_lane",
+   "fact_ab": 179,
+   "fact_ba": 180,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 90,
+   "a_name": "Mile End",
+   "b_name": "Stepney Green",
+   "a": "mile_end",
+   "b": "stepney_green",
+   "fact_ab": 181,
+   "fact_ba": 182,
+   "lines": [
+    "District",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 91,
+   "a_name": "Monument",
+   "b_name": "Tower Hill",
+   "a": "monument",
+   "b": "tower_hill",
+   "fact_ab": 183,
+   "fact_ba": 184,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 92,
+   "a_name": "North Ealing",
+   "b_name": "Park Royal",
+   "a": "north_ealing",
+   "b": "park_royal",
+   "fact_ab": 185,
+   "fact_ba": 186,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 93,
+   "a_name": "Northfields",
+   "b_name": "South Ealing",
+   "a": "northfields",
+   "b": "south_ealing",
+   "fact_ab": 187,
+   "fact_ba": 188,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 94,
+   "a_name": "Oakwood",
+   "b_name": "Southgate",
+   "a": "oakwood",
+   "b": "southgate",
+   "fact_ab": 189,
+   "fact_ba": 190,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 95,
+   "a_name": "Paddington",
+   "b_name": "Royal Oak",
+   "a": "paddington",
+   "b": "royal_oak",
+   "fact_ab": 191,
+   "fact_ba": 192,
+   "lines": [
+    "Circle",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 96,
+   "a_name": "Parsons Green",
+   "b_name": "Putney Bridge",
+   "a": "parsons_green",
+   "b": "putney_bridge",
+   "fact_ab": 193,
+   "fact_ba": 194,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 97,
+   "a_name": "Plaistow",
+   "b_name": "Upton Park",
+   "a": "plaistow",
+   "b": "upton_park",
+   "fact_ab": 195,
+   "fact_ba": 196,
+   "lines": [
+    "District",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 98,
+   "a_name": "Plaistow",
+   "b_name": "West Ham",
+   "a": "plaistow",
+   "b": "west_ham",
+   "fact_ab": 197,
+   "fact_ba": 198,
+   "lines": [
+    "District",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 99,
+   "a_name": "Ravenscourt Park",
+   "b_name": "Stamford Brook",
+   "a": "ravenscourt_park",
+   "b": "stamford_brook",
+   "fact_ab": 199,
+   "fact_ba": 200,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 100,
+   "a_name": "Rayners Lane",
+   "b_name": "South Harrow",
+   "a": "rayners_lane",
+   "b": "south_harrow",
+   "fact_ab": 201,
+   "fact_ba": 202,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 101,
+   "a_name": "Royal Oak",
+   "b_name": "Westbourne Park",
+   "a": "royal_oak",
+   "b": "westbourne_park",
+   "fact_ab": 203,
+   "fact_ba": 204,
+   "lines": [
+    "Circle",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 102,
+   "a_name": "Ruislip",
+   "b_name": "Ruislip Manor",
+   "a": "ruislip",
+   "b": "ruislip_manor",
+   "fact_ab": 205,
+   "fact_ba": 206,
+   "lines": [
+    "Metropolitan",
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 103,
+   "a_name": "Shepherd's Bush Market",
+   "b_name": "Wood Lane",
+   "a": "shepherds_bush_market",
+   "b": "wood_lane",
+   "fact_ab": 207,
+   "fact_ba": 208,
+   "lines": [
+    "Circle",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 104,
+   "a_name": "Sloane Square",
+   "b_name": "South Kensington",
+   "a": "sloane_square",
+   "b": "south_kensington",
+   "fact_ab": 209,
+   "fact_ba": 210,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 105,
+   "a_name": "Sloane Square",
+   "b_name": "Victoria",
+   "a": "sloane_square",
+   "b": "victoria",
+   "fact_ab": 211,
+   "fact_ba": 212,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 106,
+   "a_name": "South Harrow",
+   "b_name": "Sudbury Hill",
+   "a": "south_harrow",
+   "b": "sudbury_hill",
+   "fact_ab": 213,
+   "fact_ba": 214,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 107,
+   "a_name": "Southfields",
+   "b_name": "Wimbledon Park",
+   "a": "southfields",
+   "b": "wimbledon_park",
+   "fact_ab": 215,
+   "fact_ba": 216,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 108,
+   "a_name": "St James's Park",
+   "b_name": "Victoria",
+   "a": "st_jamess_park",
+   "b": "victoria",
+   "fact_ab": 217,
+   "fact_ba": 218,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 109,
+   "a_name": "St James's Park",
+   "b_name": "Westminster",
+   "a": "st_jamess_park",
+   "b": "westminster",
+   "fact_ab": 219,
+   "fact_ba": 220,
+   "lines": [
+    "Circle",
+    "District"
+   ]
+  },
+  {
+   "index": 110,
+   "a_name": "Stamford Brook",
+   "b_name": "Turnham Green",
+   "a": "stamford_brook",
+   "b": "turnham_green",
+   "fact_ab": 221,
+   "fact_ba": 222,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 111,
+   "a_name": "Stepney Green",
+   "b_name": "Whitechapel",
+   "a": "stepney_green",
+   "b": "whitechapel",
+   "fact_ab": 223,
+   "fact_ba": 224,
+   "lines": [
+    "District",
+    "Hammersmith & City"
+   ]
+  },
+  {
+   "index": 112,
+   "a_name": "Sudbury Hill",
+   "b_name": "Sudbury Town",
+   "a": "sudbury_hill",
+   "b": "sudbury_town",
+   "fact_ab": 225,
+   "fact_ba": 226,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 113,
+   "a_name": "Turnpike Lane",
+   "b_name": "Wood Green",
+   "a": "turnpike_lane",
+   "b": "wood_green",
+   "fact_ab": 227,
+   "fact_ba": 228,
+   "lines": [
+    "Piccadilly"
+   ]
+  },
+  {
+   "index": 114,
+   "a_name": "Upminster",
+   "b_name": "Upminster Bridge",
+   "a": "upminster",
+   "b": "upminster_bridge",
+   "fact_ab": 229,
+   "fact_ba": 230,
+   "lines": [
+    "District"
+   ]
+  },
+  {
+   "index": 115,
+   "a_name": "Wimbledon",
+   "b_name": "Wimbledon Park",
+   "a": "wimbledon",
+   "b": "wimbledon_park",
+   "fact_ab": 231,
+   "fact_ba": 232,
+   "lines": [
+    "District"
+   ]
+  }
+ ]
+}

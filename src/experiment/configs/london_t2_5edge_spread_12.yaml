@@ -1,0 +1,23 @@
+# T2 - Central London core - Inner Circle, Central trunk, Victoria, Northern central
+#
+# Goal: Bond Street -> King's Cross St Pancras  (4 hops, short path)
+# Shortest route: Bond Street -> Baker Street -> Great Portland Street -> Euston Square -> King's Cross St Pancras
+# Omitted edges (5), both directions each:
+#   Bank -- Liverpool Street (facts 15, 16)
+#   Bank -- Moorgate (facts 19, 20)
+#   Cannon Street -- Monument (facts 63, 64)
+#   Euston -- Warren Street (facts 91, 92)
+#   Euston Square -- Great Portland Street (facts 93, 94)
+# Placement: spread  |  crosses junction: yes (Baker Street)
+# Plausible direct-shortcut temptation: yes - both endpoints are Zone 1 interchanges
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t2_5edge_spread_12
+goal: "reachable(bond_street, kings_cross_st_pancras)"
+kb_file: kb/london_t2_zone1.pl
+propose_facts: connected/2
+omit_fact_ids: [15, 16, 19, 20, 63, 64, 91, 92, 93, 94]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 12

@@ -1,0 +1,399 @@
+# London Underground physical adjacency - EXTERNAL REFERENCE DATA
+# Source: Wikidata Query Service, property P197 (adjacent station)
+#         qualified with P81 (connecting line), restricted to the 11
+#         London Underground line items.  Retrieved 2026-08-18.
+# SPARQL:
+#   SELECT ?lineLabel ?a ?aLabel ?b ?bLabel WHERE {
+#     VALUES ?line { wd:Q19892 wd:Q205355 wd:Q210321 wd:Q211265 wd:Q211270
+#                    wd:Q961290 wd:Q19891 wd:Q214793 wd:Q207689 wd:Q203030 wd:Q207699 }
+#     ?a p:P197 ?st . ?st ps:P197 ?b ; pq:P81 ?line .
+#     SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } }
+#
+# This file is NOT the source of truth - london_network.yaml is.  It is an
+# INDEPENDENT third-party edge list that build_london_benchmark.py diffs
+# against, so that any drift in either direction is surfaced rather than
+# silently absorbed.  Rows are verbatim from Wikidata, including its errors;
+# every surviving discrepancy is explained in docs/LONDON_BENCHMARK.md.
+line,a,b
+Bakerloo line,Baker Street tube station,Marylebone tube station
+Bakerloo line,Baker Street tube station,Regent's Park tube station
+Bakerloo line,Charing Cross tube station,Embankment tube station
+Bakerloo line,Charing Cross tube station,Piccadilly Circus tube station
+Bakerloo line,Edgware Road tube station,Marylebone tube station
+Bakerloo line,Edgware Road tube station,Paddington (Praed Street) tube station
+Bakerloo line,Elephant & Castle tube station,Lambeth North tube station
+Bakerloo line,Embankment tube station,Waterloo tube station
+Bakerloo line,Harlesden station,Stonebridge Park station
+Bakerloo line,Harlesden station,Willesden Junction station
+Bakerloo line,Harrow & Wealdstone station,Kenton railway station
+Bakerloo line,Kensal Green station,Queen's Park station
+Bakerloo line,Kensal Green station,Willesden Junction station
+Bakerloo line,Kenton railway station,South Kenton station
+Bakerloo line,Kilburn Park tube station,Maida Vale tube station
+Bakerloo line,Kilburn Park tube station,Queen's Park station
+Bakerloo line,Lambeth North tube station,Waterloo tube station
+Bakerloo line,Maida Vale tube station,Warwick Avenue tube station
+Bakerloo line,North Wembley station,South Kenton station
+Bakerloo line,North Wembley station,Wembley Central station
+Bakerloo line,Oxford Circus tube station,Piccadilly Circus tube station
+Bakerloo line,Oxford Circus tube station,Regent's Park tube station
+Bakerloo line,Paddington (Praed Street) tube station,Warwick Avenue tube station
+Bakerloo line,Stonebridge Park station,Wembley Central station
+Central line,Ametyevo,Gorki
+Central line,Bank tube station,Liverpool Street tube station
+Central line,Bank tube station,St. Paul's tube station
+Central line,Barkingside tube station,Fairlop tube station
+Central line,Barkingside tube station,Newbury Park tube station
+Central line,Bethnal Green tube station,Liverpool Street tube station
+Central line,Bethnal Green tube station,Mile End tube station
+Central line,Bond Street tube station,Marble Arch tube station
+Central line,Bond Street tube station,Oxford Circus tube station
+Central line,Buckhurst Hill tube station,Loughton tube station
+Central line,Buckhurst Hill tube station,Woodford tube station
+Central line,Chancery Lane tube station,Holborn tube station
+Central line,Chancery Lane tube station,St. Paul's tube station
+Central line,Chigwell,Grange Hill tube station
+Central line,Chigwell,Roding Valley
+Central line,Debden tube station,Loughton tube station
+Central line,Debden tube station,Theydon Bois tube station
+Central line,Ealing Broadway station,West Acton tube station
+Central line,East Acton tube station,North Acton tube station
+Central line,East Acton tube station,White City tube station
+Central line,Epping tube station,North Weald railway station
+Central line,Epping tube station,Theydon Bois tube station
+Central line,Fairlop tube station,Hainault tube station
+Central line,Gants Hill tube station,Newbury Park tube station
+Central line,Gants Hill tube station,Redbridge tube station
+Central line,Grange Hill tube station,Hainault tube station
+Central line,Greenford station,Northolt tube station
+Central line,Greenford station,Perivale tube station
+Central line,Hanger Lane tube station,North Acton tube station
+Central line,Hanger Lane tube station,Perivale tube station
+Central line,Holborn tube station,Tottenham Court Road tube station
+Central line,Holland Park tube station,Notting Hill Gate tube station
+Central line,Holland Park tube station,Shepherd's Bush tube station
+Central line,Lancaster Gate tube station,Marble Arch tube station
+Central line,Lancaster Gate tube station,Queensway tube station
+Central line,Leyton tube station,Leytonstone tube station
+Central line,Leyton tube station,Stratford tube station
+Central line,Leytonstone tube station,Snaresbrook tube station
+Central line,Leytonstone tube station,Wanstead tube station
+Central line,Mile End tube station,Stratford tube station
+Central line,North Acton tube station,West Acton tube station
+Central line,Northolt tube station,South Ruislip station
+Central line,Notting Hill Gate tube station,Queensway tube station
+Central line,Oxford Circus tube station,Tottenham Court Road tube station
+Central line,Redbridge tube station,Wanstead tube station
+Central line,Roding Valley,Woodford tube station
+Central line,Ruislip Gardens tube station,South Ruislip station
+Central line,Ruislip Gardens tube station,West Ruislip station
+Central line,Shepherd's Bush tube station,White City tube station
+Central line,Snaresbrook tube station,South Woodford tube station
+Central line,South Woodford tube station,Woodford tube station
+Circle line,Aldgate tube station,Liverpool Street tube station
+Circle line,Aldgate tube station,Tower Hill tube station
+Circle line,Baker Street tube station,Edgware Road tube station
+Circle line,Baker Street tube station,Great Portland Street
+Circle line,Barbican tube station,Farringdon station
+Circle line,Barbican tube station,Moorgate tube station
+Circle line,Bayswater tube station,Notting Hill Gate tube station
+Circle line,Bayswater tube station,Paddington (Praed Street) tube station
+Circle line,Blackfriars tube station,Mansion House tube station
+Circle line,Blackfriars tube station,Temple tube station
+Circle line,Cannon Street station,Mansion House tube station
+Circle line,Cannon Street station,Monument tube station
+Circle line,Edgware Road tube station,Paddington (Bishop's Road) tube station
+Circle line,Edgware Road tube station,Paddington (Praed Street) tube station
+Circle line,Embankment tube station,Temple tube station
+Circle line,Embankment tube station,Westminster tube station
+Circle line,Euston Square tube station,Great Portland Street
+Circle line,Euston Square tube station,King's Cross St Pancras tube station
+Circle line,Farringdon station,King's Cross St Pancras tube station
+Circle line,Gloucester Road tube station,High Street Kensington tube station
+Circle line,Gloucester Road tube station,South Kensington
+Circle line,Goldhawk Road tube station,Hammersmith tube station
+Circle line,Goldhawk Road tube station,Shepherd's Bush Market tube station
+Circle line,High Street Kensington tube station,Notting Hill Gate tube station
+Circle line,Ladbroke Grove tube station,Latimer Road tube station
+Circle line,Ladbroke Grove tube station,Westbourne Park tube station
+Circle line,Latimer Road tube station,Wood Lane tube station
+Circle line,Liverpool Street tube station,Moorgate tube station
+Circle line,Monument tube station,Tower Hill tube station
+Circle line,Paddington (Bishop's Road) tube station,Royal Oak tube station
+Circle line,Royal Oak tube station,Westbourne Park tube station
+Circle line,Shepherd's Bush Market tube station,Wood Lane tube station
+Circle line,Sloane Square tube station,South Kensington
+Circle line,Sloane Square tube station,Victoria tube station
+Circle line,St. James's Park tube station,Victoria tube station
+Circle line,St. James's Park tube station,Westminster tube station
+District line,Acton Town tube station,Chiswick Park tube station
+District line,Acton Town tube station,Ealing Common tube station
+District line,Aldgate East tube station,Tower Hill tube station
+District line,Aldgate East tube station,Whitechapel station
+District line,Barking station,East Ham tube station
+District line,Barking station,Upney tube station
+District line,Barons Court tube station,Hammersmith tube station
+District line,Barons Court tube station,West Kensington tube station
+District line,Bayswater tube station,Notting Hill Gate tube station
+District line,Bayswater tube station,Paddington (Praed Street) tube station
+District line,Becontree tube station,Dagenham Heathway tube station
+District line,Becontree tube station,Upney tube station
+District line,Blackfriars tube station,Mansion House tube station
+District line,Blackfriars tube station,Temple tube station
+District line,Bow Road tube station,Bromley-by-Bow tube station
+District line,Bow Road tube station,Mile End tube station
+District line,Bromley-by-Bow tube station,West Ham station
+District line,Cannon Street station,Mansion House tube station
+District line,Cannon Street station,Monument tube station
+District line,Chiswick Park tube station,Turnham Green tube station
+District line,Dagenham East tube station,Dagenham Heathway tube station
+District line,Dagenham East tube station,Elm Park tube station
+District line,Ealing Broadway station,Ealing Common tube station
+District line,Earl’s Court tube station,Gloucester Road tube station
+District line,Earl’s Court tube station,High Street Kensington tube station
+District line,Earl’s Court tube station,Kensington (Olympia)
+District line,Earl’s Court tube station,West Brompton station
+District line,Earl’s Court tube station,West Kensington tube station
+District line,East Ham tube station,Upton Park tube station
+District line,East Putney tube station,Putney Bridge tube station
+District line,East Putney tube station,Southfields tube station
+District line,Edgware Road tube station,Paddington (Praed Street) tube station
+District line,Elm Park tube station,Hornchurch tube station
+District line,Embankment tube station,Temple tube station
+District line,Embankment tube station,Westminster tube station
+District line,Fulham Broadway tube station,Parsons Green tube station
+District line,Fulham Broadway tube station,West Brompton station
+District line,Gloucester Road tube station,South Kensington
+District line,Gunnersbury station,Kew Gardens station
+District line,Gunnersbury station,Turnham Green tube station
+District line,Hammersmith tube station,Ravenscourt Park tube station
+District line,High Street Kensington tube station,Notting Hill Gate tube station
+District line,Hornchurch tube station,Upminster Bridge tube station
+District line,Kew Gardens station,Richmond station
+District line,Mile End tube station,Stepney Green tube station
+District line,Monument tube station,Tower Hill tube station
+District line,Parsons Green tube station,Putney Bridge tube station
+District line,Plaistow tube station,Upton Park tube station
+District line,Plaistow tube station,West Ham station
+District line,Ravenscourt Park tube station,Stamford Brook tube station
+District line,Sloane Square tube station,South Kensington
+District line,Sloane Square tube station,Victoria tube station
+District line,Southfields tube station,Wimbledon Park tube station
+District line,St. James's Park tube station,Victoria tube station
+District line,St. James's Park tube station,Westminster tube station
+District line,Stamford Brook tube station,Turnham Green tube station
+District line,Stepney Green tube station,Whitechapel station
+District line,Upminster Bridge tube station,Upminster station
+District line,Wimbledon,Wimbledon Park tube station
+Hammersmith & City line,Aldgate East tube station,Liverpool Street tube station
+Hammersmith & City line,Aldgate East tube station,Whitechapel station
+Hammersmith & City line,Baker Street tube station,Edgware Road tube station
+Hammersmith & City line,Baker Street tube station,Great Portland Street
+Hammersmith & City line,Barbican tube station,Farringdon station
+Hammersmith & City line,Barbican tube station,Moorgate tube station
+Hammersmith & City line,Barking station,East Ham tube station
+Hammersmith & City line,Bow Road tube station,Bromley-by-Bow tube station
+Hammersmith & City line,Bow Road tube station,Mile End tube station
+Hammersmith & City line,Bromley-by-Bow tube station,West Ham station
+Hammersmith & City line,East Ham tube station,Upton Park tube station
+Hammersmith & City line,Edgware Road tube station,Paddington (Bishop's Road) tube station
+Hammersmith & City line,Euston Square tube station,Great Portland Street
+Hammersmith & City line,Euston Square tube station,King's Cross St Pancras tube station
+Hammersmith & City line,Farringdon station,King's Cross St Pancras tube station
+Hammersmith & City line,Goldhawk Road tube station,Hammersmith tube station
+Hammersmith & City line,Goldhawk Road tube station,Shepherd's Bush Market tube station
+Hammersmith & City line,Ladbroke Grove tube station,Latimer Road tube station
+Hammersmith & City line,Ladbroke Grove tube station,Westbourne Park tube station
+Hammersmith & City line,Latimer Road tube station,Shepherd's Bush Market tube station
+Hammersmith & City line,Latimer Road tube station,Wood Lane tube station
+Hammersmith & City line,Liverpool Street tube station,Moorgate tube station
+Hammersmith & City line,Mile End tube station,Stepney Green tube station
+Hammersmith & City line,Paddington (Bishop's Road) tube station,Royal Oak tube station
+Hammersmith & City line,Plaistow tube station,Upton Park tube station
+Hammersmith & City line,Plaistow tube station,West Ham station
+Hammersmith & City line,Royal Oak tube station,Westbourne Park tube station
+Hammersmith & City line,Shepherd's Bush Market tube station,Wood Lane tube station
+Hammersmith & City line,Stepney Green tube station,Whitechapel station
+Jubilee line,Baker Street tube station,Bond Street tube station
+Jubilee line,Baker Street tube station,St. John's Wood tube station
+Jubilee line,Bermondsey tube station,Canada Water station
+Jubilee line,Bermondsey tube station,London Bridge tube station
+Jubilee line,Bond Street tube station,Green Park tube station
+Jubilee line,Canada Water station,Canary Wharf
+Jubilee line,Canary Wharf,North Greenwich tube station
+Jubilee line,Canning Town station,North Greenwich tube station
+Jubilee line,Canning Town station,West Ham station
+Jubilee line,Canons Park tube station,Queensbury tube station
+Jubilee line,Canons Park tube station,Stanmore tube station
+Jubilee line,Dollis Hill tube station,Neasden tube station
+Jubilee line,Dollis Hill tube station,Willesden Green tube station
+Jubilee line,Finchley Road tube station,Swiss Cottage tube station
+Jubilee line,Finchley Road tube station,West Hampstead tube station
+Jubilee line,Green Park tube station,Westminster tube station
+Jubilee line,Kilburn tube station,West Hampstead tube station
+Jubilee line,Kilburn tube station,Willesden Green tube station
+Jubilee line,Kingsbury tube station,Queensbury tube station
+Jubilee line,Kingsbury tube station,Wembley Park tube station
+Jubilee line,London Bridge tube station,Southwark tube station
+Jubilee line,Neasden tube station,Wembley Park tube station
+Jubilee line,Southwark tube station,Waterloo tube station
+Jubilee line,St. John's Wood tube station,Swiss Cottage tube station
+Jubilee line,Stratford tube station,West Ham station
+Jubilee line,Waterloo tube station,Westminster tube station
+Metropolitan line,Aldgate tube station,Liverpool Street tube station
+Metropolitan line,Amersham station,Chalfont & Latimer station
+Metropolitan line,Baker Street tube station,Finchley Road tube station
+Metropolitan line,Baker Street tube station,Great Portland Street
+Metropolitan line,Barbican tube station,Farringdon station
+Metropolitan line,Barbican tube station,Moorgate tube station
+Metropolitan line,Chalfont & Latimer station,Chesham tube station
+Metropolitan line,Chalfont & Latimer station,Chorleywood station
+Metropolitan line,Chorleywood station,Rickmansworth station
+Metropolitan line,Croxley tube station,Moor Park tube station
+Metropolitan line,Croxley tube station,Watford tube station
+Metropolitan line,Eastcote tube station,Rayners Lane tube station
+Metropolitan line,Eastcote tube station,Ruislip Manor tube station
+Metropolitan line,Euston Square tube station,Great Portland Street
+Metropolitan line,Euston Square tube station,King's Cross St Pancras tube station
+Metropolitan line,Farringdon station,King's Cross St Pancras tube station
+Metropolitan line,Finchley Road tube station,Wembley Park tube station
+Metropolitan line,Harrow-on-the-Hill station,North Harrow tube station
+Metropolitan line,Harrow-on-the-Hill station,Northwick Park tube station
+Metropolitan line,Harrow-on-the-Hill station,West Harrow tube station
+Metropolitan line,Hillingdon tube station,Ickenham tube station
+Metropolitan line,Hillingdon tube station,Uxbridge tube station
+Metropolitan line,Ickenham tube station,Ruislip tube station
+Metropolitan line,Liverpool Street tube station,Moorgate tube station
+Metropolitan line,Moor Park tube station,Northwood tube station
+Metropolitan line,Moor Park tube station,Rickmansworth station
+Metropolitan line,North Harrow tube station,Pinner tube station
+Metropolitan line,Northwick Park tube station,Preston Road tube station
+Metropolitan line,Northwood Hills tube station,Northwood tube station
+Metropolitan line,Northwood Hills tube station,Pinner tube station
+Metropolitan line,Preston Road tube station,Wembley Park tube station
+Metropolitan line,Rayners Lane tube station,West Harrow tube station
+Metropolitan line,Ruislip Manor tube station,Ruislip tube station
+Northern line,Angel tube station,King's Cross St Pancras tube station
+Northern line,Angel tube station,Old Street station
+Northern line,Archway tube station,Highgate tube station
+Northern line,Archway tube station,Tufnell Park tube station
+Northern line,Balham tube station,Clapham South tube station
+Northern line,Balham tube station,Tooting Bec
+Northern line,Bank tube station,London Bridge tube station
+Northern line,Bank tube station,Moorgate tube station
+Northern line,Belsize Park tube station,Chalk Farm tube station
+Northern line,Belsize Park tube station,Hampstead tube station
+Northern line,Borough tube station,Elephant & Castle tube station
+Northern line,Borough tube station,London Bridge tube station
+Northern line,Brent Cross tube station,Golders Green tube station
+Northern line,Brent Cross tube station,Hendon Central tube station
+Northern line,Burnt Oak tube station,Colindale tube station
+Northern line,Burnt Oak tube station,Edgware tube station
+Northern line,Camden Town tube station,Chalk Farm tube station
+Northern line,Camden Town tube station,Euston tube station
+Northern line,Camden Town tube station,Kentish Town tube station
+Northern line,Camden Town tube station,Mornington Crescent tube station
+Northern line,Charing Cross tube station,Embankment tube station
+Northern line,Charing Cross tube station,Leicester Square tube station
+Northern line,Clapham Common tube station,Clapham North tube station
+Northern line,Clapham Common tube station,Clapham South tube station
+Northern line,Clapham North tube station,Stockwell tube station
+Northern line,Colindale tube station,Hendon Central tube station
+Northern line,Colliers Wood,South Wimbledon tube station
+Northern line,Colliers Wood,Tooting Broadway tube station
+Northern line,Don Muang Station (former),Krung Thep Aphiwat Central Terminal
+Northern line,East Finchley tube station,Finchley Central tube station
+Northern line,East Finchley tube station,Highgate tube station
+Northern line,Elephant & Castle tube station,Kennington tube station
+Northern line,Embankment tube station,Waterloo tube station
+Northern line,Euston tube station,King's Cross St Pancras tube station
+Northern line,Euston tube station,Mornington Crescent tube station
+Northern line,Euston tube station,Warren Street tube station
+Northern line,Finchley Central tube station,Mill Hill East tube station
+Northern line,Finchley Central tube station,West Finchley tube station
+Northern line,Golders Green tube station,Hampstead tube station
+Northern line,Goodge Street tube station,Tottenham Court Road tube station
+Northern line,Goodge Street tube station,Warren Street tube station
+Northern line,High Barnet tube station,Totteridge and Whetstone tube station
+Northern line,Kennington tube station,Oval tube station
+Northern line,Kennington tube station,Waterloo tube station
+Northern line,Kentish Town tube station,Tufnell Park tube station
+Northern line,Leicester Square tube station,Tottenham Court Road tube station
+Northern line,Moorgate tube station,Old Street station
+Northern line,Morden tube station,South Wimbledon tube station
+Northern line,Oval tube station,Stockwell tube station
+Northern line,Tooting Bec,Tooting Broadway tube station
+Northern line,Totteridge and Whetstone tube station,Woodside Park tube station
+Northern line,West Finchley tube station,Woodside Park tube station
+Piccadilly line,Acton Town tube station,Ealing Common tube station
+Piccadilly line,Acton Town tube station,Hammersmith tube station
+Piccadilly line,Acton Town tube station,South Ealing tube station
+Piccadilly line,Acton Town tube station,Turnham Green tube station
+Piccadilly line,Aldwych tube station,Holborn tube station
+Piccadilly line,Aldwych tube station,Waterloo tube station
+Piccadilly line,Alperton tube station,Park Royal tube station
+Piccadilly line,Alperton tube station,Sudbury Town tube station
+Piccadilly line,Arnos Grove tube station,Bounds Green tube station
+Piccadilly line,Arnos Grove tube station,Southgate tube station
+Piccadilly line,Arsenal tube station,Finsbury Park tube station
+Piccadilly line,Arsenal tube station,Holloway Road tube station
+Piccadilly line,Barons Court tube station,Earl’s Court tube station
+Piccadilly line,Barons Court tube station,Hammersmith tube station
+Piccadilly line,Boston Manor tube station,Northfields tube station
+Piccadilly line,Boston Manor tube station,Osterley tube station
+Piccadilly line,Bounds Green tube station,Wood Green tube station
+Piccadilly line,Caledonian Road tube station,Holloway Road tube station
+Piccadilly line,Caledonian Road tube station,King's Cross St Pancras tube station
+Piccadilly line,Cockfosters tube station,Oakwood tube station
+Piccadilly line,Covent Garden tube station,Holborn tube station
+Piccadilly line,Covent Garden tube station,Leicester Square tube station
+Piccadilly line,Ealing Common tube station,North Ealing tube station
+Piccadilly line,Earl’s Court tube station,Gloucester Road tube station
+Piccadilly line,Eastcote tube station,Rayners Lane tube station
+Piccadilly line,Eastcote tube station,Ruislip Manor tube station
+Piccadilly line,Finsbury Park tube station,Manor House tube station
+Piccadilly line,Gloucester Road tube station,South Kensington
+Piccadilly line,Green Park tube station,Hyde Park Corner tube station
+Piccadilly line,Green Park tube station,Piccadilly Circus tube station
+Piccadilly line,Hammersmith tube station,Turnham Green tube station
+Piccadilly line,Hatton Cross tube station,Heathrow Terminal 4 tube station
+Piccadilly line,Hatton Cross tube station,Heathrow Terminals 2 & 3 tube station
+Piccadilly line,Hatton Cross tube station,Hounslow West tube station
+Piccadilly line,Heathrow Terminal 4 tube station,Heathrow Terminals 2 & 3 tube station
+Piccadilly line,Heathrow Terminal 5 station,Heathrow Terminals 2 & 3 tube station
+Piccadilly line,Hillingdon tube station,Ickenham tube station
+Piccadilly line,Hillingdon tube station,Uxbridge tube station
+Piccadilly line,Holborn tube station,Russell Square tube station
+Piccadilly line,Hounslow Central tube station,Hounslow East tube station
+Piccadilly line,Hounslow Central tube station,Hounslow West tube station
+Piccadilly line,Hounslow East tube station,Osterley tube station
+Piccadilly line,Hyde Park Corner tube station,Knightsbridge tube station
+Piccadilly line,Ickenham tube station,Ruislip tube station
+Piccadilly line,King's Cross St Pancras tube station,Russell Square tube station
+Piccadilly line,Knightsbridge tube station,South Kensington
+Piccadilly line,Leicester Square tube station,Piccadilly Circus tube station
+Piccadilly line,Manor House tube station,Turnpike Lane tube station
+Piccadilly line,North Ealing tube station,Park Royal tube station
+Piccadilly line,Northfields tube station,South Ealing tube station
+Piccadilly line,Oakwood tube station,Southgate tube station
+Piccadilly line,Rayners Lane tube station,South Harrow tube station
+Piccadilly line,Ruislip Manor tube station,Ruislip tube station
+Piccadilly line,South Harrow tube station,Sudbury Hill tube station
+Piccadilly line,Sudbury Hill tube station,Sudbury Town tube station
+Piccadilly line,Turnpike Lane tube station,Wood Green tube station
+Victoria line,Blackhorse Road station,Tottenham Hale tube station
+Victoria line,Blackhorse Road station,Walthamstow Central tube station
+Victoria line,Brixton tube station,Stockwell tube station
+Victoria line,Euston tube station,King's Cross St Pancras tube station
+Victoria line,Euston tube station,Warren Street tube station
+Victoria line,Finsbury Park tube station,Highbury & Islington tube station
+Victoria line,Finsbury Park tube station,Seven Sisters station
+Victoria line,Green Park tube station,Oxford Circus tube station
+Victoria line,Green Park tube station,Victoria tube station
+Victoria line,Highbury & Islington tube station,King's Cross St Pancras tube station
+Victoria line,Oxford Circus tube station,Warren Street tube station
+Victoria line,Pimlico tube station,Vauxhall tube station
+Victoria line,Pimlico tube station,Victoria tube station
+Victoria line,Seven Sisters station,Tottenham Hale tube station
+Victoria line,Stockwell tube station,Vauxhall tube station
+Waterloo & City line,Bank tube station,Waterloo tube station

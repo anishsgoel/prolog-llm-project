@@ -1,0 +1,19 @@
+# T5 - Complete network, all 11 lines
+#
+# Goal: Acton Town -> Gunnersbury  (3 hops, short path)
+# Shortest route: Acton Town -> Chiswick Park -> Turnham Green -> Gunnersbury
+# Omitted edges (1), both directions each:
+#   Gunnersbury -- Turnham Green (facts 353, 354)
+# Placement: onpath  |  crosses junction: yes (Turnham Green)
+# Plausible direct-shortcut temptation: no
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t5_1edge_onpath_04
+goal: "reachable(acton_town, gunnersbury)"
+kb_file: kb/london_t5_full.pl
+propose_facts: connected/2
+omit_fact_ids: [353, 354]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 10

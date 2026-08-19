@@ -26,6 +26,8 @@ LLM_STOP_TOKENS = _cfg.llm.stop_tokens
 DEFAULT_MAX_DEPTH = _cfg.default_max_depth
 
 HYP_PROMPT_FACT_LIMIT = _cfg.hyp_prompt_fact_limit
+HARD_PROMPT_FACT_LIMIT = _cfg.hard_prompt_fact_limit
+HARD_PROMPT_FACT_HOPS = _cfg.hard_prompt_fact_hops
 
 PATH_AGGREGATION_FUNCTION = min if _cfg.path_aggregation == "min" else max
 
@@ -40,6 +42,7 @@ def apply_global_config(cfg: GlobalConfig) -> None:
     global MODEL, DEBUG, VERBOSE
     global LLM_TEMPERATURE, LLM_NUM_PREDICT, LLM_STOP_TOKENS
     global DEFAULT_MAX_DEPTH, HYP_PROMPT_FACT_LIMIT, PATH_AGGREGATION_FUNCTION
+    global HARD_PROMPT_FACT_LIMIT, HARD_PROMPT_FACT_HOPS
     global PROOF_OBJECTIVE, VERIFY_HYPOTHESES
 
     MODEL = cfg.llm.model
@@ -50,6 +53,8 @@ def apply_global_config(cfg: GlobalConfig) -> None:
     LLM_STOP_TOKENS = cfg.llm.stop_tokens
     DEFAULT_MAX_DEPTH = cfg.default_max_depth
     HYP_PROMPT_FACT_LIMIT = cfg.hyp_prompt_fact_limit
+    HARD_PROMPT_FACT_LIMIT = cfg.hard_prompt_fact_limit
+    HARD_PROMPT_FACT_HOPS = cfg.hard_prompt_fact_hops
     PATH_AGGREGATION_FUNCTION = min if cfg.path_aggregation == "min" else max
     PROOF_OBJECTIVE = cfg.proof_objective
     VERIFY_HYPOTHESES = cfg.verify_hypotheses

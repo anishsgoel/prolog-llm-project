@@ -1,0 +1,21 @@
+# T2 - Central London core - Inner Circle, Central trunk, Victoria, Northern central
+#
+# Goal: High Street Kensington -> Sloane Square  (3 hops, short path)
+# Shortest route: High Street Kensington -> Gloucester Road -> South Kensington -> Sloane Square
+# Omitted edges (3), both directions each:
+#   Baker Street -- Edgware Road (facts 11, 12)
+#   Bond Street -- Marble Arch (facts 47, 48)
+#   Gloucester Road -- South Kensington (facts 105, 106)
+# Placement: spread  |  crosses junction: no
+# Plausible direct-shortcut temptation: no
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t2_3edge_spread_06
+goal: "reachable(high_street_kensington, sloane_square)"
+kb_file: kb/london_t2_zone1.pl
+propose_facts: connected/2
+omit_fact_ids: [11, 12, 47, 48, 105, 106]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 10

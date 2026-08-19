@@ -1,0 +1,20 @@
+# T1 - Bakerloo line only
+#
+# Goal: Harlesden -> Kilburn Park  (4 hops, short path)
+# Shortest route: Harlesden -> Willesden Junction -> Kensal Green -> Queen's Park -> Kilburn Park
+# Omitted edges (2), both directions each:
+#   Harlesden -- Willesden Junction (facts 19, 20)
+#   Kensal Green -- Queen's Park (facts 23, 24)
+# Placement: spread  |  crosses junction: no
+# Plausible direct-shortcut temptation: no
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t1_2edge_spread_16
+goal: "reachable(harlesden, kilburn_park)"
+kb_file: kb/london_t1_bakerloo.pl
+propose_facts: connected/2
+omit_fact_ids: [19, 20, 23, 24]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 12

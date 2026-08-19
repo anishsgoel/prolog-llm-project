@@ -1,0 +1,20 @@
+# T4 - All 11 lines, Zones 1-3
+#
+# Goal: Archway -> Camden Town  (3 hops, short path)
+# Shortest route: Archway -> Tufnell Park -> Kentish Town -> Camden Town
+# Omitted edges (2), both directions each:
+#   Archway -- Tufnell Park (facts 23, 24)
+#   Camden Town -- Kentish Town (facts 121, 122)
+# Placement: onpath  |  crosses junction: no
+# Plausible direct-shortcut temptation: no
+#
+# allow_new_constants is false: every station the model may need is still
+# named somewhere in the ablated program (gate 3).
+name: london_t4_2edge_onpath_05
+goal: "reachable(archway, camden_town)"
+kb_file: kb/london_t4_core.pl
+propose_facts: connected/2
+omit_fact_ids: [23, 24, 121, 122]
+allow_new_constants: false
+solver:
+  max_depth_ceiling: 10

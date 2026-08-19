@@ -43,6 +43,17 @@ class GlobalConfig(BaseModel):
     debug: bool = False
     verbose: bool = True
     hyp_prompt_fact_limit: int = Field(25, ge=1)
+    # Cap on HARD facts shown in a prompt, mirroring hyp_prompt_fact_limit for
+    # soft ones. A KB at or under this size is passed through untouched, so
+    # every pre-existing config keeps its exact old prompts; only the large
+    # London tiers (up to 612 facts) are filtered. When it bites, facts are
+    # chosen by goal relevance, not by truncating the list - see
+    # solve.llm_search_guidance_policy.select_hard_facts.
+    hard_prompt_fact_limit: int = Field(400, ge=1)
+    # Radius of that goal-relevant subgraph, in hops over the constant
+    # co-occurrence graph, measured from the constants in the goal and in the
+    # currently open subgoals.
+    hard_prompt_fact_hops: int = Field(3, ge=1)
     soft_bfs_max_solutions: int = Field(25, ge=1)
     path_aggregation: Literal["min", "max"] = "min"
     default_max_depth: int = Field(10, ge=1)
