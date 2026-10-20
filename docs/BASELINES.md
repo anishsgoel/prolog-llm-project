@@ -124,6 +124,20 @@ Run with `--ablation <name>`:
 - `fixed_depth` — replace the LLM depth estimate with `DEFAULT_MAX_DEPTH`.
 - `init_only` — hypothesise only once, before search (never on backtrack).
 - `backtrack_only` — hypothesise only during backtracking (not before search).
+- `unify_target` — narrow the backtrack prompt to the single atom the search is
+  stuck on, and require every proposed fact to unify with it. Base PLLM lists
+  every unresolved formula of the node and asks for anything that might help,
+  but `DFSSolver._dfs` only turns a proposal into a successor via
+  `GoalNode.unify_soft_fact`, which needs the fact to unify with one of the
+  node's formulas *and* that formula to still contain a variable. Proposals that
+  unify with nothing are pure cost: they enter the soft KB, count against
+  `precision_hypothesized` / `hallucination_rate`, and open no branch. Falls back
+  to unchanged PLLM behaviour when no open atom qualifies.
+- `no_soft_facts_in_prompt` — blank the soft fact/rule sections of every prompt,
+  so each call looks to the model like the first one. The soft KB still
+  accumulates hypotheses and the search still uses them; only the prompt's view
+  is hidden. Separates the model's world knowledge from any self-priming or
+  confirmation-bias effect of being shown its own earlier guesses.
 - `self_consistency` *(optional)* — sample `k` proposal sets (default 3) and union
   them before a single symbolic verification. **Caveat:** `LLMInterface.generate`
   currently comments out the Ollama `options` block, so an explicit `temperature>0`
@@ -151,13 +165,77 @@ python src/experiment/batch_run.py --method llm_qa       --models gpt-oss:20b --
 python src/experiment/batch_run.py --method logic_lm     --models gpt-oss:20b --output results_logic_lm.csv
 
 # PLLM ablations
-for A in verify_on min_hypotheses no_order fixed_depth init_only backtrack_only self_consistency; do
+for A in verify_on min_hypotheses no_order fixed_depth init_only backtrack_only \
+         unify_target no_soft_facts_in_prompt self_consistency; do
     python src/experiment/batch_run.py --ablation "$A" --models gpt-oss:20b --output "results_ablation_$A.csv"
 done
 
 # A quick, LLM-free smoke on two small, fast configs
 python src/experiment/batch_run.py --method minimal_alp \
     --configs london_directed bio_grn_p53 --no-mlflow --output smoke_minimal_alp.csv
+```
+
+## Selecting configs
+
+`--configs` accepts exact stems and shell-style patterns, and `--exclude-configs`
+removes patterns from the selection afterwards:
+
+```bash
+python src/experiment/batch_run.py --list-configs
+python src/experiment/batch_run.py --configs 'london_t2_*' 'bio_*'
+python src/experiment/batch_run.py --configs '*' --exclude-configs 'london_t*'
+```
+
+A pattern that matches nothing is an error rather than a silently empty run. An
+exact stem with no metacharacter is passed through unchanged, so pre-existing
+invocations behave exactly as before.
+
+This is what splits the two SLURM suites (see below): the London tiers are
+selected by pattern in one and excluded by pattern in the other, so regenerating
+the benchmark with a different number of configs cannot leave either stale.
+
+## Cluster suites
+
+Two entry points, sharing `scripts/submit_common.sh` so their resource profiles,
+task table and aggregation wiring cannot drift apart:
+
+```bash
+bash scripts/submit_baselines.sh   # everything EXCEPT the London tiers
+```
+```bash
+bash scripts/submit_london.sh      # only the London tiers (london_t*)
+```
+
+Both submit one array per model (one task per method/ablation), plus one
+model-independent CPU array for the symbolic methods, plus a dependent
+aggregation job. `submit_london.sh` uses longer wall-clock and a larger
+`--eval-timeout` because it runs 76 configs on much larger KBs.
+
+Useful restrictions:
+
+```bash
+CONFIGS="london_t1_* london_t2_*" bash scripts/submit_london.sh
+```
+
+## Aggregation
+
+The dependent compare job runs both aggregators over the per-cell CSVs:
+
+- `scripts/aggregate_results.py` → `comparison.md` (headline table **per
+  method/ablation**, averaged over models and configs), plus
+  `comparison_summary.csv`, `comparison_all_runs.csv`, `comparison.xlsx`.
+- `scripts/summarize_results.py` → `summary.md` and CSVs for the breakdowns that
+  average hides: **per model**, **per method × model**, **per tier**, and per
+  difficulty axis (omitted-edge count, omission placement, shortest-path hops,
+  shortcut plausibility, junction crossing), plus a **reliability** table with
+  error rate and ground-truth-`NA` rate per model. The difficulty columns come
+  from `benchmark_manifest.csv`, joined on `config_name`; rows from configs not
+  in the manifest still appear in the per-model tables.
+
+Run either by hand on any results directory:
+
+```bash
+python scripts/summarize_results.py --indir results/london --outdir results/london
 ```
 
 Notes:

@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import random
 from itertools import product
-from typing import Iterable, List, Optional, Sequence, Set, Tuple
+from typing import Iterable, List, Optional, Sequence, Set, Tuple  # noqa: F401
 
 import config
 from logic.logic import AtomicFormula, BinaryFormula, Const, Pred
@@ -209,3 +209,60 @@ class BacktrackOnlyPolicy(TrackedLLMSearchGuidancePolicy):
 
     def extend_on_init(self, goal, min_confidence, soft_kb):
         return soft_kb, [], False
+
+
+class UnifyTargetPolicy(TrackedLLMSearchGuidancePolicy):
+    """PLLM whose backtrack prompt asks only for facts unifying with the stuck atom.
+
+    Base PLLM shows the LLM every unresolved formula of the node it is
+    backtracking at and asks for anything that might help. But
+    ``DFSSolver._dfs`` only turns a proposal into a successor via
+    ``GoalNode.unify_soft_fact``, which needs the fact to unify with one of the
+    node's formulas AND that formula to still contain a variable. A proposal
+    that unifies with nothing is pure cost: it enters the soft KB, counts
+    against ``precision_hypothesized`` / ``hallucination_rate``, and opens no
+    new branch.
+
+    This ablation names that one atom and constrains the prompt to it, isolating
+    "does focusing the request improve hypothesis quality?" from the rest of the
+    pipeline.
+    """
+
+    def _abducible_signatures(self) -> Set[Tuple[str, int]]:
+        specs = getattr(self.llm_search_guidance, "propose_facts", []) or []
+        return {parse_pred_arity(spec) for spec in specs}
+
+    def backtrack_unify_target(self, goal_node: GoalNode) -> Optional[str]:
+        """The leftmost open atom a proposed fact could actually unify with.
+
+        Requires a variable, because ``unify_soft_fact`` skips ground formulas —
+        pointing the model at a ground atom would ask for a fact that cannot
+        produce a successor either. Falls back to None (i.e. unchanged PLLM
+        behaviour) when no formula qualifies, rather than emitting an empty
+        prompt section.
+        """
+        abducible = self._abducible_signatures()
+        for formula in goal_node.unresolved_formulas():
+            if not formula.vars():
+                continue
+            if abducible and (formula.pred.name, formula.pred.arity) not in abducible:
+                continue
+            return str(formula)
+        return None
+
+
+class NoSoftFactsInPromptPolicy(TrackedLLMSearchGuidancePolicy):
+    """PLLM that never shows its own hypotheses back to the LLM.
+
+    The soft KB still accumulates hypotheses and the search still uses them —
+    only the prompt's view is blanked, so every call looks to the model like the
+    first one. This separates the LLM's world knowledge from any self-priming
+    effect of seeing its earlier guesses (and from the confirmation bias of
+    being shown a wrong hypothesis it already committed to).
+    """
+
+    def _soft_fact_lines(self, soft_kb, min_confidence):
+        return []
+
+    def _soft_rule_lines(self, soft_kb, min_confidence):
+        return []

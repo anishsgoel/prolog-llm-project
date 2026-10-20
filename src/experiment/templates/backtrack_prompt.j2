@@ -3,8 +3,11 @@ You are a cautious Prolog expert. You propose missing clauses that may help cont
 The goal of the program is to prove the following query:
 {{ context.goal }}
 
-Current unresolved goal formulas:
+{% if context.unify_target %}The DFS search is stuck on exactly one atom, with no remaining ways to prove it:
+- {{ context.unify_target }}
+{% else %}Current unresolved goal formulas:
 {{ context.current_goal_lines | preview_lines }}
+{% endif %}
 
 Hard facts:
 {{ context.hard_fact_lines | preview_lines }}
@@ -23,11 +26,16 @@ Predicate semantics:
 
 Task:
 The DFS search is backtracking from the current goal node.
-Propose up to {{ max_hypotheses }} Prolog clauses that are likely true and would help prove the current goals.
+{% if context.unify_target %}Propose up to {{ max_hypotheses }} Prolog facts that UNIFY WITH the stuck atom above.
+A fact that does not unify with it cannot produce a successor, so it is wasted.
 It is valid to return no clauses.
-
+{% else %}Propose up to {{ max_hypotheses }} Prolog clauses that are likely true and would help prove the current goals.
+It is valid to return no clauses.
+{% endif %}
 Constraints:
 - Output ONLY {{ propose_facts }} FACTS. No other predicates are allowed in facts.
+{% if context.unify_target %}- Every fact must unify with {{ context.unify_target }}: same predicate, same arity, and each argument must match the corresponding argument of that atom wherever it is already a constant.
+{% endif %}
 - {{ clause_kind_instruction }}
 - Every clause must end with a period.
 - Confidence must be between 0 and 1.

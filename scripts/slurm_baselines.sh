@@ -39,6 +39,7 @@ export PYTHONPATH="$PROJECT_ROOT/src:${PYTHONPATH:-}"
 python3 --version
 
 CONFIGS="${CONFIGS:-*}"
+EXCLUDE_CONFIGS="${EXCLUDE_CONFIGS:-}"   # patterns dropped after --configs expands
 RUNS="${RUNS:-1}"
 EVAL_TIMEOUT="${EVAL_TIMEOUT:-7200}"
 OUTDIR="${OUTDIR:-results/baselines}"
@@ -90,10 +91,37 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 if [ "$NEED_LLM" -eq 1 ]; then
-  # Unique port per array index so tasks co-located on one node don't collide.
-  # `ollama serve` binds $OLLAMA_HOST, and the ollama python client used by
-  # batch_run reads the same variable, so no code change is needed.
-  PORT=$((11434 + IDX))
+  # A port nobody else is on. `ollama serve` binds $OLLAMA_HOST, and the ollama
+  # python client used by batch_run reads the same variable, so no code change
+  # is needed.
+  #
+  # WHY this is probed rather than computed as 11434+IDX: the array task index
+  # restarts at 0 for every array, so two suites submitted concurrently
+  # (submit_baselines.sh and submit_london.sh) produce the same index on
+  # different arrays. If two such tasks land on the same node they pick the same
+  # port, the second `ollama serve` fails to bind, and — because the readiness
+  # check below only proves that SOMETHING answers — the second task would
+  # happily drive the FIRST task's server. That server has a different model
+  # loaded and OLLAMA_MAX_LOADED_MODELS=1, so the two tasks would evict and
+  # reload each other's weights on every call, and whichever task finished first
+  # would kill the server out from under the other, turning the rest of its rows
+  # into silent zeros. Exactly the failure mode the preflight below exists to
+  # catch, arriving by a different route.
+  PORT="$(python3 - "$((11434 + IDX))" <<'PY'
+import socket, sys
+start = int(sys.argv[1])
+for port in range(start, start + 512):
+    with socket.socket() as probe:
+        try:
+            probe.bind(("127.0.0.1", port))
+        except OSError:
+            continue
+    print(port)
+    break
+else:
+    sys.exit(1)
+PY
+)" || { echo "ERROR: no free port in [$((11434 + IDX)), $((11434 + IDX + 512)))" >&2; exit 1; }
   export OLLAMA_HOST="127.0.0.1:${PORT}"
   export OLLAMA_MODELS="${OLLAMA_MODELS:-$HOME/.ollama/models}"
   # One model, one request at a time, and never unload mid-sweep: keeps a single
@@ -107,12 +135,22 @@ if [ "$NEED_LLM" -eq 1 ]; then
   setsid "$OLLAMA_BIN" serve > "$OLLAMA_LOG" 2>&1 &
   OLLAMA_PID=$!
 
+  # Require OUR server to be the one answering: `ollama list` succeeding proves
+  # only that something is listening on that port, which would mask a port
+  # steal. Checking our own PID first turns that into a loud failure.
   READY=0
   for _ in $(seq 1 60); do
+    if ! kill -0 "$OLLAMA_PID" 2>/dev/null; then
+      echo "ERROR: our 'ollama serve' (pid $OLLAMA_PID) exited during startup." >&2
+      echo "       See $OLLAMA_LOG — a bind failure here means another task on" >&2
+      echo "       $(hostname) already holds $OLLAMA_HOST." >&2
+      exit 1
+    fi
     if "$OLLAMA_BIN" list >/dev/null 2>&1; then READY=1; break; fi
     sleep 2
   done
   [ "$READY" -eq 1 ] || { echo "ERROR: ollama server not ready on $OLLAMA_HOST" >&2; exit 1; }
+  echo "ollama ready on $OLLAMA_HOST (pid $OLLAMA_PID)"
 
   if [ "$PULL_MODELS" -eq 1 ]; then
     echo "pulling model $MODEL"; "$OLLAMA_BIN" pull "$MODEL"
@@ -158,13 +196,15 @@ mkdir -p "$OUTDIR"
 # globs <outdir>/*.csv, so extra files are picked up with no change needed.
 OUT_CSV="$OUTDIR/${LABEL}__${MODEL_SAFE}.csv"
 OUT_XLSX="$OUTDIR/${LABEL}__${MODEL_SAFE}.xlsx"
-echo "running: batch_run $FLAG $NAME --models $MODEL --configs $CONFIGS -> $OUT_CSV"
+echo "running: batch_run $FLAG $NAME --models $MODEL --configs $CONFIGS" \
+     "${EXCLUDE_CONFIGS:+--exclude-configs $EXCLUDE_CONFIGS} -> $OUT_CSV"
 
-# $CONFIGS is intentionally unquoted so multi-token values split into separate
-# argv items; noglob (set -f) keeps '*' literal.
+# $CONFIGS / $EXCLUDE_CONFIGS are intentionally unquoted so multi-token values
+# split into separate argv items; noglob (set -f) keeps '*' literal.
 python3 -m experiment.batch_run "$FLAG" "$NAME" \
   --models "$MODEL" \
   --configs $CONFIGS \
+  ${EXCLUDE_CONFIGS:+--exclude-configs $EXCLUDE_CONFIGS} \
   --runs "$RUNS" \
   --eval-timeout "$EVAL_TIMEOUT" \
   --no-mlflow \

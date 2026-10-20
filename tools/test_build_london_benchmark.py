@@ -255,6 +255,108 @@ class TestBatchRunConfigPatterns(unittest.TestCase):
         with self.assertRaises(SystemExit):
             _expand_config_patterns(["definitely_no_match_*"])
 
+    def test_exclude_splits_the_london_suite_from_the_baseline_suite(self):
+        _expand_config_patterns = _import_batch_run()
+        from experiment.batch_run import _exclude_config_patterns
+        from experiment.tracking import ALL_CONFIGS
+
+        every = _expand_config_patterns(["*"])
+        baselines = _exclude_config_patterns(every, ["london_t*"])   # submit_baselines.sh
+        london = _expand_config_patterns(["london_t*"])              # submit_london.sh
+
+        self.assertEqual(sorted(set(baselines) | set(london)), sorted(ALL_CONFIGS))
+        self.assertEqual(set(baselines) & set(london), set())
+        self.assertFalse([c for c in baselines if c.startswith("london_t")])
+        # the pre-existing small london configs are NOT tiers and must stay put
+        self.assertIn("london_directed", baselines)
+
+
+class TestNewAblations(unittest.TestCase):
+    """The unify_target and no_soft_facts_in_prompt ablations."""
+
+    @classmethod
+    def setUpClass(cls):
+        _import_batch_run()  # stubs mlflow if needed; tracking imports batch_run's stack
+        import config
+        from cfg import SolverConfig
+        from prolog.formula_parsing import parse_prolog_to_formula
+        from prolog.knowledge_base import KnowledgeBase, SoftKnowledgeBase
+        from experiment.prompts import PrologPromptBuilder
+
+        config.init_config()
+        kb_path = _PROJECT_ROOT / "src/experiment/configs/kb/london_directed.pl"
+        cls.soft = SoftKnowledgeBase(KnowledgeBase(kb_path.read_text(encoding="utf-8")))
+        cls.soft.upsert_soft_fact(99, "connected(waterloo, bank)", 0.7)
+        cls.builder = PrologPromptBuilder(["connected/2"], SolverConfig(),
+                                          allow_new_constants=False)
+        cls.goal = parse_prolog_to_formula("reachable(regents_park, elephant_and_castle)")
+
+    def _node(self, formulas):
+        from prolog.formula_parsing import parse_prolog_to_formula
+        from solve.goalnode import GoalNode
+        return GoalNode([parse_prolog_to_formula(f) for f in formulas], depth=3, confidence=1.0)
+
+    def _context(self, cls, node):
+        policy = cls.__new__(cls)
+        policy.llm_search_guidance = self.builder
+        return policy._prompt_context(self.goal, self.soft, 0.0, node,
+                                      unify_target=policy.backtrack_unify_target(node))
+
+    def test_baseline_pllm_is_unchanged(self):
+        from experiment.tracking import TrackedLLMSearchGuidancePolicy
+
+        node = self._node(["connected(waterloo, X)", "reachable(X, elephant_and_castle)"])
+        ctx = self._context(TrackedLLMSearchGuidancePolicy, node)
+        self.assertIsNone(ctx.unify_target)
+        self.assertEqual(len(ctx.current_goal_lines), 2)
+        self.assertTrue(ctx.soft_fact_lines)
+
+    def test_unify_target_picks_the_abducible_atom_with_a_variable(self):
+        from experiment.baseline_policies import UnifyTargetPolicy
+
+        node = self._node(["connected(waterloo, X)", "reachable(X, elephant_and_castle)"])
+        ctx = self._context(UnifyTargetPolicy, node)
+        # reachable/2 is not abducible and is skipped in favour of connected/2
+        self.assertIsNotNone(ctx.unify_target)
+        self.assertTrue(ctx.unify_target.startswith("connected(waterloo"))
+        self.assertEqual(len(ctx.current_goal_lines), 1)
+
+        prompt = self.builder.backtrack_prompt(ctx)
+        self.assertIn("stuck on exactly one atom", prompt)
+        self.assertIn("must unify with", prompt)
+
+    def test_unify_target_falls_back_when_no_atom_qualifies(self):
+        """A ground atom cannot accept a proposed fact (unify_soft_fact skips it)."""
+        from experiment.baseline_policies import UnifyTargetPolicy
+
+        node = self._node(["connected(waterloo, lambeth_north)"])
+        ctx = self._context(UnifyTargetPolicy, node)
+        self.assertIsNone(ctx.unify_target)
+        self.assertEqual(len(ctx.current_goal_lines), 1)
+
+    def test_no_soft_facts_in_prompt_blanks_only_the_soft_lines(self):
+        from experiment.baseline_policies import NoSoftFactsInPromptPolicy
+
+        node = self._node(["connected(waterloo, X)", "reachable(X, elephant_and_castle)"])
+        ctx = self._context(NoSoftFactsInPromptPolicy, node)
+        self.assertEqual(ctx.soft_fact_lines, [])
+        self.assertEqual(ctx.soft_rule_lines, [])
+        self.assertTrue(ctx.hard_fact_lines)          # hard facts still shown
+        self.assertEqual(len(ctx.current_goal_lines), 2)
+        # the soft fact is still in the KB; only the prompt's view is blanked
+        self.assertTrue(any(f.confidence < 1.0 for f in self.soft.facts))
+
+    def test_both_ablations_are_registered_and_dispatchable(self):
+        from experiment.methods import ABLATIONS, _ABLATION_POLICIES
+        from experiment.baseline_policies import (
+            NoSoftFactsInPromptPolicy, UnifyTargetPolicy,
+        )
+
+        for name, cls in [("unify_target", UnifyTargetPolicy),
+                          ("no_soft_facts_in_prompt", NoSoftFactsInPromptPolicy)]:
+            self.assertIn(name, ABLATIONS)
+            self.assertIs(_ABLATION_POLICIES[name], cls)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

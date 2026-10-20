@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from solve.goalnode import GoalNode
 
@@ -21,6 +21,11 @@ class LLMSearchGuidancePromptContext:
     soft_rule_lines: List[str]
     predicate_comments: Dict[str, str]
     min_confidence: float
+    # When set, the single atom the search is backtracking at. Prompts that
+    # render it ask for facts unifying with THAT atom rather than with any open
+    # subgoal. Optional and None by default, so every existing caller (and
+    # solve_bfs, which builds its own context) is unaffected.
+    unify_target: Optional[str] = None
 
 
 class PromptBuilder(ABC):

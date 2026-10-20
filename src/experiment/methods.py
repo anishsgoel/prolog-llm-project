@@ -42,7 +42,9 @@ from experiment.baseline_policies import (
     FixedDepthPolicy,
     InitOnlyPolicy,
     NoOrderPolicy,
+    NoSoftFactsInPromptPolicy,
     RandomFactProposerPolicy,
+    UnifyTargetPolicy,
     add_candidate_facts,
     candidate_atoms,
 )
@@ -414,6 +416,8 @@ _ABLATION_POLICIES = {
     "fixed_depth": FixedDepthPolicy,
     "init_only": InitOnlyPolicy,
     "backtrack_only": BacktrackOnlyPolicy,
+    "unify_target": UnifyTargetPolicy,
+    "no_soft_facts_in_prompt": NoSoftFactsInPromptPolicy,
 }
 
 
@@ -524,6 +528,8 @@ ABLATIONS = {
     "fixed_depth": _ablation_runner("fixed_depth"),
     "init_only": _ablation_runner("init_only"),
     "backtrack_only": _ablation_runner("backtrack_only"),
+    "unify_target": _ablation_runner("unify_target"),
+    "no_soft_facts_in_prompt": _ablation_runner("no_soft_facts_in_prompt"),
     "self_consistency": run_self_consistency,
 }
 

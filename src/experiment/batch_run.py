@@ -154,6 +154,22 @@ def _expand_config_patterns(tokens: List[str]) -> List[str]:
     return out
 
 
+def _exclude_config_patterns(selected: List[str], patterns: List[str]) -> List[str]:
+    """Drop from ``selected`` every stem matching one of ``patterns``.
+
+    Exists so one suite can run "everything except the London tiers" without
+    enumerating the other configs by hand — the tier configs are numerous and
+    are added to by tools/build_london_benchmark.py, so an explicit list would
+    silently go stale every time the benchmark is regenerated.
+    """
+    import fnmatch
+
+    return [
+        name for name in selected
+        if not any(fnmatch.fnmatchcase(name, pat) for pat in patterns)
+    ]
+
+
 def _result_fieldnames() -> List[str]:
     """Stable, complete column set known up front.
 
@@ -296,6 +312,12 @@ def main() -> None:
              f"all {len(ALL_CONFIGS)} configs. Run --list-configs to see them.",
     )
     parser.add_argument(
+        "--exclude-configs", nargs="+", default=None, metavar="NAME",
+        help="Stems or patterns to REMOVE from the selection, e.g. 'london_t*'. "
+             "Applied after --configs is expanded, so '--configs \"*\" "
+             "--exclude-configs london_t*' runs everything except the London tiers.",
+    )
+    parser.add_argument(
         "--list-configs", action="store_true",
         help="Print every available config stem and exit.",
     )
@@ -356,6 +378,10 @@ def main() -> None:
         return
 
     args.configs = _expand_config_patterns(args.configs)
+    if args.exclude_configs:
+        args.configs = _exclude_config_patterns(args.configs, args.exclude_configs)
+        if not args.configs:
+            raise SystemExit("--exclude-configs removed every selected config; nothing to run.")
 
     # Resolve the model list. With no --models, use the configured default so
     # rows (and the summary) are still labelled with a concrete model name.

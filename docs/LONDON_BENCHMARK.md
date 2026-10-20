@@ -340,6 +340,29 @@ A pattern matching nothing is an error rather than a silently empty run. An
 exact stem with no metacharacter is passed through unchanged, so existing
 invocations behave exactly as before.
 
+On the cluster the tiers have their own suite, kept separate from the baseline
+suite because they are a different workload — 76 configs on much larger KBs,
+with their own tractability limits:
+
+```bash
+bash scripts/submit_london.sh
+```
+
+`scripts/submit_baselines.sh` excludes `london_t*` (via `--exclude-configs`), so
+the two suites partition the config set exactly and neither needs updating when
+the benchmark is regenerated. Both share `scripts/submit_common.sh`.
+
+When the arrays finish, the dependent compare job writes both
+`comparison.md` (per method) and `summary.md` (**per model, per tier, and per
+difficulty axis** — omitted-edge count, placement, hops, shortcut plausibility,
+junction crossing — plus a reliability table with the ground-truth-`NA` rate).
+The tier and difficulty columns come from `benchmark_manifest.csv`, joined on
+`config_name`. To regenerate by hand:
+
+```bash
+python scripts/summarize_results.py --indir results/london --outdir results/london
+```
+
 Report `valid_success`, `proof_matches_gt`, `precision_hypothesized`,
 `recall_omitted` and `hallucination_rate`. **Never** report plain `success` as
 the headline: the solver can always inject a fact to force a proof, so `success`

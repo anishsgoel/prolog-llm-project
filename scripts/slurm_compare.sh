@@ -24,3 +24,10 @@ export PYTHONPATH="$PROJECT_ROOT/src:${PYTHONPATH:-}"
 OUTDIR="${1:-${OUTDIR:-results/baselines}}"
 echo "aggregating comparison from $OUTDIR"
 python3 scripts/aggregate_results.py --indir "$OUTDIR" --outdir "$OUTDIR"
+
+# Per-model / per-tier / per-difficulty breakdown. Run second and guarded, so a
+# failure here still leaves the comparison files from the step above intact.
+echo
+echo "summarizing per model / tier / difficulty from $OUTDIR"
+python3 scripts/summarize_results.py --indir "$OUTDIR" --outdir "$OUTDIR" \
+  || echo "WARNING: summarize_results.py failed; comparison.* files are still valid." >&2

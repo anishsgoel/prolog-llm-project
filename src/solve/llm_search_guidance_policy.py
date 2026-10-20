@@ -217,13 +217,27 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
             for rule in soft_kb.rules if min_confidence <= rule.confidence < 1.0
         ]
 
+    def backtrack_unify_target(self, goal_node: GoalNode) -> Optional[str]:
+        """The single atom to focus the backtrack prompt on, or None for all of them.
+
+        Base PLLM returns None: the prompt lists every open subgoal. The
+        ``unify_target`` ablation overrides this to name the one atom the search
+        is stuck on. Kept as a hook here so the ablation does not have to
+        duplicate ``extend_on_backtrack``.
+        """
+        return None
+
     def _prompt_context(self, goal: AtomicFormula, soft_kb: SoftKnowledgeBase,
-                        min_confidence: float, goal_node: Optional[GoalNode] = None) -> LLMSearchGuidancePromptContext:
-        current_goal_lines = (
-            [f"- {formula}" for formula in goal_node.unresolved_formulas()]
-            if goal_node is not None else [f"- {goal}"]
-        )
+                        min_confidence: float, goal_node: Optional[GoalNode] = None,
+                        unify_target: Optional[str] = None) -> LLMSearchGuidancePromptContext:
+        if unify_target is not None:
+            current_goal_lines = [f"- {unify_target}"]
+        elif goal_node is not None:
+            current_goal_lines = [f"- {formula}" for formula in goal_node.unresolved_formulas()]
+        else:
+            current_goal_lines = [f"- {goal}"]
         return LLMSearchGuidancePromptContext(
+            unify_target=unify_target,
             goal=str(goal),
             current_goal_lines=current_goal_lines,
             hard_fact_lines=self._hard_fact_lines(soft_kb, goal, goal_node),
@@ -333,7 +347,8 @@ class LLMSearchGuidancePolicy(SearchGuidancePolicy):
             return soft_kb, [], False
         self._backtrack_called_signatures.add(signature)
 
-        context = self._prompt_context(goal, soft_kb, min_confidence, goal_node)
+        context = self._prompt_context(goal, soft_kb, min_confidence, goal_node,
+                                       unify_target=self.backtrack_unify_target(goal_node))
         prompt = self.llm_search_guidance.backtrack_prompt(context)
         raw = self.llm.ask_with_retry(prompt, repair_schema=self.llm_search_guidance.backtrack_schema())
 
